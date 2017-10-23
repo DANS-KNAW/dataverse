@@ -55,6 +55,9 @@ public class OAIRecord implements Serializable {
         
     public OAIRecord(String setName, String globalId, Date lastUpdateTime) {
         this.setName = setName;
+        //Eko, JIRA DDN-258
+        if (globalId !=null)
+    		globalId = globalId.replace("hdl:", "http://hdl.handle.net/");
         this.globalId = globalId;
         this.lastUpdateTime = lastUpdateTime;
     }

@@ -8,7 +8,6 @@ import edu.harvard.iq.dataverse.search.IndexServiceBean;
 import edu.harvard.iq.dataverse.RoleAssignment;
 import edu.harvard.iq.dataverse.authorization.Permission;
 import edu.harvard.iq.dataverse.authorization.users.AuthenticatedUser;
-import edu.harvard.iq.dataverse.authorization.users.User;
 import edu.harvard.iq.dataverse.engine.command.AbstractVoidCommand;
 import edu.harvard.iq.dataverse.engine.command.CommandContext;
 import edu.harvard.iq.dataverse.engine.command.DataverseRequest;
@@ -25,7 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Same as {@link DeleteDatasetCommand}, but does not stop it the dataset is
+ * Same as {@link DeleteDatasetCommand}, but does not stop if the dataset is
  * published. This command is reserved for super-users, if at all.
  *
  * @author michael
@@ -83,6 +82,7 @@ public class DestroyDatasetCommand extends AbstractVoidCommand {
         
         //Register Cache
         if(ctxt.settings().getValueForKey(SettingsServiceBean.Key.DoiProvider, "").equals("DataCite")){
+            // TODO make ignorant of configured bean
             ctxt.doiDataCite().deleteRecordFromCache(doomed);
         }
 

@@ -52,6 +52,8 @@ import org.apache.commons.lang.StringEscapeUtils;
         uniqueConstraints = @UniqueConstraint(columnNames = {"dataset_id,versionnumber,minorversionnumber"}))
 public class DatasetVersion implements Serializable {
 
+    private static final Logger logger = Logger.getLogger(DatasetVersion.class.getCanonicalName());
+
     /**
      * Convenience comparator to compare dataset versions by their version number.
      * The draft version is considered the latest.
@@ -129,6 +131,11 @@ public class DatasetVersion implements Serializable {
     @Column(length = VERSION_NOTE_MAX_LENGTH)
     private String versionNote;
     
+    /**
+     * @todo versionState should never be null so when we are ready, uncomment
+     * the `nullable = false` below.
+     */
+//    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private VersionState versionState;
 
@@ -380,6 +387,7 @@ public class DatasetVersion implements Serializable {
         }
         return null;
     }
+    
 
     public VersionState getPriorVersionState() {
         int index = 0;
@@ -1031,6 +1039,26 @@ public class DatasetVersion implements Serializable {
                     dsfv.setValidationMessage(constraintViolation.getMessage());
                     returnSet.add(constraintViolation);
                     break; // currently only support one message, so we can break out of the loop after the first constraint violation                    
+                }
+            }
+        }
+        List<FileMetadata> dsvfileMetadatas = this.getFileMetadatas();
+        if (dsvfileMetadatas != null) {
+            for (FileMetadata fileMetadata : dsvfileMetadatas) {
+                Set<ConstraintViolation<FileMetadata>> constraintViolations = validator.validate(fileMetadata);
+                if (constraintViolations.size() > 0) {
+                    // currently only support one message
+                    ConstraintViolation<FileMetadata> violation = constraintViolations.iterator().next();
+                    /**
+                     * @todo How can we expose this more detailed message
+                     * containing the invalid value to the user?
+                     */
+                    String message = "Constraint violation found in FileMetadata. "
+                            + violation.getMessage() + " "
+                            + "The invalid value is \"" + violation.getInvalidValue().toString() + "\".";
+                    logger.info(message);
+                    returnSet.add(violation);
+                    break; // currently only support one message, so we can break out of the loop after the first constraint violation
                 }
             }
         }

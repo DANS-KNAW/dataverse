@@ -63,11 +63,11 @@ public class BundleUtilTest {
                 + "converted to use your institutional log in. After converting, you will only need to use your institutional log in.",
                 BundleUtil.getStringFromBundle("shib.welcomeExistingUserMessage",
                         Arrays.asList(BundleUtil.getStringFromBundle("shib.welcomeExistingUserMessageDefaultInstitution"))));
-        assertEquals("Welcome to Root Dataverse! Get started by adding or finding data. "
-                + "Have questions? Check out the <a href=\"http://guides.dataverse.org/en/4.3/user/index.html\">User Guide</a>."
-                + " Want to test out Dataverse features? Use our <a href=\"https://demo.dataverse.org\">Demo Site</a>.",
-                BundleUtil.getStringFromBundle("notification.welcome",
-                        Arrays.asList("Root", "<a href=\"http://guides.dataverse.org/en/4.3/user/index.html\">User Guide</a>", "<a href=\"https://demo.dataverse.org\">Demo Site</a>")));
+        assertEquals("Welcome to DataverseNL!\nGet started by adding or finding data. "
+                + "Have questions? Check out the information on https://dans.knaw.nl/en/about/services/archiving-and-reusing-data/DataverseNL/about?set_language=en or contact your local admin for assistance."
+                + " Want to test out Dataverse features? Use our Demo Site at https://demo.dataverse.nl",
+                BundleUtil.getStringFromBundle("notification.email.welcome",
+                        Arrays.asList("Root", "https://dans.knaw.nl/en/about/services/archiving-and-reusing-data/DataverseNL/about?set_language=en", "https://demo.dataverse.nl.")));
     }
 
     @Test

@@ -5,15 +5,7 @@
  */
 package edu.harvard.iq.dataverse.engine.command.impl;
 
-import edu.harvard.iq.dataverse.DataFile;
-import edu.harvard.iq.dataverse.Dataset;
-import edu.harvard.iq.dataverse.DatasetField;
-import edu.harvard.iq.dataverse.DatasetFieldConstant;
-import edu.harvard.iq.dataverse.DatasetVersionUser;
-import edu.harvard.iq.dataverse.DatasetVersion;
-import edu.harvard.iq.dataverse.Dataverse;
-import edu.harvard.iq.dataverse.RoleAssignment;
-import edu.harvard.iq.dataverse.UserNotification;
+import edu.harvard.iq.dataverse.*;
 import edu.harvard.iq.dataverse.authorization.Permission;
 import edu.harvard.iq.dataverse.authorization.users.AuthenticatedUser;
 import edu.harvard.iq.dataverse.engine.command.AbstractCommand;
@@ -27,6 +19,7 @@ import edu.harvard.iq.dataverse.export.ExportService;
 import edu.harvard.iq.dataverse.privateurl.PrivateUrl;
 import edu.harvard.iq.dataverse.search.IndexResponse;
 import edu.harvard.iq.dataverse.settings.SettingsServiceBean;
+import edu.harvard.iq.dataverse.util.BundleUtil;
 import static edu.harvard.iq.dataverse.util.json.JsonPrinter.jsonAsDatasetDto;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -62,19 +55,30 @@ public class PublishDatasetCommand extends AbstractCommand<Dataset> {
      */
     public PublishDatasetCommand(Dataset datasetIn, DataverseRequest aRequest, boolean minor) {
         super(aRequest, datasetIn);
+        logger.log(Level.FINE,"Constructor");
         minorRelease = minor;
         theDataset = datasetIn;
     }
 
     @Override
     public Dataset execute(CommandContext ctxt) throws CommandException {
+        logger.log(Level.FINE,"execute");
 
         if (!theDataset.getOwner().isReleased()) {
             throw new IllegalCommandException("This dataset may not be published because its host dataverse (" + theDataset.getOwner().getAlias() + ") has not been published.", this);
         }
-        
+
+        if (theDataset.isLocked()) {
+            throw new IllegalCommandException("This dataset is locked due to files being ingested. Please try publishing later.", this);
+        }
+
         if (theDataset.getLatestVersion().isReleased()) {
             throw new IllegalCommandException("Latest version of dataset " + theDataset.getIdentifier() + " is already released. Only draft versions can be released.", this);
+        }
+
+        // prevent publishing of 0.1 version
+        if (minorRelease && theDataset.getVersions().size() == 1 && theDataset.getLatestVersion().isDraft()) {
+            throw new IllegalCommandException("Cannot publish as minor version. Re-try as major release.", this);
         }
 
         if (minorRelease && !theDataset.getLatestVersion().isMinorUpdate()) {
@@ -85,47 +89,28 @@ public class PublishDatasetCommand extends AbstractCommand<Dataset> {
         String protocol = theDataset.getProtocol();
         String doiProvider = ctxt.settings().getValueForKey(SettingsServiceBean.Key.DoiProvider, nonNullDefaultIfKeyNotFound);
         String authority = theDataset.getAuthority();
+        IdServiceBean idServiceBean = IdServiceBean.getBean(protocol, ctxt);
+        logger.log(Level.FINE,"doiProvider={0} protocol={1} GlobalIdCreateTime=={2}", new Object[]{doiProvider, protocol, theDataset.getGlobalIdCreateTime()});
         if (theDataset.getGlobalIdCreateTime() == null) {
-            if (protocol.equals("doi")
-                    && (doiProvider.equals("EZID") || doiProvider.equals("DataCite"))) {
-                String doiRetString = "";
-                if (doiProvider.equals("EZID")) {
-                    doiRetString = ctxt.doiEZId().createIdentifier(theDataset);
-                    if (doiRetString.contains(theDataset.getIdentifier())) {
+            if (idServiceBean!=null) {
+                try {
+                    if (!idServiceBean.alreadyExists(theDataset)) {
+                        idServiceBean.createIdentifier(theDataset);
                         theDataset.setGlobalIdCreateTime(new Timestamp(new Date().getTime()));
-                    } else if (doiRetString.contains("identifier already exists")) {
-                        theDataset.setIdentifier(ctxt.datasets().generateIdentifierSequence(protocol, authority, theDataset.getDoiSeparator()));
-                        doiRetString = ctxt.doiEZId().createIdentifier(theDataset);
-                        if (!doiRetString.contains(theDataset.getIdentifier())) {
-                            throw new IllegalCommandException("This dataset may not be published because its identifier is already in use by another dataset. Please contact Dataverse Support for assistance.", this);
-                        } else {
-                            theDataset.setGlobalIdCreateTime(new Timestamp(new Date().getTime()));
-                        }
                     } else {
-                        throw new IllegalCommandException("This dataset may not be published because it has not been registered. Please contact Dataverse Support for assistance.", this);
+//                        theDataset.setIdentifier(ctxt.datasets().generateIdentifierSequence(protocol, authority, theDataset.getDoiSeparator()));
+//                        if (!idServiceBean.alreadyExists(theDataset)) {
+//                            idServiceBean.createIdentifier(theDataset);
+//                            theDataset.setGlobalIdCreateTime(new Timestamp(new Date().getTime()));
+//                        } else {
+//                            throw new IllegalCommandException("This dataset may not be published because its identifier is already in use by another dataset.", this);
+//                        }
                     }
-                }
-                
-                if (doiProvider.equals("DataCite")) {
-                    try {
-                        if (!ctxt.doiDataCite().alreadyExists(theDataset)) {
-                            ctxt.doiDataCite().createIdentifier(theDataset);
-                            theDataset.setGlobalIdCreateTime(new Timestamp(new Date().getTime()));
-                        } else {
-                            theDataset.setIdentifier(ctxt.datasets().generateIdentifierSequence(protocol, authority, theDataset.getDoiSeparator()));
-                            if (!ctxt.doiDataCite().alreadyExists(theDataset)) {
-                                ctxt.doiDataCite().createIdentifier(theDataset);
-                                theDataset.setGlobalIdCreateTime(new Timestamp(new Date().getTime()));
-                            } else {
-                                throw new IllegalCommandException("This dataset may not be published because its identifier is already in use by another dataset. Please contact Dataverse Support for assistance.", this);
-                            }
-                        }
-                    } catch (Exception e) {
-                        throw new CommandException(ResourceBundle.getBundle("Bundle").getString("dataset.publish.error.datacite"), this);
-                    }
+                } catch (Throwable e) {
+                    throw new CommandException(BundleUtil.getStringFromBundle("dataset.publish.error", idServiceBean.getProviderInformation()),this); 
                 }
             } else {
-                throw new IllegalCommandException("This dataset may not be published because its DOI provider is not supported. Please contact Dataverse Support for assistance.", this);
+                throw new IllegalCommandException("This dataset may not be published because its id registry service is not supported.", this);
             }
         }
         
@@ -221,7 +206,9 @@ public class PublishDatasetCommand extends AbstractCommand<Dataset> {
             Dataverse dv = savedDataset.getOwner();
             while (dv != null) {
                 if (dv.getDataverseSubjects().addAll(subject.getControlledVocabularyValues())) {
-                    ctxt.index().indexDataverse(dv); // need to reindex to capture the new subjects
+                    Dataverse dvWithSubjectJustAdded = ctxt.em().merge(dv);
+                    ctxt.em().flush();
+                    ctxt.index().indexDataverse(dvWithSubjectJustAdded); // need to reindex to capture the new subjects
                 }
                 dv = dv.getOwner();
             }
@@ -243,24 +230,12 @@ public class PublishDatasetCommand extends AbstractCommand<Dataset> {
             ctxt.em().merge(datasetDataverseUser);
         }
 
-        if (protocol.equals("doi")
-                && doiProvider.equals("EZID")) {
-            ctxt.doiEZId().publicizeIdentifier(savedDataset);
-        }
-        if (protocol.equals("doi")
-                && doiProvider.equals("DataCite")) {
-            try {
-                ctxt.doiDataCite().publicizeIdentifier(savedDataset);
-            } catch (IOException io) {
-                throw new CommandException(ResourceBundle.getBundle("Bundle").getString("dataset.publish.error.datacite"), this);
-            } catch (Exception e) {
-                if (e.toString().contains("Internal Server Error")) {
-                    throw new CommandException(ResourceBundle.getBundle("Bundle").getString("dataset.publish.error.datacite"), this);
-                }
-                throw new CommandException(ResourceBundle.getBundle("Bundle").getString("dataset.publish.error.datacite"), this);
+        if (idServiceBean!= null && !idServiceBean.registerWhenPublished())
+            try{
+                idServiceBean.publicizeIdentifier(savedDataset);
+            }catch (Throwable e) {
+                throw new CommandException(BundleUtil.getStringFromBundle("dataset.publish.error", idServiceBean.getProviderInformation()),this); 
             }
-        }
-
         PrivateUrl privateUrl = ctxt.engine().submit(new GetPrivateUrlCommand(getRequest(), savedDataset));
         if (privateUrl != null) {
             logger.fine("Deleting Private URL for dataset id " + savedDataset.getId());
@@ -283,6 +258,6 @@ public class PublishDatasetCommand extends AbstractCommand<Dataset> {
         IndexResponse indexResponse = ctxt.solrIndex().indexPermissionsForOneDvObject(savedDataset);
 
         return savedDataset;
-    }
+    }    
 
 }

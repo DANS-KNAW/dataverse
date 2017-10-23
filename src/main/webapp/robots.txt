@@ -1,23 +1,39 @@
+User-agent: googlebot
+User-agent: google
+User-agent: bing
+User-agent: Bingbot
+Allow: /
+Sitemap: http://dataverse.nl/sitemap.xml
+
+User-agent: Baiduspider 
+User-agent: baiduspider 
+User-agent: Baiduspider+ 
+Disallow: /
+
+User-agent: HTTrack
+Disallow: /
+User-agent: MJ12bot
+Disallow: /     
+User-agent: SemrushBot
+Disallow: /
+User-agent: SemrushBot-SA
+Disallow: /
+User-agent: rogerbot
+Disallow:/ 
+User-agent: dotbot
+Disallow:/ 
+User-agent: AhrefsBot
+Disallow: /
+User-agent: Alexibot
+Disallow: /
+User-agent: SurveyBot
+Disallow: /
+User-agent: Xenu’s
+Disallow: /
+User-agent: Xenu’s Link Sleuth 1.1c
+Disallow: /
+User-agent: BLEXBot
+Disallow: /
+
 User-agent: *
 Disallow: /
-User-agent: Googlebot
-Disallow: /
-#Crawl-delay: 120
-#Disallow: /dvn/faces/javax.faces.resource
-#Disallow: /dvn/OAIHandler
-#Disallow: /dvn/faces/ContactUsPage.xhtml
-#Disallow: /dvn/dv/*/faces/ContactUsPage.xhtml
-#Disallow: /dvn/faces/study/TermsOfUsePage.xhtml
-#Disallow: /dvn/faces/subsetting/SubsettingPage.xhtml
-#Disallow: /dvn/dv/*/faces/subsetting/SubsettingPage.xhtml
-#Disallow: /dvn/FileDownload/
-#Disallow: /FileDownload/
-#Disallow: /dvn/dv/*/FileDownload/
-#Disallow: /dvn/resources/
-#Disallow: /dvn/api/
-#
-
-
-# Created initially using: http://www.mcanerin.com/EN/search-engine/robots-txt.asp
-# Verified using: http://tool.motoricerca.info/robots-checker.phtml
-
