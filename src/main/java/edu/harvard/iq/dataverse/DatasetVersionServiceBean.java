@@ -29,7 +29,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import org.apache.commons.lang.StringUtils;
-    
+
 /**
  *
  * @author skraffmiller
@@ -420,7 +420,7 @@ public class DatasetVersionServiceBean implements java.io.Serializable {
         }
         
         try{
-            Query query = em.createNativeQuery(queryString, DatasetVersion.class);           
+            Query query = em.createNativeQuery(queryString, DatasetVersion.class);
             DatasetVersion ds = (DatasetVersion) query.getSingleResult();
             
             msg("Found: " + ds);
@@ -1064,6 +1064,13 @@ w
         Future<String> indexingResult = indexService.indexDataset(datasetVersion.getDataset(), doNormalSolrDocCleanUp);
         
         return info;
+    }
+    //DANS for DataverseBridge
+    public DatasetVersion update(DatasetVersion datasetVersion){
+        DatasetVersion saved = em.merge(datasetVersion);
+        boolean doNormalSolrDocCleanUp = true;
+        Future<String> indexingResult = indexService.indexDataset(datasetVersion.getDataset(), doNormalSolrDocCleanUp);
+        return saved;
     }
     
     private boolean isFileUnfsIdentical(List<String> fileUnfs1, List<String> fileUnfs2) {

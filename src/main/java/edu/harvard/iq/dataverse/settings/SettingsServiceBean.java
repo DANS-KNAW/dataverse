@@ -347,8 +347,23 @@ public class SettingsServiceBean {
         /**
          * Configurable text for alert/info message on passwordreset.xhtml when users are required to update their password.
          */
-        PVCustomPasswordResetAlertMessage
-        ;
+        PVCustomPasswordResetAlertMessage,
+
+        //Actually, it should use the systemConfig.getDataverseSiteUrl() but unfortunately it forced to use https,
+        // so we cannot use it in ddvn
+        DataverseDdiExportBaseURL,
+
+        /*
+        DataverseBridge location
+         */
+        DataverseBridgeUrl,
+
+        /*
+        DataverseBridge TDR IRI
+        http://deasy.dans.knaw.nl/sword2/collection/1
+         */
+        DataverseBridgeTdrIri;
+
 
         @Override
         public String toString() {
@@ -364,11 +379,11 @@ public class SettingsServiceBean {
     
     /**
      * Values that are considered as "true".
-     * @see #isTrue(java.lang.String, boolean) 
+     * @see #isTrue(java.lang.String, boolean)
      */
     public static final Set<String> TRUE_VALUES = Collections.unmodifiableSet(
             new TreeSet<>( Arrays.asList("1","yes", "true","allow")));
-    
+
     /**
      * Basic functionality - get the name, return the setting, or {@code null}.
      * @param name of the setting
@@ -378,7 +393,7 @@ public class SettingsServiceBean {
         Setting s = em.find( Setting.class, name );
         return (s!=null) ? s.getContent() : null;
     }
-    
+
     /**
      * Same as {@link #get(java.lang.String)}, but with static checking.
      * @param key Enum value of the name.

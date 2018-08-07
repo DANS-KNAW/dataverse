@@ -141,6 +141,13 @@
                 <h:outputText id="versionDate" value="#{versionTab.versionDate}" />
             </ui:fragment>
         </p:column><!-- end: date column -->
+
+        <!-- DANS DataverseBridge - archive column -->
+        <p:column headerText="Archived" class="col-sm-2">
+            <ui:fragment ><!-- rendered="#{ !empty(versionTab) and !empty(versionTab.versionDate) }"-->
+                <h:outputText id="archived" value="#{versionTab.archiveNote}"  escape="false"/>
+            </ui:fragment>
+        </p:column><!-- end: DANS archive column -->
     </p:dataTable>
 <!-- / VERSIONS -->
 </ui:fragment>
