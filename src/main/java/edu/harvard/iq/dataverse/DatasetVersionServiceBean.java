@@ -1065,7 +1065,14 @@ w
         
         return info;
     }
-    
+    //DANS for DataverseBridge
+    public DatasetVersion update(DatasetVersion datasetVersion){
+        DatasetVersion saved = em.merge(datasetVersion);
+        boolean doNormalSolrDocCleanUp = true;
+        Future<String> indexingResult = indexService.indexDataset(datasetVersion.getDataset(), doNormalSolrDocCleanUp);
+        return saved;
+    }
+
     private boolean isFileUnfsIdentical(List<String> fileUnfs1, List<String> fileUnfs2) {
         if (fileUnfs1.size() != fileUnfs2.size()) {
             return false;

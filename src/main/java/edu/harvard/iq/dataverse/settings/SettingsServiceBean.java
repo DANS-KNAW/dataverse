@@ -347,8 +347,10 @@ public class SettingsServiceBean {
         /**
          * Configurable text for alert/info message on passwordreset.xhtml when users are required to update their password.
          */
-        PVCustomPasswordResetAlertMessage
-        ;
+        PVCustomPasswordResetAlertMessage,
+
+        DataverseBridgeConf;
+
 
         @Override
         public String toString() {

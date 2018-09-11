@@ -1,7 +1,9 @@
 package edu.harvard.iq.dataverse;
 
-import edu.harvard.iq.dataverse.authorization.AuthenticationServiceBean;
-import edu.harvard.iq.dataverse.authorization.Permission;
+import edu.harvard.iq.dataverse.authorization.*;
+import edu.harvard.iq.dataverse.authorization.groups.Group;
+import edu.harvard.iq.dataverse.authorization.groups.GroupServiceBean;
+import edu.harvard.iq.dataverse.authorization.groups.impl.explicit.ExplicitGroup;
 import edu.harvard.iq.dataverse.authorization.providers.builtin.BuiltinUserServiceBean;
 import edu.harvard.iq.dataverse.authorization.users.AuthenticatedUser;
 import edu.harvard.iq.dataverse.authorization.users.PrivateUrlUser;
@@ -62,6 +64,7 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
 import javax.faces.event.ValueChangeEvent;
@@ -70,6 +73,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import org.primefaces.event.FileUploadEvent;
 import org.primefaces.model.UploadedFile;
+
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolation;
 import org.apache.commons.httpclient.HttpClient;
 import org.primefaces.context.RequestContext;
@@ -173,6 +178,10 @@ public class DatasetPage implements java.io.Serializable {
     PrivateUrlServiceBean privateUrlService;
     @EJB
     ExternalToolServiceBean externalToolService;
+    @EJB
+    MailServiceBean mailServiceBean;
+    @EJB
+    GroupServiceBean groupService;
 
     @Inject
     DataverseRequestServiceBean dvRequestService;
@@ -219,6 +228,8 @@ public class DatasetPage implements java.io.Serializable {
     private String authority = "";
     private String separator = "";
     private String customFields="";
+    private boolean dataverseBridgeEnabled;
+    private boolean displayArchivedColumn;
 
     private boolean noDVsAtAll = false;
 
@@ -1532,9 +1543,75 @@ public class DatasetPage implements java.io.Serializable {
         configureTools = externalToolService.findByType(ExternalTool.Type.CONFIGURE);
         exploreTools = externalToolService.findByType(ExternalTool.Type.EXPLORE);
 
+        List<DatasetVersion> dvs = dataset.getVersions();
+        for (DatasetVersion dv:dvs) {
+            if (dv.getArchiveNote() != null) {
+                displayArchivedColumn = true;
+                break;
+            }
+        }
+        if (isSessionUserAuthenticated() && workingVersion.isReleased()
+                && settingsService.getValueForKey(SettingsServiceBean.Key.DataverseBridgeConf) != null) {
+            RoleAssignmentSet rs = dataverseRoleService.roleAssignments(session.getUser(), dataset.getOwner());
+            if (!isUserHasAdminRole(rs))
+                return null;
+            DataverseBridge dbd = new DataverseBridge(((AuthenticatedUser) session.getUser()).getEmail(), settingsService, datasetService, datasetVersionService, authService, mailServiceBean);
+            DataverseBridge.DvBridgeConf dvBridgeConf = dbd.getDvBridgeConf();
+            dataverseBridgeEnabled = isUserBelongsToSwordGroup(rs, dvBridgeConf.getUserGroup());
+
+            if (dataverseBridgeEnabled) {
+                for (DatasetVersion dv:dvs) {
+                    String archiveNote = dv.getArchiveNote();
+                    if (archiveNote != null && (archiveNote.equals("INVALID") || archiveNote.equals("FAILED") || archiveNote.equals("REJECTED"))){
+                        dataverseBridgeEnabled = false;
+                        break;
+                    }
+                }
+            }
+
+            if (dataverseBridgeEnabled && workingVersion.getArchiveNote() != null && workingVersion.getArchiveNote().startsWith(DataverseBridge.StateEnum.IN_PROGRESS.toString())) {
+                String darName = workingVersion.getArchiveNote().split("@")[1];
+                String dvBaseMetadataXml = dvBridgeConf.getConf().get(darName);
+                DataverseBridge.StateEnum state = dbd.checkArchivingProgress(dvBaseMetadataXml ,persistentId, workingVersion.getFriendlyVersionNumber(), darName);
+                logger.info("Archiving state of '" + persistentId + "': " + state);
+            }
+        }
         return null;
     }
-    
+    public void reload() throws IOException {
+        ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+        ec.redirect("");
+    }
+    public boolean isDisplayArchivedColumn() {
+        return displayArchivedColumn;
+    }
+
+    private boolean isUserBelongsToSwordGroup(RoleAssignmentSet rs, String userGroup) {
+        Set<Group> sg = groupService.groupsFor( rs.getRoleAssignee(), dataset.getOwner());
+        for (Group g:sg){
+            if (g instanceof ExplicitGroup &&
+                ((ExplicitGroup)g).getGroupAliasInOwner().equals(userGroup)) {
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isUserHasAdminRole( RoleAssignmentSet rs) {
+        Set<RoleAssignment> sra = rs.getAssignments();
+        for(RoleAssignment r:sra ){
+           if (r.getRole().getAlias().equals("admin")) {
+               return true;
+           }
+        }
+        return false;
+    }
+
+
+    public boolean isDataverseBridgeEnabled() {
+        return dataverseBridgeEnabled;
+    }
+
     public boolean isReadOnly() {
         return readOnly; 
     }

@@ -1,0 +1,48 @@
+<ui:composition xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:jsf="http://xmlns.jcp.org/jsf">
+    <!-- Dialog DataverseBridge Form -->
+    <p:dialog id="dataverseBridgeDialog" header="Archiving dataset '#{DatasetPage.persistentId}'" widgetVar="darForm" modal="true">
+        <p:ajax event="close" update=":datasetForm" />
+        <p:fragment>
+            <h:form class="form-horizontal"  autocomplete="off">
+                <h:outputText value="#{bundle['dataset.archive.dialog.label']}" escape="false"/>
+                <h:panelGrid columns="3" cellpadding="5">
+
+                    <p:outputLabel for="selected-dar" value="#{bundle['dataset.archive.dialog.label.name']}"/>
+                    <h:selectOneMenu id="selected-dar"
+                                     value="#{dataverseBridgeDialog.darName}"
+                                     required="true" requiredMessage="#{bundle['dataset.archive.dialog.required.name']}">
+                        <f:selectItem itemLabel="Select Repository" itemValue="" noSelectionOption="true" required="true"/>
+                        <f:selectItems value="#{dataverseBridgeDialog.darNames}" />
+                    </h:selectOneMenu>
+
+                    <p:message for="selected-dar" styleClass="bg-danger text-danger"/>
+
+                    <p:outputLabel for="darUsername" value="#{bundle['dataset.archive.dialog.label.username']}"/>
+                    <p:inputText id="darUsername" value="#{dataverseBridgeDialog.darUsername}"
+                                 requiredMessage="#{bundle['dataset.archive.dialog.required.username']}" required="true"/>
+                    <h:message for="darUsername" styleClass="bg-danger text-danger"/>
+
+                    <p:outputLabel for="password" value="#{bundle['dataset.archive.dialog.label.password']}"/>
+                    <p:password id="password" value="#{dataverseBridgeDialog.darPassword}"
+                                requiredMessage="#{bundle['dataset.archive.dialog.required.password']}" required="true"/>
+                    <h:message for="password" styleClass="bg-danger text-danger"/>
+                </h:panelGrid>
+
+
+                <!-- send | cancel buttons -->
+                <div class="button-block">
+                    <p:commandLink styleClass="btn btn-default" value="#{bundle['dataset.archive.dialog.button.ingest']}"
+                                   update="@form,:messagePanel" oncomplete="if (args &amp;&amp; !args.validationFailed) PF('darForm').hide();" actionListener="#{dataverseBridgeDialog.archive}">
+                        <f:param name="DO_VALIDATION" value="true"/>
+                    </p:commandLink>
+                    <p:commandButton value="#{bundle.cancel}" onclick="PF('darForm').hide();PF('blockDatasetForm').hide();" type="button" />
+                </div>
+            </h:form>
+        </p:fragment>
+    </p:dialog>
+</ui:composition>

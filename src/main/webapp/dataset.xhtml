@@ -19,7 +19,9 @@
             <ui:param name="dataset" value="#{DatasetPage.dataset}"/>
             <ui:param name="version" value="#{DatasetPage.workingVersion}"/>
             <ui:param name="locked" value="#{DatasetPage.locked}"/>
-	    <ui:param name="showMessagePanel" value="#{true}"/>
+	        <ui:param name="showMessagePanel" value="#{true}"/>
+            <!-- DANS DataverseBridge -->
+            <ui:param name="showDataverseBridge" value="#{DatasetPage.sessionUserAuthenticated and DatasetPage.dataverseBridgeEnabled and DatasetPage.workingVersion.isReleased()}"/>
 	    <ui:define name="dc_meta_header">
 	    <meta name="DC.identifier" content="#{DatasetPage.persistentId}"/>
 	    <meta name="DC.type" content="Dataset"/>
@@ -53,6 +55,11 @@
                     <f:viewAction action="#{dataverseHeaderFragment.initBreadcrumbs(DatasetPage.dataset)}"/>
                     <f:viewAction action="#{EditDatafilesPage.initCreateMode(DatasetPage.editMode, DatasetPage.workingVersion, DatasetPage.newFiles, DatasetPage.selectedFiles)}"/>
                 </f:metadata>
+                <!-- DANS DataverseBridge BLOCK -->
+                <ui:fragment rendered="#{showDataverseBridge}">
+                    <ui:include src="dataverseBridgeFragment.xhtml"/>
+                </ui:fragment>
+                <!-- END: DataverseBridge BLOCK -->
                 <h:form id="datasetForm">
                     <!-- Header / Button Panel -->
                     <!-- View editMode -->
@@ -232,7 +239,24 @@
                                 <!-- END: Edit Button -->
                                 <!-- END: Edit/Link/Publish Button Group -->
                             </div>
-                            
+
+                            <!-- DANS Archive button-->
+                            <div class="btn-group pull-right" id="datasetButtonBar" role="group">
+                                <p:commandLink type="button" styleClass="btn btn-default #{DatasetPage.locked ? 'disabled' : ''}" oncomplete="PF('darForm').show()"
+                                               rendered="#{showDataverseBridge and DatasetPage.workingVersion.archiveNote == null and DatasetPage.workingVersion.isLatestVersion()
+                                               					and DatasetPage.dataset.owner.released and permissionsWrapper.canIssuePublishDatasetCommand(DatasetPage.dataset)}">
+                                    <f:setPropertyActionListener target="#{dataverseBridgeDialog.datasetVersionFriendlyNumber}" value="#{DatasetPage.workingVersion.versionNumber}.#{DatasetPage.workingVersion.minorVersionNumber}"/>
+                                    <f:setPropertyActionListener target="#{dataverseBridgeDialog.persistentId}" value="#{DatasetPage.persistentId}"/>
+
+                                    <span class="glyphicon glyphicon-save-file"/>#{bundle['dataset.archive.button']}
+                                </p:commandLink>
+                                <p:commandLink id="ajax" type="button" styleClass="btn btn-default bootstrap-button-tooltip #{DatasetPage.locked ? 'disabled' : ''}"
+                                               title="Please reload the page to check on the archiving progress" update=":datasetForm" actionListener="#{DatasetPage.reload()}"
+                                               rendered="#{showDataverseBridge and DatasetPage.workingVersion.archiveNote.startsWith('IN-PROGRESS@')}" >
+                                    <span class="glyphicon glyphicon-transfer"/>#{bundle['dataset.archive.button.inprogress']}
+                                </p:commandLink>
+                            </div>
+
                             <!-- Contact/Share Button Group -->
                             <div class="btn-group pull-right" id="datasetButtonBar" role="group">
                                 <p:commandLink class="text-button bootstrap-button-tooltip" title="#{bundle['dataset.email.datasetContactBtn']}"
