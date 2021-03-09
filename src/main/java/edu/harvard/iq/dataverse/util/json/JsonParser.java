@@ -35,6 +35,7 @@ import org.apache.commons.validator.routines.DomainValidator;
 import java.io.StringReader;
 import java.sql.Timestamp;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -279,7 +280,15 @@ public class JsonParser {
         dataset.setProtocol(obj.getString("protocol", null) == null ? settingsService.getValueForKey(SettingsServiceBean.Key.Protocol) : obj.getString("protocol"));
         dataset.setIdentifier(obj.getString("identifier",null));
 
-        DatasetVersion dsv = new DatasetVersion(); 
+        String publicationDateString = (obj.getString("publicationDate", null));
+        if (publicationDateString != null) {
+            Timestamp publicationDate = parsePublicationDate(publicationDateString);
+            if (publicationDate != null) {
+                dataset.setPublicationDate(publicationDate);
+            }
+        }
+
+        DatasetVersion dsv = new DatasetVersion();
         dsv.setDataset(dataset);
         dsv = parseDatasetVersion(obj.getJsonObject("datasetVersion"), dsv);
         List<DatasetVersion> versions = new ArrayList<>(1);
@@ -287,6 +296,20 @@ public class JsonParser {
 
         dataset.setVersions(versions);
         return dataset;
+    }
+
+    private Timestamp parsePublicationDate(String publicationDate) {
+        Timestamp timestamp = null;
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Date parsedDate = dateFormat.parse(publicationDate);
+            timestamp = new Timestamp(parsedDate.getTime());
+            return timestamp;
+        }
+        catch (Exception e) {
+            logger.severe("Publication date could not be parsed: " + e);
+        }
+        return timestamp;
     }
 
     public DatasetVersion parseDatasetVersion(JsonObject obj, DatasetVersion dsv) throws JsonParseException {

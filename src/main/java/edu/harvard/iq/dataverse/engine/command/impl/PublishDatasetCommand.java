@@ -71,7 +71,7 @@ public class PublishDatasetCommand extends AbstractPublishDatasetCommand<Publish
 
         // Set the version numbers:
 
-        if (theDataset.getPublicationDate() == null) {
+        if (theDataset.getPublicationDate() == null || theDataset.getPublicationDate() != null && datasetExternallyReleased) {
             // First Release
             theDataset.getLatestVersion().setVersionNumber(new Long(1)); // minor release is blocked by #verifyCommandArguments
             theDataset.getLatestVersion().setMinorVersionNumber(new Long(0));
@@ -134,7 +134,7 @@ public class PublishDatasetCommand extends AbstractPublishDatasetCommand<Publish
             DatasetLock lock = new DatasetLock(DatasetLock.Reason.finalizePublication, user);
             lock.setDataset(theDataset);
             lock.setInfo(info);
-            ctxt.datasets().addDatasetLock(theDataset, lock);
+            //ctxt.datasets().addDatasetLock(theDataset, lock);
             theDataset = ctxt.em().merge(theDataset);
             // The call to FinalizePublicationCommand has been moved to the new @onSuccess()
             // method:
