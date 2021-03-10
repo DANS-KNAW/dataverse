@@ -61,7 +61,7 @@
                     var readonly = "#{cvoc.get(dsfv.datasetField.datasetFieldType.parentDatasetFieldType.name).isReadonly()}" === "true";
                     var hideReadonlyUrls = "#{cvoc.get(dsfv.datasetField.datasetFieldType.parentDatasetFieldType.name).isHideReadonlyUrls()}" === "true";
                     //$("#akmi_#{valCount.index+1}_#{cvoc.get(dsfv.datasetField.datasetFieldType.parentDatasetFieldType.name).getKeys()[3]}").find("input[name*='cv_vocab_url_'").css('background-color' , '#EEEEEE');
-                    $("#akmi_#{valCount.index+1}_#{cvoc.get(dsfv.datasetField.datasetFieldType.parentDatasetFieldType.name).getKeys()[3]}").find("input[name*='cv_vocab_url_'").val(vocabUri);//termParentUri);
+                    $("#akmi_#{valCount.index+1}_#{cvoc.get(dsfv.datasetField.datasetFieldType.parentDatasetFieldType.name).getKeys()[3]}").find("input[name*='cv_vocab_url_'").val(vocabUri);
                     if (vocabsize == 1 && readonly) {
                         // make it look readonly
                         $("#akmi_#{valCount.index+1}_#{cvoc.get(dsfv.datasetField.datasetFieldType.parentDatasetFieldType.name).getKeys()[0]}").find("input[name*='cv_vocabs_'").css('background-color' , '#EEEEEE');
