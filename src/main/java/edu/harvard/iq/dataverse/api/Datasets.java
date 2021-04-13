@@ -161,6 +161,7 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.amazonaws.services.s3.model.PartETag;
+import edu.harvard.iq.dataverse.FileMetadata;
 import java.util.Map.Entry;
 
 @Path("datasets")
@@ -269,7 +270,7 @@ public class Datasets extends AbstractApiBean {
                 return error(Response.Status.NOT_FOUND, "A dataset with the persistentId " + persistentId + " could not be found.");
             }
             
-            ExportService instance = ExportService.getInstance(settingsSvc);
+            ExportService instance = ExportService.getInstance();
             
             InputStream is = instance.getExport(dataset, exporter);
            
@@ -469,6 +470,42 @@ public class Datasets extends AbstractApiBean {
     public Response getVersionFiles( @PathParam("id") String datasetId, @PathParam("versionId") String versionId, @Context UriInfo uriInfo, @Context HttpHeaders headers) {
         return response( req -> ok( jsonFileMetadatas(
                          getDatasetVersionOrDie(req, versionId, findDatasetOrDie(datasetId), uriInfo, headers).getFileMetadatas())));
+    }
+    
+    @GET
+    @Path("{id}/dirindex")
+    @Produces("text/html")
+    public Response getFileAccessFolderView(@PathParam("id") String datasetId, @QueryParam("version") String versionId, @QueryParam("folder") String folderName, @QueryParam("original") Boolean originals, @Context UriInfo uriInfo, @Context HttpHeaders headers, @Context HttpServletResponse response) {
+
+        folderName = folderName == null ? "" : folderName;
+        versionId = versionId == null ? ":latest-published" : versionId; 
+        
+        DatasetVersion version; 
+        try {
+            DataverseRequest req = createDataverseRequest(findUserOrDie());
+            version = getDatasetVersionOrDie(req, versionId, findDatasetOrDie(datasetId), uriInfo, headers);
+        } catch (WrappedResponse wr) {
+            return wr.getResponse();
+        }
+        
+        String output = FileUtil.formatFolderListingHtml(folderName, version, "", originals != null && originals);
+        
+        // return "NOT FOUND" if there is no such folder in the dataset version:
+        
+        if ("".equals(output)) {
+            return notFound("Folder " + folderName + " does not exist");
+        }
+        
+        
+        String indexFileName = folderName.equals("") ? ".index.html"
+                : ".index-" + folderName.replace('/', '_') + ".html";
+        response.setHeader("Content-disposition", "attachment; filename=\"" + indexFileName + "\"");
+
+        
+        return Response.ok()
+                .entity(output)
+                //.type("application/html").
+                .build();
     }
     
     @GET
@@ -805,7 +842,7 @@ public class Datasets extends AbstractApiBean {
          req = createDataverseRequest(findUserOrDie());
         } catch (WrappedResponse ex) {
             logger.log(Level.SEVERE, "Edit metdata error: " + ex.getMessage(), ex);
-            return ex.getResponse();   
+            return ex.getResponse();
         }
 
         return processDatasetUpdate(jsonBody, id, req, replaceData);
@@ -1828,6 +1865,9 @@ public Response completeMPUpload(String partETagBody, @QueryParam("globalid") St
             optionalFileParams = new OptionalFileParams(jsonData);
         } catch (DataFileTagException ex) {
             return error( Response.Status.BAD_REQUEST, ex.getMessage());            
+        }
+        catch (ClassCastException | com.google.gson.JsonParseException ex) {
+            return error(Response.Status.BAD_REQUEST, BundleUtil.getStringFromBundle("file.addreplace.error.parsing"));
         }
         
         // -------------------------------------

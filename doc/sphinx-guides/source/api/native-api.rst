@@ -130,7 +130,7 @@ The fully expanded example above (without environment variables) looks like this
 Show Contents of a Dataverse Collection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-|CORS| Lists all the Dataverse collections and datasets directly under a Dataverse collection (direct children only, not recursive) specified by database id or alias. If you pass your API token and have access, unpublished Dataverse collections and datasets will be included in the response.
+|CORS| Lists all the Dataverse collections and datasets directly under a Dataverse collection (direct children only, not recursive) specified by database id or alias. If you pass your API token and have access, unpublished Dataverse collections and datasets will be included in the response. The list will be ordered by database id within type of object. That is, all Dataverse collections will be listed first and ordered by database id, then all datasets will be listed ordered by database id.
 
 .. note:: See :ref:`curl-examples-and-environment-variables` if you are unfamiliar with the use of ``export`` below.
 
@@ -246,7 +246,7 @@ The fully expanded example above (without environment variables) looks like this
 
 .. code-block:: bash
 
-  curl -H X-Dataverse-key:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx -X POST https://demo.dataverse.org/api/dataverses/root/roles --upload-file roles.json
+  curl -H X-Dataverse-key:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx -X POST -H "Content-type:application/json" https://demo.dataverse.org/api/dataverses/root/roles --upload-file roles.json
 
 Where ``roles.json`` looks like this::
 
@@ -258,6 +258,8 @@ Where ``roles.json`` looks like this::
       "AddDataset"
     ]
   } 
+
+.. note:: Only a Dataverse installation account with superuser permissions is allowed to create roles in a Dataverse Collection.
 
 .. _list-role-assignments-on-a-dataverse-api:
 
@@ -783,8 +785,91 @@ List Files in a Dataset
 The fully expanded example above (without environment variables) looks like this:
 
 .. code-block:: bash
-
+ 
   curl https://demo.dataverse.org/api/datasets/24/versions/1.0/files
+
+View Dataset Files and Folders as a Directory Index
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+|CORS| Provides a *crawlable* view of files and folders within the given dataset and version:
+
+.. code-block:: bash
+
+  curl $SERVER_URL/api/datasets/$ID/dirindex/
+
+Optional parameters:
+
+* ``folder`` - A subfolder within the dataset (default: top-level view of the dataset)
+* ``version`` - Specifies the version (default: latest published version)
+* ``original=true`` - Download original versions of ingested tabular files. 
+  
+This API outputs a simple html listing, based on the standard Apache
+directory index, with Access API download links for individual files,
+and recursive calls to the API above for sub-folders.
+
+Using this API, ``wget --recursive`` (or a similar crawling client) can
+be used to download all the files in a dataset, preserving the file
+names and folder structure; without having to use the download-as-zip
+API. In addition to being faster (zipping is a relatively
+resource-intensive operation on the server side), this process can be
+restarted if interrupted (with ``wget --continue`` or equivalent) -
+unlike zipped multi-file downloads that always have to start from the
+beginning.
+
+On a system that uses S3 with download redirects, the individual file
+downloads will be handled by S3 directly, without having to be proxied
+through the Dataverse application.
+
+For example, if you have a dataset version with 2 files, one with the folder named "subfolder":
+
+.. |image1| image:: ./img/dataset_page_files_view.png
+
+or, as viewed as a tree on the dataset page:
+
+.. |image2| image:: ./img/dataset_page_tree_view.png
+
+The output of the API for the top-level folder (``/api/datasets/{dataset}/dirindex/``) will be as follows:
+
+.. |image3| image:: ./img/index_view_top.png
+
+with the underlying html source:
+
+.. code-block:: html
+
+    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+    <html><head><title>Index of folder /</title></head>
+    <body><h1>Index of folder / in dataset doi:XXX/YY/ZZZZ (v. MM)</h1>
+    <table>
+    <tr><th>Name</th><th>Last Modified</th><th>Size</th><th>Description</th></tr>
+    <tr><th colspan="4"><hr></th></tr>
+    <tr><td><a href="/api/datasets/NNNN/dirindex/?folder=subfolder">subfolder/</a></td><td align="right"> - </td><td align="right"> - </td><td align="right">&nbsp;</td></tr>
+    <tr><td><a href="/api/access/datafile/KKKK">testfile.txt</a></td><td align="right">13-January-2021 22:35</td><td align="right">19 B</td><td align="right">&nbsp;</td></tr>
+    </table></body></html>
+
+The ``/dirindex/?folder=subfolder`` link above will produce the following view:
+
+.. |image4| image:: ./img/index_view_subfolder.png
+
+with the html source as follows:
+
+.. code-block:: html
+
+    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+    <html><head><title>Index of folder /subfolder</title></head>
+    <body><h1>Index of folder /subfolder in dataset doi:XXX/YY/ZZZZ (v. MM)</h1>
+    <table>
+    <tr><th>Name</th><th>Last Modified</th><th>Size</th><th>Description</th></tr>
+    <tr><th colspan="4"><hr></th></tr>
+    <tr><td><a href="/api/access/datafile/subfolder/LLLL">50by1000.tab</a></td><td align="right">11-January-2021 09:31</td><td align="right">102.5 KB</td><td align="right">&nbsp;</td></tr>
+    </table></body></html>
+
+An example of a ``wget`` command line for crawling ("recursive downloading") of the files and folders in a dataset: 
+
+.. code-block:: bash
+
+  wget -r -e robots=off -nH --cut-dirs=3 --content-disposition https://demo.dataverse.org/api/datasets/24/dirindex/
+
+.. note:: In addition to the files and folders in the dataset, the command line above will also save the directory index of each folder, in a separate folder "dirindex".
 
 List All Metadata Blocks for a Dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -937,6 +1022,8 @@ When publishing a dataset it's good to be aware of the Dataverse Software's vers
 
 If this is the first version of the dataset, its version number will be set to ``1.0``. Otherwise, the new dataset version number is determined by the most recent version number and the ``type`` parameter. Passing ``type=minor`` increases the minor version number (2.3 is updated to 2.4). Passing ``type=major`` increases the major version number (2.3 is updated to 3.0). (Superusers can pass ``type=updatecurrent`` to update metadata without changing the version number.)
 
+This call also supports an optional boolean query parameter: ``assureIsIndexed``. If true, the call will fail with a 409 ("CONFLICT") response if the dataset is awaiting re-indexing. If indexing occurs during publishing it could cause the publish request to fail, after a 202 response has been received. Using this parameter allows the caller to wait for indexing to occur and avoid this possibility. It is most useful in situations where edits are made immediately before publication.
+
 .. note:: See :ref:`curl-examples-and-environment-variables` if you are unfamiliar with the use of ``export`` below.
 
 .. code-block:: bash
@@ -956,7 +1043,7 @@ The fully expanded example above (without environment variables) looks like this
 
 The quotes around the URL are required because there is more than one query parameter separated by an ampersand (``&``), which has special meaning to Unix shells such as Bash. Putting the ``&`` in quotes ensures that "type" is interpreted as one of the query parameters.
 
-You should expect JSON output and a 200 ("OK") response in most cases. If you receive a 202 ("ACCEPTED") response, this is normal for installations that have workflows configured. Workflows are described in the :doc:`/developers/workflows` section of the Developer Guide.
+You should expect JSON output and a 200 ("OK") response in most cases. If you receive a 202 ("ACCEPTED") response, this is normal for installations that have workflows configured. Workflows are described in the :doc:`/developers/workflows` section of the Developer Guide. A 409 ("CONFLICT") response is also possible if you set ``assureIsIndexed=true``. (In this case, one could then repeat the call until a 200/202 response is sent.)
 
 .. note:: POST should be used to publish a dataset. GET is supported for backward compatibility but is deprecated and may be removed: https://github.com/IQSS/dataverse/issues/2431
 
@@ -1659,6 +1746,15 @@ Configure a Dataset to Use a Specific File Store
 
 ``/api/datasets/$dataset-id/storageDriver`` can be used to check, configure or reset the designated file store (storage driver) for a dataset. Please see the :doc:`/admin/dataverses-datasets` section of the guide for more information on this API.
 
+View the Timestamps on a Dataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``/api/datasets/$dataset-id/timestamps`` can be used to view timestamps associated with various events in the dataset's lifecycle. For published datasets, this API call provides the ``createTime``, ``publicationTime``, ``lastMetadataExportTime`` and ``lastMajorVersionReleaseTime``, as well as two booleans - ``hasStaleIndex`` and ``hasStalePermissionIndex`` - which, if false, indicate the Dataverse displays for the dataset are up-to-date. The response is ``application/json`` with the timestamps included in the returned ``data`` object.
+
+When called by a user who can view the draft version of the dataset, additional timestamps are reported: ``lastUpdateTime``, ``lastIndexTime``, ``lastPermissionUpdateTime``, and ``globalIdCreateTime``.
+
+One use case where this API call could be useful is in allowing an external application to poll and wait for changes being made by the Dataverse software or other external tool to complete prior to continuing its own processing.
+
 Files
 -----
 
@@ -2324,9 +2420,35 @@ Roles
 Create a New Role in a Dataverse Collection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Creates a new role in Dataverse collection object whose Id is ``dataverseIdtf`` (that's an id/alias)::
+Creates a new role under Dataverse collection ``id``. Needs a json file with the role description:
 
-  POST http://$SERVER/api/roles?dvo=$dataverseIdtf&key=$apiKey
+.. code-block:: bash
+
+  export API_TOKEN=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  export SERVER_URL=https://demo.dataverse.org
+  export ID=root
+
+  curl -H X-Dataverse-key:$API_TOKEN -X POST -H "Content-type:application/json" $SERVER_URL/api/dataverses/$ID/roles --upload-file roles.json
+
+The fully expanded example above (without environment variables) looks like this:
+
+.. code-block:: bash
+
+  curl -H X-Dataverse-key:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx -X POST -H "Content-type:application/json" https://demo.dataverse.org/api/dataverses/root/roles --upload-file roles.json
+
+Where ``roles.json`` looks like this::
+
+  {
+    "alias": "sys1",
+    "name": “Restricted System Role”,
+    "description": “A person who may only add datasets.”,
+    "permissions": [
+      "AddDataset"
+    ]
+  } 
+
+.. note:: Only a Dataverse installation account with superuser permissions is allowed to create roles in a Dataverse Collection.
+
 
 Show Role
 ~~~~~~~~~
@@ -2338,9 +2460,38 @@ Shows the role with ``id``::
 Delete Role
 ~~~~~~~~~~~
 
-Deletes the role with ``id``::
+A curl example using an ``ID``
 
-  DELETE http://$SERVER/api/roles/$id
+.. code-block:: bash
+
+  export API_TOKEN=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  export SERVER_URL=https://demo.dataverse.org
+  export ID=24
+
+  curl -H "X-Dataverse-key:$API_TOKEN" -X DELETE $SERVER_URL/api/roles/$ID
+
+The fully expanded example above (without environment variables) looks like this:
+
+.. code-block:: bash
+
+  curl -H "X-Dataverse-key:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -X DELETE https://demo.dataverse.org/api/roles/24
+
+A curl example using a Role alias ``ALIAS``
+
+.. code-block:: bash
+
+  export API_TOKEN=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  export SERVER_URL=https://demo.dataverse.org
+  export ALIAS=roleAlias
+
+  curl -H "X-Dataverse-key:$API_TOKEN" -X DELETE "$SERVER_URL/api/roles/:alias?alias=$ALIAS"
+
+The fully expanded example above (without environment variables) looks like this:
+
+.. code-block:: bash
+
+  curl -H "X-Dataverse-key:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -X DELETE https://demo.dataverse.org/api/roles/:alias?alias=roleAlias
+
 
 Explicit Groups
 ---------------
@@ -2780,6 +2931,41 @@ Create Global Role
 Creates a global role in the Dataverse installation. The data POSTed are assumed to be a role JSON. ::
 
     POST http://$SERVER/api/admin/roles
+    
+Delete Global Role
+~~~~~~~~~~~~~~~~~~
+
+A curl example using an ``ID``
+
+.. code-block:: bash
+
+  export API_TOKEN=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  export SERVER_URL=https://demo.dataverse.org
+  export ID=24
+
+  curl -H "X-Dataverse-key:$API_TOKEN" -X DELETE $SERVER_URL/api/admin/roles/$ID
+
+The fully expanded example above (without environment variables) looks like this:
+
+.. code-block:: bash
+
+  curl -H "X-Dataverse-key:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -X DELETE https://demo.dataverse.org/api/admin/roles/24
+
+A curl example using a Role alias ``ALIAS``
+
+.. code-block:: bash
+
+  export API_TOKEN=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  export SERVER_URL=https://demo.dataverse.org
+  export ALIAS=roleAlias
+
+  curl -H "X-Dataverse-key:$API_TOKEN" -X DELETE "$SERVER_URL/api/admin/roles/:alias?alias=$ALIAS"
+
+The fully expanded example above (without environment variables) looks like this:
+
+.. code-block:: bash
+
+  curl -H "X-Dataverse-key:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -X DELETE https://demo.dataverse.org/api/admin/roles/:alias?alias=roleAlias    
 
 List Users
 ~~~~~~~~~~

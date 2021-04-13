@@ -110,7 +110,7 @@ public class WorkflowServiceBean {
     //ToDo - should this be @Async? or just the forward() method?
     @Asynchronous
     public void start(Workflow wf, WorkflowContext ctxt) throws CommandException {
-        
+
 //        // Since we are calling this asynchronously anyway - sleep here
 //        // for a few seconds, just in case, to make sure the database update of
 //        // the dataset initiated by the PublishDatasetCommand has finished,
@@ -201,6 +201,7 @@ public class WorkflowServiceBean {
 
         WorkflowStepResult res = pendingStep.resume(ctxt, pending.getLocalData(), body);
         if (res instanceof Failure) {
+            logger.warning(((Failure) res).getReason());
             userNotificationService.sendNotification(ctxt.getRequest().getAuthenticatedUser(), Timestamp.from(Instant.now()), UserNotification.Type.WORKFLOW_FAILURE, ctxt.getDataset().getLatestVersion().getId(), ((Failure) res).getMessage());
             //UserNotification isn't meant to be a long-term record and doesn't store the comment, so we'll also keep it as a workflow comment
             WorkflowComment wfc = new WorkflowComment(ctxt.getDataset().getLatestVersion(), WorkflowComment.Type.WORKFLOW_FAILURE, ((Failure) res).getMessage(), ctxt.getRequest().getAuthenticatedUser());
@@ -262,7 +263,7 @@ public class WorkflowServiceBean {
             WorkflowStepResult res = runStep(step, ctxt);
             logger.info("AfterStep");
             logLocks(ctxt, ctxt.getDataset());
-            
+
             try {
                 if (res == WorkflowStepResult.OK) {
                     logger.log(Level.INFO, "Workflow {0} step {1}: OK", new Object[]{ctxt.getInvocationId(), stepIdx});
@@ -409,13 +410,13 @@ public class WorkflowServiceBean {
                 ctxt.getDataset().addLock(lock);
                 logger.info("Added fiLock");
                 logLocks(ctxt, ctxt.getDataset());
-               
-                
-                DatasetLock wfLock =ctxt.getDataset().getLockFor(DatasetLock.Reason.Workflow); 
+
+
+                DatasetLock wfLock =ctxt.getDataset().getLockFor(DatasetLock.Reason.Workflow);
                 logger.info("Found wef lock: " + ((wfLock==null)? "No": wfLock.getId()));
-                DatasetLock fiLock =ctxt.getDataset().getLockFor(DatasetLock.Reason.finalizePublication); 
+                DatasetLock fiLock =ctxt.getDataset().getLockFor(DatasetLock.Reason.finalizePublication);
                 logger.info("Found final lock: " + ((fiLock==null)? "No": (fiLock.getId() + " " + fiLock.getInfo())));
-                
+
                 unlockDataset(ctxt);
                 ctxt.setLockId(null); //the workflow lock
                 //Refreshing merges the dataset
@@ -533,10 +534,10 @@ public class WorkflowServiceBean {
     }
 
     private WorkflowContext refresh( WorkflowContext ctxt, Map<String, Object> settings, ApiToken apiToken, boolean findDataset) {
-    	/* An earlier version of this class used em.find() to 'refresh' the Dataset in the context. 
-    	 * For a PostPublication workflow, this had the consequence of hiding/removing changes to the Dataset 
+    	/* An earlier version of this class used em.find() to 'refresh' the Dataset in the context.
+    	 * For a PostPublication workflow, this had the consequence of hiding/removing changes to the Dataset
     	 * made in the FinalizeDatasetPublicationCommand (i.e. the fact that the draft version is now released and
-    	 * has a version number). It is not clear to me if the em.merge below is needed or if it handles the case of 
+    	 * has a version number). It is not clear to me if the em.merge below is needed or if it handles the case of
     	 * resumed workflows. (The overall method is needed to allow the context to be updated in the start() method with the
     	 * settings and APItoken retrieved by the WorkflowServiceBean) - JM - 9/18.
     	 */
