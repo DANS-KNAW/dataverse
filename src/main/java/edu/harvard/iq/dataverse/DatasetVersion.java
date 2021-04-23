@@ -562,7 +562,7 @@ public class DatasetVersion implements Serializable {
         } else {
             TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
             terms.setDatasetVersion(this);
-            terms.setLicense(TermsOfUseAndAccess.License.CC0);
+            terms.setLicense(terms.getCC0());
             terms.setDatasetVersion(this);
             this.setTermsOfUseAndAccess(terms);
         }
@@ -586,7 +586,7 @@ public class DatasetVersion implements Serializable {
             } else {
                 TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
                 terms.setDatasetVersion(dsv);
-                terms.setLicense(TermsOfUseAndAccess.License.CC0);
+                terms.setLicense(terms.getCC0());
                 dsv.setTermsOfUseAndAccess(terms);
             }
 
@@ -625,7 +625,7 @@ public class DatasetVersion implements Serializable {
         this.setDatasetFields(this.initDatasetFields());
         TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
         terms.setDatasetVersion(this);
-        terms.setLicense(TermsOfUseAndAccess.License.CC0);
+        terms.setLicense(terms.getCC0());
         this.setTermsOfUseAndAccess(terms);
 
     }
@@ -1873,7 +1873,7 @@ public class DatasetVersion implements Serializable {
         if (terms != null) {
             JsonObjectBuilder license = Json.createObjectBuilder().add("@type", "Dataset");
             
-            if (TermsOfUseAndAccess.License.CC0.equals(terms.getLicense())) {
+            if (TermsOfUseAndAccess.License.CC0.toString().equals(terms.getLicense().getName())) {
                 license.add("text", "CC0").add("url", "https://creativecommons.org/publicdomain/zero/1.0/");
             } else {
                 String termsOfUse = terms.getTermsOfUse();

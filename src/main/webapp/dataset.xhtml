@@ -563,6 +563,18 @@
                                                         </td>
                                                     </tr>
                                                 </ui:repeat>
+                                                <tr>
+                                                    <th scope="row">
+                                                        #{bundle['file.dataFilesTab.terms.list.termsOfUse.waiver']}
+                                                        <span class="glyphicon glyphicon-question-sign tooltip-icon"
+                                                             data-toggle="tooltip" data-placement="auto right" data-original-title="#{bundle['file.dataFilesTab.terms.list.termsOfUse.waiver.title']}"></span>
+                                                    </th>
+                                                    <td>
+                                                        <ui:fragment rendered="#{DatasetPage.workingVersion.termsOfUseAndAccess.license == 'CC0'}">
+                                                            <p><img src="/resources/images/cc0.png" alt="#{bundle['file.cc0.icon.alttxt']}"/> #{bundle['file.dataFilesTab.terms.list.termsOfUse.waiver.txt']}</p>
+                                                        </ui:fragment>
+                                                    </td>
+                                                </tr>
                                             </tbody>
                                         </table>
                                     </div>

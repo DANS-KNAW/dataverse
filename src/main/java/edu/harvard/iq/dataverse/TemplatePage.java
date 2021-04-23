@@ -133,7 +133,7 @@ public class TemplatePage implements java.io.Serializable {
             } else {
                 TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
                 terms.setTemplate(template);
-                terms.setLicense(TermsOfUseAndAccess.License.CC0);
+                terms.setLicense(terms.getCC0());
                 template.setTermsOfUseAndAccess(terms);
             }
 
@@ -145,7 +145,7 @@ public class TemplatePage implements java.io.Serializable {
             template = new Template(this.dataverse);
             TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
             terms.setTemplate(template);
-            terms.setLicense(TermsOfUseAndAccess.License.CC0);
+            terms.setLicense(terms.getCC0());
             template.setTermsOfUseAndAccess(terms);
             updateDatasetFieldInputLevels();
         } else {

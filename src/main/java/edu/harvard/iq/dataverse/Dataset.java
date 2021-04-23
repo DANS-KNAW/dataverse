@@ -320,7 +320,7 @@ public class Dataset extends DvObjectContainer {
             } else {
                 TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
                 terms.setDatasetVersion(dsv);
-                terms.setLicense(TermsOfUseAndAccess.License.CC0);
+                terms.setLicense(terms.getCC0());
                 dsv.setTermsOfUseAndAccess(terms);
             }
 

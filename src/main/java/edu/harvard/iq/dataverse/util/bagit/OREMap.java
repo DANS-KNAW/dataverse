@@ -136,7 +136,7 @@ public class OREMap {
                 .add(JsonLDTerm.schemaOrg("dateModified").getLabel(), version.getLastUpdateTime().toString());
 
         TermsOfUseAndAccess terms = version.getTermsOfUseAndAccess();
-        if (terms.getLicense() == TermsOfUseAndAccess.License.CC0) {
+        if (terms.getLicense().equals(TermsOfUseAndAccess.License.CC0.toString())) {
             aggBuilder.add(JsonLDTerm.schemaOrg("license").getLabel(),
                     "https://creativecommons.org/publicdomain/zero/1.0/");
         } else {

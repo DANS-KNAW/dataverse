@@ -6,6 +6,8 @@
 package edu.harvard.iq.dataverse;
 
 import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -13,6 +15,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
 /**
@@ -57,10 +61,10 @@ public class TermsOfUseAndAccess implements Serializable {
         this.template = template;
     }
     
-    
-    @Enumerated(EnumType.STRING)
-    private TermsOfUseAndAccess.License license;
-    
+    @ManyToOne
+    @JoinColumn(name="license_id")
+    private edu.harvard.iq.dataverse.License license;
+
     @Column(columnDefinition="TEXT")      
     private String termsOfUse;
     
@@ -116,11 +120,11 @@ public class TermsOfUseAndAccess implements Serializable {
         this.fileAccessRequest = fileAccessRequest;
     }
     
-    public TermsOfUseAndAccess.License getLicense() {
+    public edu.harvard.iq.dataverse.License getLicense() {
         return license;
     }
 
-    public void setLicense(TermsOfUseAndAccess.License license) {
+    public void setLicense(edu.harvard.iq.dataverse.License license) {
         this.license = license;
     }
 
@@ -268,9 +272,25 @@ public class TermsOfUseAndAccess implements Serializable {
 
         return retVal;
     }
-
     
-        
+    public edu.harvard.iq.dataverse.License getCC0() {
+        try {
+            edu.harvard.iq.dataverse.License license = new edu.harvard.iq.dataverse.License("CC0", "", new URI("https://creativecommons.org/publicdomain/zero/1.0/"), new URI(""), true);
+            return license;
+        } catch (URISyntaxException e) {
+            return null;
+        }
+    }
+    
+    public edu.harvard.iq.dataverse.License getNone() {
+        try {
+            edu.harvard.iq.dataverse.License license = new edu.harvard.iq.dataverse.License("NONE", "", new URI("https://creativecommons.org/publicdomain/zero/1.0/"), new URI(""), true);
+            return license;
+        } catch (URISyntaxException e) {
+            return null;
+        }
+    }
+    
     public enum License {
         NONE, CC0
     }

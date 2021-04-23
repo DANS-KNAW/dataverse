@@ -70,6 +70,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Collection;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.faces.application.FacesMessage;
@@ -230,6 +231,8 @@ public class DatasetPage implements java.io.Serializable {
     @Inject
     MakeDataCountLoggingServiceBean mdcLogService;
     @Inject DataverseHeaderFragment dataverseHeaderFragment;
+    @Inject
+    LicenseServiceBean licenseServiceBean;
 
     private Dataset dataset = new Dataset();
     
@@ -282,6 +285,7 @@ public class DatasetPage implements java.io.Serializable {
     private List<SelectItem> linkingDVSelectItems;
     private Dataverse linkingDataverse;
     private Dataverse selectedHostDataverse;
+    private List<SelectItem> licenseSelectItems;
 
     public Dataverse getSelectedHostDataverse() {
         return selectedHostDataverse;
@@ -1188,6 +1192,14 @@ public class DatasetPage implements java.io.Serializable {
         this.linkingDataverseId = linkingDataverseId;
     }
 
+    public List<SelectItem> getLicenseSelectItems() {
+        return licenseSelectItems;
+    }
+
+    public void setLicenseSelectItems(List<SelectItem> licenseSelectItems) {
+        this.licenseSelectItems = licenseSelectItems;
+    }
+
 
     
     public void updateReleasedVersions(){
@@ -2010,7 +2022,9 @@ public class DatasetPage implements java.io.Serializable {
         previewTools = externalToolService.findFileToolsByType(ExternalTool.Type.PREVIEW);
         datasetExploreTools = externalToolService.findDatasetToolsByType(ExternalTool.Type.EXPLORE);
         rowsPerPage = 10;
-      
+        licenseSelectItems = licenseServiceBean.getAllNames().stream()
+                                                             .map(name -> new SelectItem(name, name))
+                                                             .collect(Collectors.toList());
         
         
         return null;

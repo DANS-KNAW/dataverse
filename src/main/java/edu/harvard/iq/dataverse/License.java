@@ -2,6 +2,7 @@ package edu.harvard.iq.dataverse;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -10,6 +11,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
@@ -26,7 +28,9 @@ import javax.persistence.UniqueConstraint;
     @NamedQuery( name="License.deleteById",
                 query="DELETE FROM License l WHERE l.id=:id"),
     @NamedQuery( name="License.deleteByName",
-                query="DELETE FROM License l WHERE l.name=:name")
+                query="DELETE FROM License l WHERE l.name=:name"),
+    @NamedQuery( name="License.findAllNames",
+                query="SELECT l.name FROM License l")
 })
 @Entity
 @Table(uniqueConstraints = {
@@ -53,6 +57,9 @@ public class License {
 
     @Column(nullable = false)
     private boolean active;
+    
+    @OneToMany(mappedBy="license")
+    private List<TermsOfUseAndAccess> termsOfUseAndAccess;
 
     public License() {
     }
@@ -119,6 +126,14 @@ public class License {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public List<TermsOfUseAndAccess> getTermsOfUseAndAccess() {
+        return termsOfUseAndAccess;
+    }
+
+    public void setTermsOfUseAndAccess(List<TermsOfUseAndAccess> termsOfUseAndAccess) {
+        this.termsOfUseAndAccess = termsOfUseAndAccess;
     }
 
     @Override
