@@ -10,8 +10,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -274,12 +272,11 @@ public class TermsOfUseAndAccess implements Serializable {
     }
     
     public edu.harvard.iq.dataverse.License getCC0() {
-        try {
-            edu.harvard.iq.dataverse.License license = new edu.harvard.iq.dataverse.License("CC0", "", new URI("https://creativecommons.org/publicdomain/zero/1.0/"), new URI(""), true);
-            return license;
-        } catch (URISyntaxException e) {
-            return null;
-        }
+        String shortDescription = "You can copy, modify, distribute and perform the work, even for commercial purposes, all without asking permission.";
+        URI uri = URI.create("https://creativecommons.org/publicdomain/zero/1.0/");
+        URI iconUrl = URI.create("https://www.researchgate.net/profile/Donat-Agosti/publication/51971424/figure/fig2/AS:203212943564807@1425461149299/Logo-of-the-CC-Zero-or-CC0-Public-Domain-Dedication-License-No-Rights-Reserved-CC.png");
+        edu.harvard.iq.dataverse.License license = new edu.harvard.iq.dataverse.License("CC0", shortDescription, uri, iconUrl, true);
+        return license;
     }
     
     public edu.harvard.iq.dataverse.License getNone() {
@@ -290,7 +287,7 @@ public class TermsOfUseAndAccess implements Serializable {
             return null;
         }
     }
-    
+
     public enum License {
         NONE, CC0
     }

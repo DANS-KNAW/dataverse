@@ -25,12 +25,12 @@ import javax.persistence.UniqueConstraint;
             query = "SELECT l FROM License l WHERE l.id=:id"),
     @NamedQuery( name="License.findByName",
             query = "SELECT l FROM License l WHERE l.name=:name"),
+    @NamedQuery( name="License.findDefault",
+            query = "SELECT l FROM License l WHERE l.name='CC0'"),
     @NamedQuery( name="License.deleteById",
                 query="DELETE FROM License l WHERE l.id=:id"),
     @NamedQuery( name="License.deleteByName",
-                query="DELETE FROM License l WHERE l.name=:name"),
-    @NamedQuery( name="License.findAllNames",
-                query="SELECT l.name FROM License l")
+                query="DELETE FROM License l WHERE l.name=:name")
 })
 @Entity
 @Table(uniqueConstraints = {

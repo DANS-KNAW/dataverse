@@ -7,17 +7,18 @@ import edu.harvard.iq.dataverse.DatasetFieldServiceBean;
 import edu.harvard.iq.dataverse.DatasetFieldType;
 import edu.harvard.iq.dataverse.DatasetVersion;
 import edu.harvard.iq.dataverse.License;
+import edu.harvard.iq.dataverse.LicenseServiceBean;
 import edu.harvard.iq.dataverse.TermsOfUseAndAccess;
 import edu.harvard.iq.dataverse.authorization.users.AuthenticatedUser;
 import edu.harvard.iq.dataverse.authorization.users.User;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import javax.inject.Named;
 import org.apache.commons.lang.StringUtils;
 import org.swordapp.server.SwordEntry;
@@ -31,6 +32,8 @@ public class SwordServiceBean {
 
     @EJB
     DatasetFieldServiceBean datasetFieldService;
+    @Inject
+    LicenseServiceBean licenseServiceBean;
 
     /**
      * Mutate the dataset version, adding a datasetContact (email address) from
@@ -152,7 +155,7 @@ public class SwordServiceBean {
                 // leave the license alone but set terms of use
                 setTermsOfUse(datasetVersionToMutate, dcterms, existingLicense.getName());
             } else {
-                License defaultLicense = terms.getCC0();
+                License defaultLicense = licenseServiceBean.getCC0();
                 List<String> listOfRights = dcterms.get("rights");
                 if (listOfRights != null) {
                     int numRightsProvided = listOfRights.size();

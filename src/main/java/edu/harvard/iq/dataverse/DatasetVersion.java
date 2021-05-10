@@ -551,7 +551,7 @@ public class DatasetVersion implements Serializable {
         return !this.fileMetadatas.get(0).getDataFile().getContentType().equals(DataFileServiceBean.MIME_TYPE_PACKAGE_FILE);
     }
 
-    public void updateDefaultValuesFromTemplate(Template template) {
+    public void updateDefaultValuesFromTemplate(Template template, edu.harvard.iq.dataverse.License license) {
         if (!template.getDatasetFields().isEmpty()) {
             this.setDatasetFields(this.copyDatasetFields(template.getDatasetFields()));
         }
@@ -562,13 +562,13 @@ public class DatasetVersion implements Serializable {
         } else {
             TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
             terms.setDatasetVersion(this);
-            terms.setLicense(terms.getCC0());
+            terms.setLicense(license);
             terms.setDatasetVersion(this);
             this.setTermsOfUseAndAccess(terms);
         }
     }
     
-    public DatasetVersion cloneDatasetVersion(){
+    public DatasetVersion cloneDatasetVersion(edu.harvard.iq.dataverse.License license){
         DatasetVersion dsv = new DatasetVersion();
         dsv.setVersionState(this.getPriorVersionState());
         dsv.setFileMetadatas(new ArrayList<>());
@@ -586,7 +586,7 @@ public class DatasetVersion implements Serializable {
             } else {
                 TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
                 terms.setDatasetVersion(dsv);
-                terms.setLicense(terms.getCC0());
+                terms.setLicense(license);
                 dsv.setTermsOfUseAndAccess(terms);
             }
 
@@ -618,14 +618,14 @@ public class DatasetVersion implements Serializable {
         
     }
 
-    public void initDefaultValues() {
+    public void initDefaultValues(edu.harvard.iq.dataverse.License license) {
         //first clear then initialize - in case values were present 
         // from template or user entry
         this.setDatasetFields(new ArrayList<>());
         this.setDatasetFields(this.initDatasetFields());
         TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
         terms.setDatasetVersion(this);
-        terms.setLicense(terms.getCC0());
+        terms.setLicense(license);
         this.setTermsOfUseAndAccess(terms);
 
     }

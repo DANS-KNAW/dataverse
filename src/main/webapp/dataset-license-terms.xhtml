@@ -38,23 +38,26 @@
                                        <h:outputText value="#{bundle['file.dataFilesTab.terms.list.termsOfUse.waiver.txt.description']}" escape="false"/>
                                    </p>
                                </ui:fragment>
-                               <ui:fragment rendered="#{empty editMode and termsOfUseAndAccess.license == 'NONE'}">
+                               <ui:fragment rendered="#{empty editMode and termsOfUseAndAccess.license == null}">
                                    <p><h:outputText value="#{bundle['file.dataFilesTab.terms.list.termsOfUse.no.waiver.txt']}" escape="false"/></p>
                                </ui:fragment>
                                <ui:fragment rendered="#{!empty editMode}">
                                    <p class="help-block"><h:outputText value="#{bundle['file.dataFilesTab.terms.list.termsOfUse.waiver.description']}" escape="false"/></p>
-                                   <p:selectOneMenu id="licenses" value="#{termsOfUseAndAccess.license.name}" style="width: 40%">
-                                       <f:selectItem itemLabel="#{bundle['license.custom']}" itemValue="Custom" />
+                                   <p:selectOneMenu id="licenses" value="#{DatasetPage.licenseId}" style="width: 40%">
+                                       <f:selectItem itemLabel="#{bundle['license.custom']}" itemValue="" />
                                        <f:selectItems value="#{DatasetPage.licenseSelectItems}" />
                                        <p:ajax update="touFragment" oncomplete="javascript:bind_bsui_components();" />
                                    </p:selectOneMenu>
                                </ui:fragment>
-                               <ui:fragment rendered="#{termsOfUseAndAccess.license == 'CC0'}">
-                                   <p><img src="/resources/images/cc0.png" alt="#{bundle['file.cc0.icon.alttxt']}" width="15%" height="15%"/> #{bundle['file.dataFilesTab.terms.list.termsOfUse.waiver.txt']}</p>
+                               <ui:fragment rendered="#{termsOfUseAndAccess.license != null}">
+                                   <p>
+                                       <img src="#{termsOfUseAndAccess.license.iconUrl}" alt="#{bundle['file.icon.alttxt']}" width="15%" height="15%"/>
+                                       <a href="#{termsOfUseAndAccess.license.uri}">#{termsOfUseAndAccess.license.name}</a>
+                                   </p>
                                </ui:fragment>
                            </div>
                        </div>
-                       <div class="form-group" jsf:rendered="#{termsOfUseAndAccess.license != 'CC0'}">
+                       <div class="form-group" jsf:rendered="#{DatasetPage.licenseId == null}">
                            <label for="metadata_TermsUse" class="col-sm-3 control-label">
                                #{bundle['file.dataFilesTab.terms.list.termsOfUse.termsOfUse']}
                                <span class="glyphicon glyphicon-question-sign tooltip-icon"
@@ -142,7 +145,7 @@
                                 </div>
                             </div>
                         </ui:fragment>
-                        <ui:fragment rendered="#{!empty editMode}">
+                        <ui:fragment rendered="#{!empty editMode and DatasetPage.licenseId == null}">
                             <div class="form-group">
                                 <label for="confidentialityDeclaration" class="col-sm-3 control-label">
                                     #{bundle['file.dataFilesTab.terms.list.termsOfUse.addInfo.declaration']}
