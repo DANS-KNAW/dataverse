@@ -570,8 +570,14 @@
                                                              data-toggle="tooltip" data-placement="auto right" data-original-title="#{bundle['file.dataFilesTab.terms.list.termsOfUse.waiver.title']}"></span>
                                                     </th>
                                                     <td>
-                                                        <ui:fragment rendered="#{DatasetPage.workingVersion.termsOfUseAndAccess.license == 'CC0'}">
-                                                            <p><img src="/resources/images/cc0.png" alt="#{bundle['file.cc0.icon.alttxt']}"/> #{bundle['file.dataFilesTab.terms.list.termsOfUse.waiver.txt']}</p>
+                                                        <ui:fragment rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.license}">
+                                                            <p>
+                                                                <img src="#{DatasetPage.workingVersion.termsOfUseAndAccess.license.iconUrl}" alt="#{bundle['file.icon.alttxt']}" width="15%" height="15%"/>
+                                                                <a href="#{DatasetPage.workingVersion.termsOfUseAndAccess.license.uri}">#{DatasetPage.workingVersion.termsOfUseAndAccess.license.name}</a>
+                                                            </p>
+                                                        </ui:fragment>
+                                                        <ui:fragment rendered="#{empty DatasetPage.workingVersion.termsOfUseAndAccess.license}">
+                                                            <p>Custom terms</p>
                                                         </ui:fragment>
                                                     </td>
                                                 </tr>
