@@ -37,10 +37,10 @@
                                                                    or (DatasetPage.workingVersion.deaccessioned and DatasetPage.canUpdateDataset()))}"/>
             <!-- TO-DO FIX RSYNC LOGIC !fileMetadata.dataFile.filePackage or
                                                     fileMetadata.dataFile.filePackage and systemConfig.HTTPDownload -->
-            <ui:param name="showAccessFileButtonGroup" value="#{fileDownloadHelper.canDownloadFile(fileMetadata)
-                                                                or (!fileDownloadHelper.canDownloadFile(fileMetadata) and DatasetPage.dataset.fileAccessRequest)
-                                                                and (!DatasetPage.workingVersion.deaccessioned
-                                                                or (DatasetPage.workingVersion.deaccessioned and permissionsWrapper.canIssueUpdateDatasetCommand(FilePage.fileMetadata.datasetVersion.dataset)))}"/>
+            <!-- NOTE removed fileAccessRequest logic in order to always display the file access btn -->
+            <ui:param name="showAccessFileButtonGroup" value="#{!DatasetPage.workingVersion.deaccessioned
+                                                                or (DatasetPage.workingVersion.deaccessioned
+                                                                and permissionsWrapper.canIssueUpdateDatasetCommand(FilePage.fileMetadata.datasetVersion.dataset))}"/>
             <ui:param name="publishDataset" value="#{DatasetPage.publishDatasetPopup()}"/>
             <ui:param name="releaseDraft" value="#{DatasetPage.releaseDraftPopup()}"/>
             <ui:param name="releaseBoth" value="#{DatasetPage.publishBothPopup()}"/>
@@ -577,7 +577,7 @@
                                                             </p>
                                                         </ui:fragment>
                                                         <ui:fragment rendered="#{empty DatasetPage.workingVersion.termsOfUseAndAccess.license}">
-                                                            <p>Custom terms</p>
+                                                            <p>#{bundle['license.custom']}</p>
                                                         </ui:fragment>
                                                     </td>
                                                 </tr>
@@ -1542,10 +1542,11 @@
                     </p:dialog>
                     <!-- Publish/Submit for Review Dialogs -->
                     <p:dialog id="publishDataset" width="70%" header="#{bundle['dataset.publish.header']}" widgetVar="publishDataset" modal="true">
-                        <ui:fragment  rendered="#{publishDataset}">
-                            <p class="text-warning">
-                                <span class="glyphicon glyphicon-warning-sign"/> #{bundle['dataset.publish.tip']}
-                            </p>
+                        <ui:fragment rendered="#{publishDataset}">
+                            <div class="form-group">
+                                <p class="col-sm-12 text-warning">#{bundle['dataset.publish.tip']}</p>
+                                <p class="col-sm-12 help-block">#{bundle['dataset.publish.terms.tip']}</p>
+                            </div>
                         </ui:fragment>
                         <ui:fragment rendered="#{releaseBoth}">
                             <p class="text-warning">
@@ -1566,9 +1567,11 @@
                             </p>
                         </ui:fragment>
                         <ui:fragment rendered="#{releaseBoth}">
-                            <p class="help-block">
-                                #{bundle['dataset.publishBoth.tip']}
-                            </p>
+                            <div class="form-group">
+                                <p class="help-block">
+                                    #{bundle['dataset.publishBoth.tip']}
+                                </p>
+                            </div>
                         </ui:fragment>
                         <div class="well terms-agreement-block" jsf:rendered="#{DatasetPage.displayPublishPopupCustomText}">
                             <h:outputText value="#{DatasetPage.datasetPublishCustomText}" escape="false"/>
@@ -1591,6 +1594,97 @@
                                     <f:param value="#{DatasetPage.datasetNextMajorVersion}"/>
                                 </h:outputFormat>
                             </p>
+                        </ui:fragment>
+                        <!-- START license info -->
+                        <div class="form-group">
+                            <div class="form-group">
+                                <label for="metadata_Terms" class="col-sm-3 control-label">
+                                    #{bundle['file.dataFilesTab.terms.list.termsOfUse.waiver']}
+                                </label>
+                                <div class="col-sm-9">
+                                    <ui:fragment rendered="#{empty DatasetPage.workingVersion.termsOfUseAndAccess.license}">
+                                        <p>#{bundle['license.custom']}</p>
+                                    </ui:fragment>
+                                    <ui:fragment rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.license}">
+                                        <p>
+                                            <img src="#{DatasetPage.workingVersion.termsOfUseAndAccess.license.iconUrl}" alt="#{bundle['file.icon.alttxt']}" width="15%" height="15%"/>
+                                            <a href="#{DatasetPage.workingVersion.termsOfUseAndAccess.license.uri}">#{DatasetPage.workingVersion.termsOfUseAndAccess.license.name}</a>
+                                        </p>
+                                    </ui:fragment>
+                                </div>
+                            </div>
+                            <ui:fragment rendered="#{empty DatasetPage.workingVersion.termsOfUseAndAccess.license}">
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.termsOfUse}">
+                                    <label for="metadata_TermsUse" class="col-sm-3 control-label">
+                                        #{bundle['file.dataFilesTab.terms.list.termsOfUse.termsOfUse']}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        <p:inputTextarea value="#{MarkupChecker:sanitizeBasicHTML(DatasetPage.workingVersion.termsOfUseAndAccess.termsOfUse)}" readonly="true" rows="3" styleClass="form-control"/>
+                                   </div>
+                                </div>
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.confidentialityDeclaration}">
+                                    <label for="confidentialityDeclaration" class="col-sm-3 control-label">
+                                        #{bundle['file.dataFilesTab.terms.list.termsOfUse.addInfo.declaration']}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        <p:inputTextarea value="#{MarkupChecker:sanitizeBasicHTML(DatasetPage.workingVersion.termsOfUseAndAccess.confidentialityDeclaration)}" readonly="true" rows="3" styleClass="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.specialPermissions}">
+                                    <label for="specialPermissions" class="col-sm-3 control-label">
+                                        #{bundle['file.dataFilesTab.terms.list.termsOfUse.addInfo.permissions']}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        <p:inputTextarea value="#{MarkupChecker:sanitizeBasicHTML(DatasetPage.workingVersion.termsOfUseAndAccess.specialPermissions)}" readonly="true" rows="3" styleClass="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.restrictions}">
+                                    <label for="restrictions" class="col-sm-3 control-label">
+                                        #{bundle['file.dataFilesTab.terms.list.termsOfUse.addInfo.restrictions']}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        <p:inputTextarea value="#{MarkupChecker:sanitizeBasicHTML(DatasetPage.workingVersion.termsOfUseAndAccess.restrictions)}" readonly="true" rows="3" styleClass="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.citationRequirements}">
+                                    <label for="citationRequirements" class="col-sm-3 control-label">
+                                        #{bundle['file.dataFilesTab.terms.list.termsOfUse.addInfo.citationRequirements']}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        <p:inputTextarea value="#{MarkupChecker:sanitizeBasicHTML(DatasetPage.workingVersion.termsOfUseAndAccess.citationRequirements)}" readonly="true" rows="3" styleClass="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.depositorRequirements}">
+                                    <label for="depositorRequirements" class="col-sm-3 control-label">
+                                        #{bundle['file.dataFilesTab.terms.list.termsOfUse.addInfo.depositorRequirements']}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        <p:inputTextarea value="#{MarkupChecker:sanitizeBasicHTML(DatasetPage.workingVersion.termsOfUseAndAccess.depositorRequirements)}" readonly="true" rows="3" styleClass="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.conditions}">
+                                    <label for="conditions" class="col-sm-3 control-label">
+                                        #{bundle['file.dataFilesTab.terms.list.termsOfUse.addInfo.conditions']}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        <p:inputTextarea value="#{MarkupChecker:sanitizeBasicHTML(DatasetPage.workingVersion.termsOfUseAndAccess.conditions)}" readonly="true" rows="3" styleClass="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.disclaimer}">
+                                    <label for="disclaimer" class="col-sm-3 control-label">
+                                        #{bundle['file.dataFilesTab.terms.list.termsOfUse.addInfo.disclaimer']}
+                                    </label>
+                                    <div class="col-sm-9">
+                                        <p:inputTextarea value="#{MarkupChecker:sanitizeBasicHTML(DatasetPage.workingVersion.termsOfUseAndAccess.disclaimer)}" readonly="true" rows="3" styleClass="form-control"/>
+                                    </div>
+                                </div>
+                            </ui:fragment>
+                        </div>
+                        <!-- END license info -->
+                        <ui:fragment  rendered="#{publishDataset}">
+                            <div class="form-group">
+                                <p class="col-sm-12 help-block">#{bundle['dataset.publish.terms.help.tip']}</p>
+                            </div>
                         </ui:fragment>
                         <div class="button-block">
                             <p:commandButton styleClass="btn btn-default" value="#{bundle.continue}" 

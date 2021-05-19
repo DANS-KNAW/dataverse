@@ -27,6 +27,8 @@ import javax.persistence.UniqueConstraint;
             query = "SELECT l FROM License l WHERE l.name=:name"),
     @NamedQuery( name="License.findDefault",
             query = "SELECT l FROM License l WHERE l.name='CC0'"),
+    @NamedQuery( name="License.findByNameOrUri",
+            query = "SELECT l FROM License l WHERE l.name=:name OR l.uri=:uri"),
     @NamedQuery( name="License.deleteById",
                 query="DELETE FROM License l WHERE l.id=:id"),
     @NamedQuery( name="License.deleteByName",

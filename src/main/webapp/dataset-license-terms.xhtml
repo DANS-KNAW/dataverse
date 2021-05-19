@@ -59,7 +59,7 @@
                        </div>
 
                        <!-- Additional Information -->
-                        <ui:fragment rendered="#{empty editMode}">
+                        <ui:fragment rendered="#{empty editMode and empty termsOfUseAndAccess.license}">
                             <div class="form-group" jsf:rendered="#{!empty termsOfUseAndAccess.termsOfUse}">
                                 <label for="metadata_TermsUse" class="col-sm-3 control-label">
                                     #{bundle['file.dataFilesTab.terms.list.termsOfUse.termsOfUse']}
