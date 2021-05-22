@@ -279,24 +279,11 @@ public class TermsOfUseAndAccess implements Serializable {
         return license;
     }
     
-    public edu.harvard.iq.dataverse.License getNone() {
-        try {
-            edu.harvard.iq.dataverse.License license = new edu.harvard.iq.dataverse.License("NONE", "", new URI("https://creativecommons.org/publicdomain/zero/1.0/"), new URI(""), true);
-            return license;
-        } catch (URISyntaxException e) {
-            return null;
-        }
-    }
-
-    public enum License {
-        NONE, CC0
-    }
-    
-        /**
+    /**
      * @todo What does the GUI use for a default license? What does the "native"
      * API use? See also https://github.com/IQSS/dataverse/issues/1385
      */
-    public static TermsOfUseAndAccess.License defaultLicense = TermsOfUseAndAccess.License.CC0;
+    public static String defaultLicense = "CC0";
 
     @Override
     public int hashCode() {

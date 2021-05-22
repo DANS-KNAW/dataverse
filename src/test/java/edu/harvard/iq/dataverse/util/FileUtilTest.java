@@ -152,7 +152,7 @@ public class FileUtilTest {
             DatasetVersion dsv1 = new DatasetVersion();
             dsv1.setVersionState(DatasetVersion.VersionState.RELEASED);
             TermsOfUseAndAccess termsOfUseAndAccess = new TermsOfUseAndAccess();
-            termsOfUseAndAccess.setLicense(termsOfUseAndAccess.getNone());
+            termsOfUseAndAccess.setLicense(null);
             termsOfUseAndAccess.setTermsOfUse("be excellent to each other");
             dsv1.setTermsOfUseAndAccess(termsOfUseAndAccess);
             assertEquals(true, FileUtil.isDownloadPopupRequired(dsv1));

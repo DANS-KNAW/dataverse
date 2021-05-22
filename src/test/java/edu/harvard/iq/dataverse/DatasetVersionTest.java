@@ -175,7 +175,7 @@ public class DatasetVersionTest {
         dataset.setOwner(dataverse);
 
         TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
-        terms.setLicense(terms.getNone());
+        terms.setLicense(null);
         terms.setTermsOfUse("Call me maybe");
         datasetVersion.setTermsOfUseAndAccess(terms);
 

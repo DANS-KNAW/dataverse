@@ -163,12 +163,11 @@ public class SwordServiceBean {
                         throw new SwordError("Only one Terms of Use (dcterms:rights) can be provided per dataset, not " + numRightsProvided);
                     } else {
                         // Set to NONE for backwards combatibility. We didn't require a license for SWORD in DVN 3.x.
-                        defaultLicense = terms.getNone();
+                        defaultLicense = null;
                     }
                 }
-                terms.setLicense(existingLicense);
-                terms.setLicense(defaultLicense);
-                setTermsOfUse(datasetVersionToMutate, dcterms, defaultLicense.toString());
+                terms.setLicense(null);
+                setTermsOfUse(datasetVersionToMutate, dcterms, "NONE");
             }
             return;
         }
@@ -191,7 +190,7 @@ public class SwordServiceBean {
     }
 
     private void setTermsOfUse(DatasetVersion datasetVersionToMutate, Map<String, List<String>> dcterms, String providedLicense) throws SwordError {
-        if (providedLicense.equals(TermsOfUseAndAccess.License.CC0.toString())) {
+        if (providedLicense.equals(TermsOfUseAndAccess.defaultLicense)) {
             String existingTermsOfUse = datasetVersionToMutate.getTermsOfUseAndAccess().getTermsOfUse();
             if (existingTermsOfUse != null) {
                 throw new SwordError("Can not change license to \"" + DatasetVersion.License.CC0 + "\" due to existing Terms of Use (dcterms:rights): \"" + existingTermsOfUse + "\". You can specify a license of \"" + DatasetVersion.License.NONE + "\'.");
@@ -202,7 +201,7 @@ public class SwordServiceBean {
             int numRightsProvided = listOfRightsProvided.size();
             if (providedLicense.equals(DatasetVersion.License.CC0.toString())) {
                 if (numRightsProvided > 0) {
-                    throw new SwordError("Terms of Use (dcterms:rights) can not be specified in combination with the license \"" + TermsOfUseAndAccess.License.CC0 + "\". A license of \"" + TermsOfUseAndAccess.License.NONE + "\" can be used instead.");
+                    throw new SwordError("Terms of Use (dcterms:rights) can not be specified in combination with the license \"CC0\". A license of \"NONE\" can be used instead.");
                 }
             } else {
                 if (numRightsProvided != 1) {
