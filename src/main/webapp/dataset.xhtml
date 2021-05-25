@@ -1614,7 +1614,7 @@
                                 </div>
                             </div>
                             <ui:fragment rendered="#{empty DatasetPage.workingVersion.termsOfUseAndAccess.license}">
-                                <div class="form-group">
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.termsOfUse}">
                                     <label for="metadata_TermsUse" class="col-sm-3 control-label">
                                         #{bundle['file.dataFilesTab.terms.list.termsOfUse.termsOfUse']}
                                     </label>
@@ -1622,7 +1622,7 @@
                                         <p:inputTextarea value="#{MarkupChecker:sanitizeBasicHTML(DatasetPage.workingVersion.termsOfUseAndAccess.termsOfUse)}" readonly="true" rows="3" styleClass="form-control"/>
                                    </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.confidentialityDeclaration}">
                                     <label for="confidentialityDeclaration" class="col-sm-3 control-label">
                                         #{bundle['file.dataFilesTab.terms.list.termsOfUse.addInfo.declaration']}
                                     </label>
@@ -1630,7 +1630,7 @@
                                         <p:inputTextarea value="#{MarkupChecker:sanitizeBasicHTML(DatasetPage.workingVersion.termsOfUseAndAccess.confidentialityDeclaration)}" readonly="true" rows="3" styleClass="form-control"/>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.specialPermissions}">
                                     <label for="specialPermissions" class="col-sm-3 control-label">
                                         #{bundle['file.dataFilesTab.terms.list.termsOfUse.addInfo.permissions']}
                                     </label>
@@ -1638,7 +1638,7 @@
                                         <p:inputTextarea value="#{MarkupChecker:sanitizeBasicHTML(DatasetPage.workingVersion.termsOfUseAndAccess.specialPermissions)}" readonly="true" rows="3" styleClass="form-control"/>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.restrictions}">
                                     <label for="restrictions" class="col-sm-3 control-label">
                                         #{bundle['file.dataFilesTab.terms.list.termsOfUse.addInfo.restrictions']}
                                     </label>
@@ -1646,7 +1646,7 @@
                                         <p:inputTextarea value="#{MarkupChecker:sanitizeBasicHTML(DatasetPage.workingVersion.termsOfUseAndAccess.restrictions)}" readonly="true" rows="3" styleClass="form-control"/>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.citationRequirements}">
                                     <label for="citationRequirements" class="col-sm-3 control-label">
                                         #{bundle['file.dataFilesTab.terms.list.termsOfUse.addInfo.citationRequirements']}
                                     </label>
@@ -1654,7 +1654,7 @@
                                         <p:inputTextarea value="#{MarkupChecker:sanitizeBasicHTML(DatasetPage.workingVersion.termsOfUseAndAccess.citationRequirements)}" readonly="true" rows="3" styleClass="form-control"/>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.depositorRequirements}">
                                     <label for="depositorRequirements" class="col-sm-3 control-label">
                                         #{bundle['file.dataFilesTab.terms.list.termsOfUse.addInfo.depositorRequirements']}
                                     </label>
@@ -1662,7 +1662,7 @@
                                         <p:inputTextarea value="#{MarkupChecker:sanitizeBasicHTML(DatasetPage.workingVersion.termsOfUseAndAccess.depositorRequirements)}" readonly="true" rows="3" styleClass="form-control"/>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.conditions}">
                                     <label for="conditions" class="col-sm-3 control-label">
                                         #{bundle['file.dataFilesTab.terms.list.termsOfUse.addInfo.conditions']}
                                     </label>
@@ -1670,7 +1670,7 @@
                                         <p:inputTextarea value="#{MarkupChecker:sanitizeBasicHTML(DatasetPage.workingVersion.termsOfUseAndAccess.conditions)}" readonly="true" rows="3" styleClass="form-control"/>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" jsf:rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.disclaimer}">
                                     <label for="disclaimer" class="col-sm-3 control-label">
                                         #{bundle['file.dataFilesTab.terms.list.termsOfUse.addInfo.disclaimer']}
                                     </label>
