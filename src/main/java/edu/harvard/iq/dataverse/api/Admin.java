@@ -2029,7 +2029,7 @@ public class Admin extends AbstractApiBean {
             if (result == 1) {
                 return ok("OK. License with ID " + id + " was deleted.");
             }
-            return error(Response.Status.NOT_FOUND, "A license with ID " + id + " doesn't exist.");
+            return error(Response.Status.NOT_FOUND, "License with ID " + id + " not found");
         } catch(ConflictException e) {
             return error(Response.Status.CONFLICT, e.getMessage());
         }
