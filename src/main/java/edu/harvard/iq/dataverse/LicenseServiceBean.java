@@ -49,20 +49,25 @@ public class LicenseServiceBean {
         return licenses.get(0);
     }
 
-    public License getByName(String name) throws FetchException {
-        List<License> licenses = em.createNamedQuery("License.findByName", License.class)
-                .setParameter("name", name )
-                .getResultList();
-        if (licenses.isEmpty()) {
-            throw new FetchException("License with that name doesn't exist.");
-        }
-        return licenses.get(0);
-    }
-
     public License getDefault() {
         List<License> licenses = em.createNamedQuery("License.findDefault", License.class)
                 .getResultList();
         return licenses.get(0);
+    }
+
+    public void setDefault(Long id) throws UpdateException, FetchException {
+        License candidate = getById(id);
+        if (candidate.isActive()) {
+            try {
+                em.createNamedQuery("License.clearDefault");
+                em.createNamedQuery("License.setDefault").setParameter("id", id);
+            }
+            catch (PersistenceException e) {
+                throw new UpdateException("Could not change default license");
+            }
+        }
+        else
+            throw new IllegalArgumentException("Cannot set an inactive license as default");
     }
 
     public License save(License license) throws RequestBodyException, ConflictException {
