@@ -63,7 +63,7 @@ public class LicenseServiceBean {
                 em.createNamedQuery("License.setDefault").setParameter("id", id);
             }
             catch (PersistenceException e) {
-                throw new UpdateException("Could not change default license");
+                throw new UpdateException("Inactive license cannot be default.");
             }
         }
         else

@@ -34,9 +34,9 @@ import java.util.Objects;
     @NamedQuery( name="License.deleteByName",
             query = "DELETE FROM License l WHERE l.name=:name"),
     @NamedQuery( name="License.setDefault",
-            query = "UPDATE License l SET isDefault='true' WHERE l.id=:id"),
+            query = "UPDATE License l SET l.isDefault='true' WHERE l.id=:id"),
     @NamedQuery( name="License.clearDefault",
-                query = "UPDATE License SET isDefault='false'"),
+                query = "UPDATE License l SET l.isDefault='false'"),
 
 })
 @Entity
