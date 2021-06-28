@@ -59,8 +59,8 @@ public class LicenseServiceBean {
         License candidate = getById(id);
         if (candidate.isActive()) {
             try {
-                em.createNamedQuery("License.clearDefault");
-                em.createNamedQuery("License.setDefault").setParameter("id", id);
+                em.createNamedQuery("License.clearDefault").executeUpdate();
+                em.createNamedQuery("License.setDefault").setParameter("id", id).executeUpdate();
             }
             catch (PersistenceException e) {
                 throw new UpdateException("Inactive license cannot be default.");
