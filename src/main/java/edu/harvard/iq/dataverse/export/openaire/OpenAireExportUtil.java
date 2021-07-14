@@ -1136,6 +1136,7 @@ public class OpenAireExportUtil {
         writeRightsHeader(xmlw, language);
         if (StringUtils.isNotBlank(datasetVersionDTO.getLicense())) {
             if (StringUtils.containsIgnoreCase(datasetVersionDTO.getLicense(), "cc0")) {
+// TODO: FIX FOR MULTI-LICENSE
 //                xmlw.writeAttribute("rightsURI", TermsOfUseAndAccess.CC0_URI);
 //                if (StringUtils.isNotBlank(datasetVersionDTO.getTermsOfUse())) {
 //                    xmlw.writeCharacters(datasetVersionDTO.getTermsOfUse());

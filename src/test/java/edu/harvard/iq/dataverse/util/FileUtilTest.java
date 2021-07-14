@@ -122,6 +122,7 @@ public class FileUtilTest {
             assertEquals(false, FileUtil.isDownloadPopupRequired(dsv1));
         }
 
+        // TODO: FIX FOR MULTI-LICENSE
         @Test
         @Ignore
         public void testIsDownloadPopupRequiredLicenseCC0() {
@@ -133,6 +134,7 @@ public class FileUtilTest {
             assertEquals(false, FileUtil.isDownloadPopupRequired(dsv1));
         }
 
+        // TODO: FIX FOR MULTI-LICENSE
         @Test
         @Ignore
         public void testIsDownloadPopupRequiredHasTermsOfUseAndCc0License() {

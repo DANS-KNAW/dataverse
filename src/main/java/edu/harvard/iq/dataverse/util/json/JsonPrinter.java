@@ -402,7 +402,8 @@ public class JsonPrinter {
 
         return bld;
     }
-    
+
+// TODO: FIX FOR MULTI-LICENSE
 //    private static String getLicenseInfo(DatasetVersion dsv) {
 //        if (dsv.getTermsOfUseAndAccess().getLicense() != null && dsv.getTermsOfUseAndAccess().getLicense().getName().equals(TermsOfUseAndAccess.defaultLicense)) {
 //            return "CC0 Waiver";

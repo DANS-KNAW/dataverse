@@ -1868,7 +1868,8 @@ public class DatasetVersion implements Serializable {
         TermsOfUseAndAccess terms = this.getTermsOfUseAndAccess();
         if (terms != null) {
             JsonObjectBuilder license = Json.createObjectBuilder().add("@type", "Dataset");
-            
+
+// TODO: FIX FOR MULTI-LICENSE (CHECK IF THIS SOLUTION IS OK)
             if (terms.getLicense() != null) {
                 license.add("text", terms.getLicense().getName()).add("url", terms.getLicense().getUri().toString());
             } else {

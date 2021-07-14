@@ -189,6 +189,7 @@ public class SwordServiceBean {
 
     }
 
+    // TODO: FIX FOR MULTI-LICENSE
     private void setTermsOfUse(DatasetVersion datasetVersionToMutate, Map<String, List<String>> dcterms, String providedLicense) throws SwordError {
 //        if (providedLicense.equals(TermsOfUseAndAccess.defaultLicense)) {
 //            String existingTermsOfUse = datasetVersionToMutate.getTermsOfUseAndAccess().getTermsOfUse();

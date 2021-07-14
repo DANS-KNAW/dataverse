@@ -888,6 +888,7 @@ public class OpenAireExportUtilTest {
      * @throws javax.xml.stream.XMLStreamException
      * @throws java.io.FileNotFoundException
      */
+    // TODO: FIX FOR MULTI-LICENSE
     @Test
     @Ignore
     public void testWriteAccessRightElement() throws XMLStreamException, FileNotFoundException {
