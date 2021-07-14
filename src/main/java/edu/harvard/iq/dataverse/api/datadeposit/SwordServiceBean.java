@@ -190,12 +190,12 @@ public class SwordServiceBean {
     }
 
     private void setTermsOfUse(DatasetVersion datasetVersionToMutate, Map<String, List<String>> dcterms, String providedLicense) throws SwordError {
-        if (providedLicense.equals(TermsOfUseAndAccess.defaultLicense)) {
-            String existingTermsOfUse = datasetVersionToMutate.getTermsOfUseAndAccess().getTermsOfUse();
-            if (existingTermsOfUse != null) {
-                throw new SwordError("Can not change license to \"" + DatasetVersion.License.CC0 + "\" due to existing Terms of Use (dcterms:rights): \"" + existingTermsOfUse + "\". You can specify a license of \"" + DatasetVersion.License.NONE + "\'.");
-            }
-        }
+//        if (providedLicense.equals(TermsOfUseAndAccess.defaultLicense)) {
+//            String existingTermsOfUse = datasetVersionToMutate.getTermsOfUseAndAccess().getTermsOfUse();
+//            if (existingTermsOfUse != null) {
+//                throw new SwordError("Can not change license to \"" + DatasetVersion.License.CC0 + "\" due to existing Terms of Use (dcterms:rights): \"" + existingTermsOfUse + "\". You can specify a license of \"" + DatasetVersion.License.NONE + "\'.");
+//            }
+//        }
         List<String> listOfRightsProvided = dcterms.get("rights");
         if (listOfRightsProvided != null) {
             int numRightsProvided = listOfRightsProvided.size();

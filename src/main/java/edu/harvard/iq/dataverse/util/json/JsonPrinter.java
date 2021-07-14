@@ -403,12 +403,12 @@ public class JsonPrinter {
         return bld;
     }
     
-    private static String getLicenseInfo(DatasetVersion dsv) {
-        if (dsv.getTermsOfUseAndAccess().getLicense() != null && dsv.getTermsOfUseAndAccess().getLicense().getName().equals(TermsOfUseAndAccess.defaultLicense)) {
-            return "CC0 Waiver";
-        }
-        return dsv.getTermsOfUseAndAccess().getTermsOfUse();
-    }
+//    private static String getLicenseInfo(DatasetVersion dsv) {
+//        if (dsv.getTermsOfUseAndAccess().getLicense() != null && dsv.getTermsOfUseAndAccess().getLicense().getName().equals(TermsOfUseAndAccess.defaultLicense)) {
+//            return "CC0 Waiver";
+//        }
+//        return dsv.getTermsOfUseAndAccess().getTermsOfUse();
+//    }
 
     /**
      * Export formats such as DDI require the citation to be included. See
