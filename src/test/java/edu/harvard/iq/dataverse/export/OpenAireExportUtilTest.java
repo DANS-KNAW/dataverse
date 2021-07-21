@@ -888,9 +888,7 @@ public class OpenAireExportUtilTest {
      * @throws javax.xml.stream.XMLStreamException
      * @throws java.io.FileNotFoundException
      */
-    // TODO: FIX FOR MULTI-LICENSE
     @Test
-    @Ignore
     public void testWriteAccessRightElement() throws XMLStreamException, FileNotFoundException {
         System.out.println("writeAccessRightElement");
         XMLOutputFactory f = XMLOutputFactory.newInstance();
@@ -906,8 +904,8 @@ public class OpenAireExportUtilTest {
         xmlw.close();
         Assert.assertEquals("<rightsList>"
                 + "<rights rightsURI=\"info:eu-repo/semantics/closedAccess\" />"
-                + "<rights rightsURI=\"https://creativecommons.org/publicdomain/zero/1.0/\">"
-                + "CC0 Waiver</rights></rightsList>",
+                + "<rights rightsURI=\"https://creativecommons.org/publicdomain/zero/1.0/\" />"
+                + "</rightsList>",
                 sw.toString());
     }
 
