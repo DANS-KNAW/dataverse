@@ -1137,9 +1137,7 @@ public class OpenAireExportUtil {
         if (datasetVersionDTO.getLicense() != null) {
             if (!StringUtils.containsIgnoreCase(datasetVersionDTO.getLicense().getLabel(), "custom")) {
                 xmlw.writeAttribute("rightsURI", datasetVersionDTO.getLicense().getUri());
-                if (StringUtils.isNotBlank(datasetVersionDTO.getTermsOfUse())) {
-                    xmlw.writeCharacters(datasetVersionDTO.getTermsOfUse());
-                }
+                xmlw.writeCharacters(datasetVersionDTO.getLicense().getLabel());
             } else if (StringUtils.isNotBlank(datasetVersionDTO.getTermsOfUse())) {
                 if (StringUtils.startsWithIgnoreCase(datasetVersionDTO.getTermsOfUse().trim(), "http")) {
                     xmlw.writeAttribute("rightsURI", datasetVersionDTO.getTermsOfUse());
