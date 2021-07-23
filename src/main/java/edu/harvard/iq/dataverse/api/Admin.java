@@ -2041,7 +2041,7 @@ public class Admin extends AbstractApiBean {
 			        return error(Status.CONFLICT, "Please make sure the license is not the default before deleting it. ");
 		        }
 	        } catch (FetchException e) {
-		        return error(Response.Status.BAD_REQUEST, e.getMessage());
+		        return error(Status.NOT_FOUND, e.getMessage());
 	        }
 	        int result = licenseService.deleteById(id);
             if (result == 1) {
