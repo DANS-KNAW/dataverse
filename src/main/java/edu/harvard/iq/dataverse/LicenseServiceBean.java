@@ -49,6 +49,16 @@ public class LicenseServiceBean {
         return licenses.get(0);
     }
 
+    public License getByName(String licenseName) throws FetchException{
+        License license = em.createNamedQuery("License.findByName", License.class)
+                .setParameter("name", licenseName)
+                .getSingleResult();
+        if (license == null || !license.isActive()){
+                throw new FetchException("Couldn't find an active license with that name");
+        }
+        return license;
+    }
+
     public License getDefault() {
         List<License> licenses = em.createNamedQuery("License.findDefault", License.class)
                 .getResultList();
