@@ -19,6 +19,7 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
@@ -31,12 +32,6 @@ import javax.json.JsonValue.ValueType;
 import javax.json.stream.JsonGenerator;
 import javax.ws.rs.BadRequestException;
 
-import org.apache.commons.lang3.StringUtils;
-
-import com.apicatalog.jsonld.JsonLd;
-import com.apicatalog.jsonld.api.JsonLdError;
-import com.apicatalog.jsonld.document.JsonDocument;
-
 import edu.harvard.iq.dataverse.ControlledVocabularyValue;
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetField;
@@ -48,7 +43,16 @@ import edu.harvard.iq.dataverse.DatasetVersion;
 import edu.harvard.iq.dataverse.GlobalId;
 import edu.harvard.iq.dataverse.MetadataBlock;
 import edu.harvard.iq.dataverse.MetadataBlockServiceBean;
+import edu.harvard.iq.dataverse.License;
+import edu.harvard.iq.dataverse.LicenseServiceBean;
 import edu.harvard.iq.dataverse.TermsOfUseAndAccess;
+import edu.harvard.iq.dataverse.api.FetchException;
+import org.apache.commons.lang3.StringUtils;
+
+import com.apicatalog.jsonld.JsonLd;
+import com.apicatalog.jsonld.api.JsonLdError;
+import com.apicatalog.jsonld.document.JsonDocument;
+
 import edu.harvard.iq.dataverse.DatasetVersion.VersionState;
 import edu.harvard.iq.dataverse.util.bagit.OREMap;
 
@@ -74,7 +78,7 @@ public class JSONLDUtil {
     }
 
     public static Dataset updateDatasetMDFromJsonLD(Dataset ds, String jsonLDBody,
-            MetadataBlockServiceBean metadataBlockSvc, DatasetFieldServiceBean datasetFieldSvc, boolean append, boolean migrating) {
+                                                    MetadataBlockServiceBean metadataBlockSvc, DatasetFieldServiceBean datasetFieldSvc, boolean append, boolean migrating, LicenseServiceBean licenseSvc) {
 
         DatasetVersion dsv = new DatasetVersion();
 
@@ -95,7 +99,7 @@ public class JSONLDUtil {
             }
         }
 
-        dsv = updateDatasetVersionMDFromJsonLD(dsv, jsonld, metadataBlockSvc, datasetFieldSvc, append, migrating);
+        dsv = updateDatasetVersionMDFromJsonLD(dsv, jsonld, metadataBlockSvc, datasetFieldSvc, append, migrating, licenseSvc);
         dsv.setDataset(ds);
 
         List<DatasetVersion> versions = new ArrayList<>(1);
@@ -125,9 +129,9 @@ public class JSONLDUtil {
     }
 
     public static DatasetVersion updateDatasetVersionMDFromJsonLD(DatasetVersion dsv, String jsonLDBody,
-            MetadataBlockServiceBean metadataBlockSvc, DatasetFieldServiceBean datasetFieldSvc, boolean append, boolean migrating) {
+            MetadataBlockServiceBean metadataBlockSvc, DatasetFieldServiceBean datasetFieldSvc, boolean append, boolean migrating, LicenseServiceBean licenseSvc) {
         JsonObject jsonld = decontextualizeJsonLD(jsonLDBody);
-        return updateDatasetVersionMDFromJsonLD(dsv, jsonld, metadataBlockSvc, datasetFieldSvc, append, migrating);
+        return updateDatasetVersionMDFromJsonLD(dsv, jsonld, metadataBlockSvc, datasetFieldSvc, append, migrating, licenseSvc);
     }
 
     /**
@@ -143,7 +147,7 @@ public class JSONLDUtil {
      * @return
      */
     public static DatasetVersion updateDatasetVersionMDFromJsonLD(DatasetVersion dsv, JsonObject jsonld,
-            MetadataBlockServiceBean metadataBlockSvc, DatasetFieldServiceBean datasetFieldSvc, boolean append, boolean migrating) {
+            MetadataBlockServiceBean metadataBlockSvc, DatasetFieldServiceBean datasetFieldSvc, boolean append, boolean migrating, LicenseServiceBean licenseSvc) {
 
         //Assume draft to start
         dsv.setVersionState(VersionState.DRAFT);
@@ -210,7 +214,15 @@ public class JSONLDUtil {
                                                 + JsonLDTerm.termsOfUse.getUrl());
                             }
                             // TODO: get default terms from database
-                            //setSemTerm(terms, key, TermsOfUseAndAccess.defaultLicense);
+                            try {
+                                if (licenseSvc.getByNameOrUri(jsonld.getString(key)) != null) {
+                                    setSemTerm(terms, key, licenseSvc.getByNameOrUri(jsonld.getString(key)));
+                                } else {
+                                    setSemTerm(terms, key, licenseSvc.getDefault());
+                                }
+                            } catch (FetchException e) {
+                                throw new BadRequestException(e.getMessage());
+                            }
                         } else {
                             throw new BadRequestException(
                                     "Can't append to a single-value field that already has a value: "
@@ -220,7 +232,9 @@ public class JSONLDUtil {
                     } else if (datasetTerms.contains(key)) {
                         // Other Dataset-level TermsOfUseAndAccess
                         if (!append || !isSet(terms, key)) {
+
                             setSemTerm(terms, key, jsonld.getString(key));
+
                         } else {
                             throw new BadRequestException(
                                     "Can't append to a single-value field that already has a value: " + key);
@@ -739,14 +753,7 @@ public class JSONLDUtil {
     public static void setSemTerm(TermsOfUseAndAccess terms, String semterm, Object value) {
         switch (semterm) {
         case "http://schema.org/license":
-            // Mirror rules from SwordServiceBean
-//            if (((License) value).equals(TermsOfUseAndAccess.defaultLicense)) {
-//                terms.setLicense(TermsOfUseAndAccess.defaultLicense);
-//            } else {
-//                throw new BadRequestException("The only allowed value for " + JsonLDTerm.schemaOrg("license").getUrl()
-//                        + " is " + TermsOfUseAndAccess.CC0_URI);
-//            }
-            // TODO: the value should be on the list of active licenses.
+            terms.setLicense((License) value);
             break;
         case "https://dataverse.org/schema/core#termsOfUse":
             terms.setTermsOfUse((String) value);
