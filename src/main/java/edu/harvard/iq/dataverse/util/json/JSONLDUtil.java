@@ -46,6 +46,7 @@ import edu.harvard.iq.dataverse.MetadataBlockServiceBean;
 import edu.harvard.iq.dataverse.License;
 import edu.harvard.iq.dataverse.LicenseServiceBean;
 import edu.harvard.iq.dataverse.TermsOfUseAndAccess;
+import edu.harvard.iq.dataverse.api.ConflictException;
 import edu.harvard.iq.dataverse.api.FetchException;
 import org.apache.commons.lang3.StringUtils;
 
@@ -165,7 +166,13 @@ public class JSONLDUtil {
             fieldByTypeMap.put(dsf.getDatasetFieldType(), dsf);
         }
 
-        TermsOfUseAndAccess terms = (dsv.getTermsOfUseAndAccess()!=null) ? dsv.getTermsOfUseAndAccess().copyTermsOfUseAndAccess() : new TermsOfUseAndAccess();
+        TermsOfUseAndAccess terms = (dsv.getTermsOfUseAndAccess() != null) ? dsv.getTermsOfUseAndAccess().copyTermsOfUseAndAccess() : new TermsOfUseAndAccess();
+
+        if (dsv.getTermsOfUseAndAccess() == null) {
+            if (!jsonld.containsKey(JsonLDTerm.schemaOrg("license").getUrl()) && !jsonld.containsKey(JsonLDTerm.termsOfUse.getUrl())) {
+                terms.setLicense(licenseSvc.getDefault());
+            }
+        }
 
         for (String key : jsonld.keySet()) {
             if (!key.equals("@context")) {
@@ -194,7 +201,6 @@ public class JSONLDUtil {
                     addField(dsf, valArray, dsft, datasetFieldSvc, append);
 
                 } else {
-
                     if (key.equals(JsonLDTerm.schemaOrg("datePublished").getUrl())&& migrating && !append) {
                         dsv.setVersionState(VersionState.RELEASED);
                     } else if (key.equals(JsonLDTerm.schemaOrg("version").getUrl())&& migrating && !append) {
@@ -213,14 +219,18 @@ public class JSONLDUtil {
                                         "Cannot specify " + JsonLDTerm.schemaOrg("license").getUrl() + " and "
                                                 + JsonLDTerm.termsOfUse.getUrl());
                             }
-                            // TODO: get default terms from database
                             try {
-                                if (licenseSvc.getByNameOrUri(jsonld.getString(key)) != null) {
-                                    setSemTerm(terms, key, licenseSvc.getByNameOrUri(jsonld.getString(key)));
+                                if (dsv.getTermsOfUseAndAccess() == null && !dsv.getDataset().isReleased()) {
+                                    if (StringUtils.isEmpty(jsonld.getString(key)) || licenseSvc.getByNameOrUri(jsonld.getString(key)) == null) {
+                                        setSemTerm(terms, key, licenseSvc.getDefault());
+                                    } else {
+                                        setSemTerm(terms, key, licenseSvc.getByNameOrUri(jsonld.getString(key)));
+                                    }
                                 } else {
-                                    setSemTerm(terms, key, licenseSvc.getDefault());
+                                    throw new ConflictException("Cannot change to " + jsonld.getString(key) + " license due to existing Terms of Use", null);
                                 }
-                            } catch (FetchException e) {
+                            } catch (FetchException | ConflictException e) {
+                                logger.warning(e.getMessage());
                                 throw new BadRequestException(e.getMessage());
                             }
                         } else {
@@ -228,13 +238,10 @@ public class JSONLDUtil {
                                     "Can't append to a single-value field that already has a value: "
                                             + JsonLDTerm.schemaOrg("license").getUrl());
                         }
-
                     } else if (datasetTerms.contains(key)) {
                         // Other Dataset-level TermsOfUseAndAccess
                         if (!append || !isSet(terms, key)) {
-
                             setSemTerm(terms, key, jsonld.getString(key));
-
                         } else {
                             throw new BadRequestException(
                                     "Can't append to a single-value field that already has a value: " + key);
@@ -258,14 +265,13 @@ public class JSONLDUtil {
                             }
                         }
                     }
-                    dsv.setTermsOfUseAndAccess(terms);
                     // ToDo: support Dataverse location metadata? e.g. move to new dataverse?
                     // re: JsonLDTerm.schemaOrg("includedInDataCatalog")
                 }
 
             }
         }
-
+        dsv.setTermsOfUseAndAccess(terms);
         dsv.setDatasetFields(dsfl);
 
         return dsv;
