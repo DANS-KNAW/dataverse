@@ -186,7 +186,7 @@ public class SwordServiceBean {
                 terms.setLicense(null);
                 setTermsOfUse(datasetVersionToMutate, dcterms, null);
             } else {
-                License licenseToSet = licenseServiceBean.getByName(licenseProvided);
+                License licenseToSet = licenseServiceBean.getByNameOrUri(licenseProvided);
                 terms.setLicense(licenseToSet);
                 setTermsOfUse(datasetVersionToMutate, dcterms, licenseToSet);
             }
