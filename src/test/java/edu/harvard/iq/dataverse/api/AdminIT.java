@@ -870,12 +870,13 @@ public class AdminIT {
         body = getLicenseByIdResponse.getBody().asString();
         status = JsonPath.from(body).getString("status");
         assertEquals("OK", status);
-        
-        Response getLicenseByNameResponse = UtilIT.getLicenseByName("");
+
+        //TODO implement tests after these methods from PR's have been merged into multi-license
+        /*Response getLicenseByNameResponse = UtilIT.getLicenseByName("");
         getLicenseByNameResponse.prettyPrint();
         body = getLicenseByNameResponse.getBody().asString();
         status = JsonPath.from(body).getString("status");
-        assertEquals("OK", status);
+        assertEquals("OK", status);*/
         
         Response getLicenseErrorResponse = UtilIT.getLicenseById(10L);
         getLicenseErrorResponse.prettyPrint();
@@ -889,13 +890,14 @@ public class AdminIT {
         body = updateLicenseByIdResponse.getBody().asString();
         status = JsonPath.from(body).getString("status");
         assertEquals("OK", status);
-        
-        pathToJsonFile = "scripts/api/data/licenseUpdate.json";
+
+        //TODO updateLicenseByName method does not exist yet
+        /*pathToJsonFile = "scripts/api/data/licenseUpdate.json";
         Response updateLicenseByNameResponse = UtilIT.updateLicenseByName(pathToJsonFile, "");
         updateLicenseByNameResponse.prettyPrint();
         body = updateLicenseByNameResponse.getBody().asString();
         status = JsonPath.from(body).getString("status");
-        assertEquals("OK", status);
+        assertEquals("OK", status);*/
         
         Response updateLicenseErrorResponse = UtilIT.updateLicenseById(pathToJsonFile, 10L);
         updateLicenseErrorResponse.prettyPrint();
@@ -908,12 +910,13 @@ public class AdminIT {
         body = deleteLicenseByIdResponse.getBody().asString();
         status = JsonPath.from(body).getString("status");
         assertEquals("OK", status);
-        
-        Response deleteLicenseByNameResponse = UtilIT.deleteLicenseByName("");
+
+        //TODO deleteLicenseByName method does not exist yet
+        /*Response deleteLicenseByNameResponse = UtilIT.deleteLicenseByName("");
         deleteLicenseByNameResponse.prettyPrint();
         body = deleteLicenseByNameResponse.getBody().asString();
         status = JsonPath.from(body).getString("status");
-        assertEquals("OK", status);
+        assertEquals("OK", status);*/
         
         Response deleteLicenseErrorResponse = UtilIT.deleteLicenseById(10L);
         deleteLicenseErrorResponse.prettyPrint();
