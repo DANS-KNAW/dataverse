@@ -2679,17 +2679,12 @@ public class UtilIT {
     static Response updateLicenseById(String pathToJsonFile, Long id) {
         String jsonIn = getDatasetJson(pathToJsonFile);
 
-        RequestSpecification request = RestAssured.given();
-        request.header("Content-Type", "application/json");
-        request.body(jsonIn);
-        return request.put("/api/admin/licenses/{id}", id);
-
-        /*Response updateLicenseResponse = given()
+        Response updateLicenseResponse = given()
                 .request()
                 .body(jsonIn)
                 .contentType("application/json")
                 .put("/api/admin/licenses/{id}", id);
-        return updateLicenseResponse;*/
+        return updateLicenseResponse;
 
 
     }
