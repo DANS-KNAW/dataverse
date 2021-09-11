@@ -72,6 +72,22 @@ public class LicenseServiceBean {
         return licenses.get(0);
     }
 
+    public License getByNameOrUri(String nameOrUri) throws FetchException {
+        License license;
+        try {
+            license = em.createNamedQuery("License.findByNameOrUri", License.class)
+                    .setParameter("name", nameOrUri)
+                    .setParameter("uri", nameOrUri)
+                    .getSingleResult();
+        } catch (NoResultException noResultException){
+            throw new FetchException("Couldn't find an active license with that name or uri");
+        }
+        if (license == null || !license.isActive()){
+            throw new FetchException("Couldn't find an active license with that name or uri");
+        }
+        return license;
+    }
+
     public void setDefault(Long id) throws UpdateException, FetchException {
         License candidate = getById(id);
         if (candidate.isActive()) {

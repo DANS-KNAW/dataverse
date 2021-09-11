@@ -606,7 +606,7 @@
                                                     <td>
                                                         <ui:fragment rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.license}">
                                                             <p>
-                                                                <img src="#{DatasetPage.workingVersion.termsOfUseAndAccess.license.iconUrl}" title="#{DatasetPage.workingVersion.termsOfUseAndAccess.license.shortDescription}" alt="#{bundle['file.icon.alttxt']}" style="max-width:90px;width:100%;max-height:30px;height:100%" />
+                                                                <img src="#{DatasetPage.workingVersion.termsOfUseAndAccess.license.iconUrl}" title="#{DatasetPage.workingVersion.termsOfUseAndAccess.license.shortDescription}" style="display:none"  onload="this.style.display='inline'" />
                                                                 <a href="#{DatasetPage.workingVersion.termsOfUseAndAccess.license.uri}" title="#{DatasetPage.workingVersion.termsOfUseAndAccess.license.shortDescription}" target="_blank">#{DatasetPage.workingVersion.termsOfUseAndAccess.license.name}</a>
                                                             </p>
                                                         </ui:fragment>
@@ -716,6 +716,8 @@
                             <ui:param name="metadataBlocks" value="#{!empty DatasetPage.editMode ? DatasetPage.datasetVersionUI.metadataBlocksForEdit.entrySet().toArray(): DatasetPage.datasetVersionUI.metadataBlocksForView.entrySet().toArray()}"/>
                             <ui:param name="publicationDate" value="#{DatasetPage.dataset.publicationDateFormattedYYYYMMDD}"/>
                             <ui:param name="globalId" value="#{DatasetPage.dataset.globalIdString}"/>
+                            <ui:param name="mdLang" value="#{DatasetPage.getLocaleDisplayName(DatasetPage.effectiveMetadataLanguage)}"/>
+                            <ui:param name="mdLangCode" value="#{DatasetPage.effectiveMetadataLanguage}"/>
                         </ui:include>
                     </ui:fragment>
                     <!-- Create/Save Dataset Button Panel TOP editMode -->
@@ -846,6 +848,8 @@
                                     <ui:param name="publicationDate" value="#{DatasetPage.dataset.publicationDate != null ? DatasetPage.dataset.publicationDateFormattedYYYYMMDD : ''}"/>
                                     <ui:param name="globalId" value="#{DatasetPage.dataset.globalIdString}"/>
                                     <ui:param name="altPID" value="#{DatasetPage.dataset.alternativePersistentIdentifier}"/>
+                                    <ui:param name="mdLang" value="#{DatasetPage.getLocaleDisplayName(DatasetPage.effectiveMetadataLanguage)}"/>
+                                    <ui:param name="mdLangCode" value="#{DatasetPage.effectiveMetadataLanguage}"/>
                                     <ui:param name="anonymized" value="#{DatasetPage.anonymizedAccess}"/>
                                 </ui:include>
                             </p:tab>
@@ -1637,7 +1641,7 @@
                                     </ui:fragment>
                                     <ui:fragment rendered="#{!empty DatasetPage.workingVersion.termsOfUseAndAccess.license}">
                                         <p>
-                                            <img src="#{DatasetPage.workingVersion.termsOfUseAndAccess.license.iconUrl}" alt="#{bundle['file.icon.alttxt']}" />
+                                            <img src="#{DatasetPage.workingVersion.termsOfUseAndAccess.license.iconUrl}" title="#{DatasetPage.workingVersion.termsOfUseAndAccess.license.shortDescription}" style="display:none"  onload="this.style.display='inline'" />
                                             <a href="#{DatasetPage.workingVersion.termsOfUseAndAccess.license.uri}" target="_blank">#{DatasetPage.workingVersion.termsOfUseAndAccess.license.name}</a>
                                         </p>
                                     </ui:fragment>
