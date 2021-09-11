@@ -464,7 +464,13 @@ public class SettingsServiceBean {
         /*
          * Include "Custom Terms" as an item in the license drop-down or not.
          */
-        AllowCustomTerms
+        AllowCustomTerms,
+        /**
+         * A boolean setting that, if true will send an email and notification to users
+         * when a Dataset is created. Messages go to those who have the
+         * ability/permission necessary to publish the dataset
+         */
+        SendNotificationOnDatasetCreation
         ;
 
         @Override
