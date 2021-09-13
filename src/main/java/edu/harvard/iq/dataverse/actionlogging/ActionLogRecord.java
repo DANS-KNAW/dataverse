@@ -25,7 +25,7 @@ public class ActionLogRecord implements java.io.Serializable {
     public enum Result {
         OK, BadRequest, PermissionError, InternalError
     }
-    
+
     
     public enum ActionType {
         /** login, logout */
