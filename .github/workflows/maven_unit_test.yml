@@ -40,5 +40,4 @@ jobs:
                 CI_NAME: github
                 COVERALLS_SECRET: ${{ secrets.GITHUB_TOKEN }}
             run: mvn -V -B jacoco:report coveralls:report -DrepoToken=${COVERALLS_SECRET} -DpullRequest=${{ github.event.number }}
-            if: secrets.GITHUB_TOKEN != ''
-            
+            if: ${{ secrets.GITHUB_TOKEN != '' }}
