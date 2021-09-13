@@ -36,8 +36,8 @@ jobs:
           - name: Build with Maven
             run: mvn -DcompilerArgument=-Xlint:unchecked -P all-unit-tests clean test
           - name: Maven Code Coverage
+            if: secrets.GITHUB_TOKEN != ''
             env:
                 CI_NAME: github
                 COVERALLS_SECRET: ${{ secrets.GITHUB_TOKEN }}
             run: mvn -V -B jacoco:report coveralls:report -DrepoToken=${COVERALLS_SECRET} -DpullRequest=${{ github.event.number }}
-            if: ${{ secrets.GITHUB_TOKEN != '' }}
