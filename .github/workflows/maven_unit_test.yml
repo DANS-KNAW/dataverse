@@ -35,14 +35,8 @@ jobs:
                 restore-keys: ${{ runner.os }}-m2
           - name: Build with Maven
             run: mvn -DcompilerArgument=-Xlint:unchecked -P all-unit-tests clean test
-
-          - uses: codecov/codecov-action@v1
-            with:
-                file: ./**/target/site/jacoco/jacoco.xml
-                name: codecov
-
-#          - name: Maven Code Coverage
-#            env:
-#                CI_NAME: github
-#                COVERALLS_SECRET: ${{ secrets.GITHUB_TOKEN }}
-#            run: mvn -e -X -V -B jacoco:report coveralls:report -DrepoToken=$COVERALLS_SECRET -DpullRequest=${{ github.event.number }} -DisDebugEnabled=true
+          - name: Maven Code Coverage
+            env:
+                CI_NAME: github
+                COVERALLS_SECRET: ${{ secrets.GITHUB_TOKEN }}
+            run: mvn -e -X -V -B coveralls:report -DrepoToken=$COVERALLS_SECRET -DpullRequest=${{ github.event.number }}
