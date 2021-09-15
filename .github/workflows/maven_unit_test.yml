@@ -36,10 +36,10 @@ jobs:
           - name: Build with Maven
             run: mvn -DcompilerArgument=-Xlint:unchecked -P all-unit-tests clean test
 
-          - name: Coveralls
-            uses: coverallsapp/github-action@master
+          - uses: codecov/codecov-action@v1
             with:
-                github-token: ${{ secrets.github_token }}
+                file: ./**/target/site/jacoco/jacoco.xml
+                name: codecov
 
 #          - name: Maven Code Coverage
 #            env:
