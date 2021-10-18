@@ -4,22 +4,13 @@
 
 package edu.harvard.iq.dataverse.util.json;
 
-import edu.harvard.iq.dataverse.ControlledVocabularyValue;
-import edu.harvard.iq.dataverse.Dataset;
-import edu.harvard.iq.dataverse.DatasetField;
-import edu.harvard.iq.dataverse.DatasetFieldCompoundValue;
-import edu.harvard.iq.dataverse.DatasetFieldServiceBean;
-import edu.harvard.iq.dataverse.DatasetFieldType;
+import edu.harvard.iq.dataverse.*;
 import edu.harvard.iq.dataverse.DatasetFieldType.FieldType;
-import edu.harvard.iq.dataverse.DatasetFieldValue;
-import edu.harvard.iq.dataverse.DatasetVersion;
-import edu.harvard.iq.dataverse.Dataverse;
 import edu.harvard.iq.dataverse.authorization.groups.impl.ipaddress.IpGroup;
 import edu.harvard.iq.dataverse.authorization.groups.impl.ipaddress.IpGroupProvider;
 import edu.harvard.iq.dataverse.authorization.groups.impl.ipaddress.ip.IpAddress;
 import edu.harvard.iq.dataverse.authorization.groups.impl.ipaddress.ip.IpAddressRange;
 import edu.harvard.iq.dataverse.DataverseTheme.Alignment;
-import edu.harvard.iq.dataverse.FileMetadata;
 import edu.harvard.iq.dataverse.authorization.groups.impl.maildomain.MailDomainGroup;
 import edu.harvard.iq.dataverse.authorization.groups.impl.maildomain.MailDomainGroupTest;
 import edu.harvard.iq.dataverse.authorization.users.GuestUser;
@@ -59,6 +50,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 /**
  *
@@ -68,6 +60,7 @@ public class JsonParserTest {
     
     MockDatasetFieldSvc datasetFieldTypeSvc = null;
     MockSettingsSvc settingsSvc = null;
+    LicenseServiceBean licenseService = Mockito.mock(LicenseServiceBean.class);
     DatasetFieldType keywordType;
     DatasetFieldType descriptionType;
     DatasetFieldType subjectType;
@@ -120,7 +113,7 @@ public class JsonParserTest {
         }
         compoundSingleType.setChildDatasetFieldTypes(childTypes);
         settingsSvc = new MockSettingsSvc();
-        sut = new JsonParser(datasetFieldTypeSvc, null, settingsSvc);
+        sut = new JsonParser(datasetFieldTypeSvc, null, settingsSvc, licenseService);
     }
     
     @Test 
@@ -691,6 +684,14 @@ public class JsonParserTest {
                     break;
             }
              return null;
+        }
+
+        @Override
+        public boolean isTrueForKey(Key key, boolean safeDefaultIfKeyNotFound) {
+            if (key == Key.AllowCustomTerms) {
+                return false;
+            }
+            return safeDefaultIfKeyNotFound;
         }
     }
 

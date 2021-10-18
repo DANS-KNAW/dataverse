@@ -1,23 +1,7 @@
 package edu.harvard.iq.dataverse.util.json;
 
 import com.google.gson.Gson;
-import edu.harvard.iq.dataverse.ControlledVocabularyValue;
-import edu.harvard.iq.dataverse.DataFile;
-import edu.harvard.iq.dataverse.DataFileCategory;
-import edu.harvard.iq.dataverse.Dataset;
-import edu.harvard.iq.dataverse.DatasetField;
-import edu.harvard.iq.dataverse.DatasetFieldConstant;
-import edu.harvard.iq.dataverse.DatasetFieldCompoundValue;
-import edu.harvard.iq.dataverse.DatasetFieldServiceBean;
-import edu.harvard.iq.dataverse.DatasetFieldType;
-import edu.harvard.iq.dataverse.DatasetFieldValue;
-import edu.harvard.iq.dataverse.DatasetVersion;
-import edu.harvard.iq.dataverse.Dataverse;
-import edu.harvard.iq.dataverse.DataverseContact;
-import edu.harvard.iq.dataverse.DataverseTheme;
-import edu.harvard.iq.dataverse.FileMetadata;
-import edu.harvard.iq.dataverse.MetadataBlockServiceBean;
-import edu.harvard.iq.dataverse.TermsOfUseAndAccess;
+import edu.harvard.iq.dataverse.*;
 import edu.harvard.iq.dataverse.api.Util;
 import edu.harvard.iq.dataverse.api.dto.FieldDTO;
 import edu.harvard.iq.dataverse.authorization.groups.impl.ipaddress.IpGroup;
@@ -41,6 +25,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.json.*;
 import javax.json.JsonValue.ValueType;
+import javax.persistence.NoResultException;
 
 /**
  * Parses JSON objects into domain objects.
@@ -54,6 +39,7 @@ public class JsonParser {
     DatasetFieldServiceBean datasetFieldSvc;
     MetadataBlockServiceBean blockService;
     SettingsServiceBean settingsService;
+    LicenseServiceBean licenseService;
     
     /**
      * if lenient, we will accept alternate spellings for controlled vocabulary values
@@ -64,6 +50,13 @@ public class JsonParser {
         this.datasetFieldSvc = datasetFieldSvc;
         this.blockService = blockService;
         this.settingsService = settingsService;
+    }
+
+    public JsonParser(DatasetFieldServiceBean datasetFieldSvc, MetadataBlockServiceBean blockService, SettingsServiceBean settingsService, LicenseServiceBean licenseService) {
+        this.datasetFieldSvc = datasetFieldSvc;
+        this.blockService = blockService;
+        this.settingsService = settingsService;
+        this.licenseService = licenseService;
     }
 
     public JsonParser() {
@@ -323,22 +316,27 @@ public class JsonParser {
             dsv.setUNF(obj.getString("UNF", null));
             // Terms of Use related fields
             TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
-            terms.setTermsOfUse(obj.getString("termsOfUse", null));           
+            License license = parseLicense(obj.getString("license", null));
+            if (license == null) {
+                terms.setLicense(license);
+                terms.setTermsOfUse(obj.getString("termsOfUse", null));
+                terms.setConfidentialityDeclaration(obj.getString("confidentialityDeclaration", null));
+                terms.setSpecialPermissions(obj.getString("specialPermissions", null));
+                terms.setRestrictions(obj.getString("restrictions", null));
+                terms.setCitationRequirements(obj.getString("citationRequirements", null));
+                terms.setDepositorRequirements(obj.getString("depositorRequirements", null));
+                terms.setConditions(obj.getString("conditions", null));
+                terms.setDisclaimer(obj.getString("disclaimer", null));
+            } else {
+                terms.setLicense(license);
+            }
             terms.setTermsOfAccess(obj.getString("termsOfAccess", null));
-            terms.setConfidentialityDeclaration(obj.getString("confidentialityDeclaration", null));
-            terms.setSpecialPermissions(obj.getString("specialPermissions", null));
-            terms.setRestrictions(obj.getString("restrictions", null));
-            terms.setCitationRequirements(obj.getString("citationRequirements", null));
-            terms.setDepositorRequirements(obj.getString("depositorRequirements", null));
-            terms.setConditions(obj.getString("conditions", null));
-            terms.setDisclaimer(obj.getString("disclaimer", null));
             terms.setDataAccessPlace(obj.getString("dataAccessPlace", null));
             terms.setOriginalArchive(obj.getString("originalArchive", null));
             terms.setAvailabilityStatus(obj.getString("availabilityStatus", null));
             terms.setContactForAccess(obj.getString("contactForAccess", null));
             terms.setSizeOfCollection(obj.getString("sizeOfCollection", null));
             terms.setStudyCompletion(obj.getString("studyCompletion", null));
-            terms.setLicense(parseLicense(obj.getString("license", null)));
             terms.setFileAccessRequest(obj.getBoolean("fileAccessRequest", false));
             dsv.setTermsOfUseAndAccess(terms);
             
@@ -360,15 +358,20 @@ public class JsonParser {
         }
     }
     
-    private edu.harvard.iq.dataverse.License parseLicense(String inString) {
-        try {
-            if (inString != null) {
-                return new edu.harvard.iq.dataverse.License(inString, "", new URI("https://creativecommons.org/publicdomain/zero/1.0/"), new URI(""), true);
+    private edu.harvard.iq.dataverse.License parseLicense(String licenseNameOrUri) throws JsonParseException {
+        if (licenseNameOrUri == null){
+            boolean safeDefaultIfKeyNotFound = true;
+            if (settingsService.isTrueForKey(SettingsServiceBean.Key.AllowCustomTerms, safeDefaultIfKeyNotFound)){
+                return null;
+            } else {
+                return licenseService.getDefault();
             }
-            return null;
-        } catch (URISyntaxException e) {
-            return null;
-        }       
+        }
+        try {
+            return licenseService.getByNameOrUri(licenseNameOrUri);
+        } catch (NoResultException nre){
+            throw new JsonParseException("Couldn't find an active license with: " + licenseNameOrUri);
+        }
     }
 
     public List<DatasetField> parseMetadataBlocks(JsonObject json) throws JsonParseException {
