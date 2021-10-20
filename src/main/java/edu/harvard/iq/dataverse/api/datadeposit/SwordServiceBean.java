@@ -181,19 +181,15 @@ public class SwordServiceBean {
         if (StringUtils.isBlank(licenseProvided)) {
             throw new SwordError("License provided was blank.");
         }
-        try {
-            if (StringUtils.equalsIgnoreCase(licenseProvided, "Custom License")){
-                terms.setLicense(null);
-                setTermsOfUse(datasetVersionToMutate, dcterms, null);
-            } else {
-                License licenseToSet = licenseServiceBean.getByNameOrUri(licenseProvided);
-                terms.setLicense(licenseToSet);
-                setTermsOfUse(datasetVersionToMutate, dcterms, licenseToSet);
-            }
-        } catch (NoResultException e) {
-            throw new SwordError("Couldn't find an active license with: " + licenseProvided);
+        if (StringUtils.equalsIgnoreCase(licenseProvided, "Custom License")){
+            terms.setLicense(null);
+            setTermsOfUse(datasetVersionToMutate, dcterms, null);
+        } else {
+            License licenseToSet = licenseServiceBean.getByNameOrUri(licenseProvided);
+            if (licenseToSet == null) throw new SwordError("Couldn't find an active license with: " + licenseProvided);
+            terms.setLicense(licenseToSet);
+            setTermsOfUse(datasetVersionToMutate, dcterms, licenseToSet);
         }
-
     }
 
     private void setTermsOfUse(DatasetVersion datasetVersionToMutate, Map<String, List<String>> dcterms, License providedLicense) throws SwordError {

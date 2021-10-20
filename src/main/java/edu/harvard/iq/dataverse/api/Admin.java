@@ -1991,12 +1991,9 @@ public class Admin extends AbstractApiBean {
     @GET
     @Path("/licenses/{id}")
     public Response getLicenseById(@PathParam("id") long id) {
-        try {
-            License license = licenseService.getById(id);
-            return ok(json(license));
-        } catch (NoResultException nre) {
-            return error(Response.Status.NOT_FOUND, "License with ID " + id + " not found");
-        }
+	    License license = licenseService.getById(id);
+	    if (license == null) return error(Response.Status.NOT_FOUND, "License with ID " + id + " not found");
+	    return ok(json(license));
     }
 
     @POST
@@ -2019,18 +2016,14 @@ public class Admin extends AbstractApiBean {
 	}
 
     @PUT
-    @Path("/licenses/default")
-    public Response setDefault(long id) {
+    @Path("/licenses/default/{id}")
+    public Response setDefault(@PathParam("id") long id) {
         try {
-            licenseService.setDefault(id);
+            if (licenseService.setDefault(id) == 0) return error(Response.Status.NOT_FOUND, "License with ID " + id + " not found");
             return ok("Default license ID set to " + id);
         }
-        catch (IllegalArgumentException | NoResultException e) {
-        	if (e instanceof IllegalArgumentException) {
-		        return badRequest(e.getMessage());
-	        } else {
-        		return error(Response.Status.NOT_FOUND, "License with ID " + id + " not found");
-	        }
+        catch (IllegalArgumentException illegalArgumentException) {
+        	return badRequest(illegalArgumentException.getMessage());
         }
     }
 

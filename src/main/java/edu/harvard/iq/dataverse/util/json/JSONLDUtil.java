@@ -18,6 +18,7 @@ import java.util.TreeMap;
 import java.util.logging.Logger;
 
 
+import javax.ejb.EJBException;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
@@ -196,13 +197,16 @@ public class JSONLDUtil {
                                     setSemTerm(terms, key, licenseSvc.getDefault());
                                 }
                                 else {
-                                    try {
+                                    //try {
                                         License license = licenseSvc.getByNameOrUri(jsonld.getString(key));
+                                        if (license == null) throw new BadRequestException("Invalid license");
                                         setSemTerm(terms, key, license);
-                                    }
-                                    catch (NoResultException e) {
-                                        throw new BadRequestException("Invalid license");
-                                    }
+                                    //}
+                                    /*catch (EJBException e) {
+                                        if (e.getMessage().equalsIgnoreCase("getSingleResult() did not retrieve any entities.")) {
+                                            throw new BadRequestException("Invalid license");
+                                        } else throw e;
+                                    }*/
                                 }
                             }
                             else if (key.equals("https://dataverse.org/schema/core#fileRequestAccess")) {
