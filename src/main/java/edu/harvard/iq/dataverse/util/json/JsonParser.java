@@ -385,11 +385,9 @@ public class JsonParser {
                 return licenseService.getDefault();
             }
         }
-        try {
-            return licenseService.getByNameOrUri(licenseNameOrUri);
-        } catch (NoResultException nre){
-            throw new JsonParseException("Couldn't find an active license with: " + licenseNameOrUri);
-        }
+        License license = licenseService.getByNameOrUri(licenseNameOrUri);
+        if (license == null) throw new JsonParseException("Invalid license: " + licenseNameOrUri);
+        return license;
     }
 
     public List<DatasetField> parseMetadataBlocks(JsonObject json) throws JsonParseException {
