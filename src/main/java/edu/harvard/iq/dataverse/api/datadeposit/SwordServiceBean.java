@@ -19,6 +19,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.swordapp.server.SwordEntry;
