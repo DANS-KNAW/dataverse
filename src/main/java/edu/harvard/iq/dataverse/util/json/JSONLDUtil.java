@@ -18,7 +18,6 @@ import java.util.TreeMap;
 import java.util.logging.Logger;
 
 
-import javax.ejb.EJBException;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
@@ -29,7 +28,6 @@ import javax.json.JsonWriter;
 import javax.json.JsonWriterFactory;
 import javax.json.JsonValue.ValueType;
 import javax.json.stream.JsonGenerator;
-import javax.persistence.NoResultException;
 import javax.ws.rs.BadRequestException;
 
 import edu.harvard.iq.dataverse.ControlledVocabularyValue;
@@ -197,16 +195,9 @@ public class JSONLDUtil {
                                     setSemTerm(terms, key, licenseSvc.getDefault());
                                 }
                                 else {
-                                    //try {
                                         License license = licenseSvc.getByNameOrUri(jsonld.getString(key));
                                         if (license == null) throw new BadRequestException("Invalid license");
                                         setSemTerm(terms, key, license);
-                                    //}
-                                    /*catch (EJBException e) {
-                                        if (e.getMessage().equalsIgnoreCase("getSingleResult() did not retrieve any entities.")) {
-                                            throw new BadRequestException("Invalid license");
-                                        } else throw e;
-                                    }*/
                                 }
                             }
                             else if (key.equals("https://dataverse.org/schema/core#fileRequestAccess")) {
