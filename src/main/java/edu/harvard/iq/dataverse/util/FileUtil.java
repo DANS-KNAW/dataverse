@@ -984,7 +984,7 @@ public class FileUtil implements java.io.Serializable  {
                         ZipEntry entry = entries.nextElement();
                         logger.fine("inside first zip pass; this entry: "+entry.getName());
                         if (!entry.isDirectory()) {
-                            String shortName = entry.getName().replaceFirst("^.*[\\/]", "");
+                            String shortName = entry.getName().replaceFirst("^.*[\\\\/]", "");
                             // ... and, finally, check if it's a "fake" file - a zip archive entry
                             // created for a MacOS X filesystem element: (these
                             // start with "._") 
