@@ -503,6 +503,10 @@ public class SettingsServiceBean {
          */
         ShibAffiliationSeparator,
         /**
+         * Get list of providers from discofeed and provide selection for login within Dataverse, default true
+         */
+        ShibIdpSelectEnabled,
+        /**
          * Validate physical files for all the datafiles in the dataset when publishing
          */
         FileValidationOnPublishEnabled,

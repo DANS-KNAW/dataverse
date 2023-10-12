@@ -19,6 +19,7 @@ import edu.harvard.iq.dataverse.validation.EMailValidator;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -422,7 +423,11 @@ public class Shib implements java.io.Serializable {
         if (attribute != null) {
             String attributeValue = attribute.toString();
             if(systemConfig.isShibAttributeCharacterSetConversionEnabled()) {
-                attributeValue = new String(attributeValue.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+                try {
+                    attributeValue = new String(attributeValue.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+                } catch (UnsupportedEncodingException e) {
+                    logger.warning("Character conversion failed for Shib attribute (key, value) = (" + key + ", " + attributeValue + ") ; ignoring it");
+                }
             }
             String trimmedValue = attributeValue.trim();
             if (!trimmedValue.isEmpty()) {
