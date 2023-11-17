@@ -601,10 +601,16 @@ public class DatasetFieldServiceBean implements java.io.Serializable {
                         job.add(filterKey, termUri);
                     } else if (pattern.contains("{")) {
                         if (pattern.equals("{0}")) {
-                            if (vals.get(0) instanceof JsonArray) {
-                                job.add(filterKey, (JsonArray) vals.get(0));
-                            } else {
-                                job.add(filterKey, (String) vals.get(0));
+                            if (!vals.isEmpty() && vals.get(0) != null) {
+                                if (vals.get(0) instanceof JsonArray) {
+                                    job.add(filterKey, (JsonArray) vals.get(0));
+                                }
+                                else if (vals.get(0) instanceof String) {
+                                    job.add(filterKey, (String) vals.get(0));
+                                }
+                                else {
+                                    logger.warning("Class cast problem: " + termUri + " - " + vals.get(0).getClass().getName() + "neither JsonArray nor String, no job added");
+                                }
                             }
                         } else {
                             String result = MessageFormat.format(pattern, vals.toArray());
@@ -679,13 +685,17 @@ public class DatasetFieldServiceBean implements java.io.Serializable {
             logger.fine("Last segment: " + curPath.toString());
             logger.fine("Looking for : " + pathParts[index]);
             JsonValue jv = ((JsonObject) curPath).get(pathParts[index]);
-            ValueType type =jv.getValueType();
-            if (type.equals(JsonValue.ValueType.STRING)) {
-                return ((JsonString) jv).getString();
-            } else if (jv.getValueType().equals(JsonValue.ValueType.ARRAY)) {
-                return jv;
-            } else if (jv.getValueType().equals(JsonValue.ValueType.OBJECT)) {
-                return jv;
+            if (jv != null) {
+                ValueType type = jv.getValueType();
+                if (type.equals(JsonValue.ValueType.STRING)) {
+                    return ((JsonString) jv).getString();
+                }
+                else if (jv.getValueType().equals(JsonValue.ValueType.ARRAY)) {
+                    return jv;
+                }
+                else if (jv.getValueType().equals(JsonValue.ValueType.OBJECT)) {
+                    return jv;
+                }
             }
         }
 
