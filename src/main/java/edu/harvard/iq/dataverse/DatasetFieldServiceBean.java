@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.text.MessageFormat;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +52,8 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
 import edu.harvard.iq.dataverse.settings.SettingsServiceBean;
+
+import static org.apache.commons.lang3.ThreadUtils.sleep;
 
 /**
  *
@@ -430,6 +433,7 @@ public class DatasetFieldServiceBean implements java.io.Serializable {
      */
     public JsonObject getExternalVocabularyValue(String termUri) {
         try {
+            sleep(Duration.ofSeconds(10));
             ExternalVocabularyValue evv = em
                     .createQuery("select object(o) from ExternalVocabularyValue as o where o.uri=:uri",
                             ExternalVocabularyValue.class)
@@ -442,6 +446,9 @@ public class DatasetFieldServiceBean implements java.io.Serializable {
             }
         } catch (NoResultException nre) {
             logger.warning("No external vocab value for uri: " + termUri);
+        }
+        catch (InterruptedException e) { // sleep
+            throw new RuntimeException(e);
         }
         return null;
     }
@@ -601,16 +608,10 @@ public class DatasetFieldServiceBean implements java.io.Serializable {
                         job.add(filterKey, termUri);
                     } else if (pattern.contains("{")) {
                         if (pattern.equals("{0}")) {
-                            if (!vals.isEmpty() && vals.get(0) != null) {
-                                if (vals.get(0) instanceof JsonArray) {
-                                    job.add(filterKey, (JsonArray) vals.get(0));
-                                }
-                                else if (vals.get(0) instanceof String) {
-                                    job.add(filterKey, (String) vals.get(0));
-                                }
-                                else {
-                                    logger.warning("Class cast problem: " + termUri + " - " + vals.get(0).getClass().getName() + "neither JsonArray nor String, no job added");
-                                }
+                            if (vals.get(0) instanceof JsonArray) {
+                                job.add(filterKey, (JsonArray) vals.get(0));
+                            } else {
+                                job.add(filterKey, (String) vals.get(0));
                             }
                         } else {
                             String result = MessageFormat.format(pattern, vals.toArray());
@@ -685,17 +686,13 @@ public class DatasetFieldServiceBean implements java.io.Serializable {
             logger.fine("Last segment: " + curPath.toString());
             logger.fine("Looking for : " + pathParts[index]);
             JsonValue jv = ((JsonObject) curPath).get(pathParts[index]);
-            if (jv != null) {
-                ValueType type = jv.getValueType();
-                if (type.equals(JsonValue.ValueType.STRING)) {
-                    return ((JsonString) jv).getString();
-                }
-                else if (jv.getValueType().equals(JsonValue.ValueType.ARRAY)) {
-                    return jv;
-                }
-                else if (jv.getValueType().equals(JsonValue.ValueType.OBJECT)) {
-                    return jv;
-                }
+            ValueType type =jv.getValueType();
+            if (type.equals(JsonValue.ValueType.STRING)) {
+                return ((JsonString) jv).getString();
+            } else if (jv.getValueType().equals(JsonValue.ValueType.ARRAY)) {
+                return jv;
+            } else if (jv.getValueType().equals(JsonValue.ValueType.OBJECT)) {
+                return jv;
             }
         }
 
