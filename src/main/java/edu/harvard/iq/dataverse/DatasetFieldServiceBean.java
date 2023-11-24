@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.text.MessageFormat;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +52,8 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
 import edu.harvard.iq.dataverse.settings.SettingsServiceBean;
+
+import static org.apache.commons.lang3.ThreadUtils.sleep;
 
 /**
  *
@@ -430,6 +433,7 @@ public class DatasetFieldServiceBean implements java.io.Serializable {
      */
     public JsonObject getExternalVocabularyValue(String termUri) {
         try {
+            sleep(Duration.ofSeconds(10));
             ExternalVocabularyValue evv = em
                     .createQuery("select object(o) from ExternalVocabularyValue as o where o.uri=:uri",
                             ExternalVocabularyValue.class)
@@ -442,6 +446,9 @@ public class DatasetFieldServiceBean implements java.io.Serializable {
             }
         } catch (NoResultException nre) {
             logger.warning("No external vocab value for uri: " + termUri);
+        }
+        catch (InterruptedException e) { // sleep
+            throw new RuntimeException(e);
         }
         return null;
     }
