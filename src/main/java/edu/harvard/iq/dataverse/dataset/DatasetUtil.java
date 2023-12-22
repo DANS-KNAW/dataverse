@@ -5,6 +5,7 @@ import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetField;
 import edu.harvard.iq.dataverse.DatasetVersion;
 import edu.harvard.iq.dataverse.FileMetadata;
+import edu.harvard.iq.dataverse.GlobalId;
 import edu.harvard.iq.dataverse.TermsOfUseAndAccess;
 import edu.harvard.iq.dataverse.authorization.groups.impl.ipaddress.ip.IpAddress;
 import edu.harvard.iq.dataverse.authorization.users.AuthenticatedUser;
@@ -584,10 +585,18 @@ public class DatasetUtil {
                 : (dsv.getVersionState().name().equals("DRAFT")
                         ? dsv.getDataverseSiteUrl()
                                 + "/api/datasets/:persistentId/versions/:draft/customlicense?persistentId="
-                                + dsv.getDataset().getGlobalId().asString()
+                                + getPid(dsv)
                         : dsv.getDataverseSiteUrl() + "/api/datasets/:persistentId/versions/" + dsv.getVersionNumber()
                                 + "." + dsv.getMinorVersionNumber() + "/customlicense?persistentId="
-                                + dsv.getDataset().getGlobalId().asString());
+                                + getPid(dsv));
+    }
+
+    private static String getPid(DatasetVersion dsv) {
+        GlobalId globalId = dsv.getDataset().getGlobalId();
+        if (globalId == null)
+            return "no-doi-yet";
+        else
+            return globalId.asString();
     }
 
     public static String getLicenseIcon(DatasetVersion dsv) {
