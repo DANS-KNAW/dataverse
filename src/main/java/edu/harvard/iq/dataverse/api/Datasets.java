@@ -97,6 +97,7 @@ import edu.harvard.iq.dataverse.util.SignpostingResources;
 import edu.harvard.iq.dataverse.util.json.JsonUtil;
 import edu.harvard.iq.dataverse.search.IndexServiceBean;
 
+import static edu.harvard.iq.dataverse.util.StringUtil.isEmpty;
 import static edu.harvard.iq.dataverse.util.json.JsonPrinter.*;
 import static edu.harvard.iq.dataverse.util.json.NullSafeJsonBuilder.jsonObjectBuilder;
 import edu.harvard.iq.dataverse.util.json.NullSafeJsonBuilder;
@@ -1114,7 +1115,7 @@ public class Datasets extends AbstractApiBean {
             if (dsf.getDatasetFieldType().isAllowMultiples() && dsf.getControlledVocabularyValues().isEmpty()
                     && dsf.getDatasetFieldCompoundValues().isEmpty() && dsf.getDatasetFieldValues().isEmpty()) {
                 error.append("Empty multiple value for field: ").append(dsf.getDatasetFieldType().getDisplayName()).append(" ");
-            } else if (!dsf.getDatasetFieldType().isAllowMultiples() && dsf.getSingleValue().getValue().isEmpty()) {
+            } else if (!dsf.getDatasetFieldType().isAllowMultiples() && isEmpty(dsf.getSingleValue().getValue())) {
                 error.append("Empty value for field: ").append(dsf.getDatasetFieldType().getDisplayName()).append(" ");
             }
         }
