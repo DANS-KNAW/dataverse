@@ -289,14 +289,6 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
                 	 }
                      */
 
-                    /** 
-                     * Perform a quick check for how many individual files are 
-                     * inside this zip archive. If it's above the limit, we can 
-                     * give up right away, without doing any unpacking. 
-                     * This should be a fairly inexpensive operation, we just need
-                     * to read the directory at the end of the file. 
-                     */
-
                     /**
                      * The ZipFile constructors in openZipFile will throw ZipException -
                      * a type of IOException - if there's something wrong 
@@ -317,45 +309,47 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
                      */
 
                     try (var zipFile = openZipFile(tempFile, charset)) {
-                        for (Enumeration<? extends ZipEntry> entries = zipFile.entries(); entries.hasMoreElements(); ) {
-                            ZipEntry entry = entries.nextElement();
+                        for (var entry : filteredZipEntries(zipFile)) {
+                        /**
+                         * Perform a quick check for how many individual files are
+                         * inside this zip archive. If it's above the limit, we can
+                         * give up right away, without doing any unpacking.
+                         * This should be a fairly inexpensive operation, we just need
+                         * to read the directory at the end of the file.
+                         */
                             logger.fine("inside first zip pass; this entry: " + entry.getName());
-                            if (!entry.isDirectory()) {
-                                if (isNotFakeFile(toShortName(entry.getName()))) {
-                                    numberOfUnpackableFiles++;
-                                    if (numberOfUnpackableFiles > fileNumberLimit) {
-                                        logger.warning("Zip upload - too many files in the zip to process individually.");
-                                        warningMessage = "The number of files in the zip archive is over the limit (" + fileNumberLimit
-                                                         + "); please upload a zip archive with fewer files, if you want them to be ingested "
-                                                         + "as individual DataFiles.";
-                                        throw new IOException();
-                                    }
-                                    // In addition to counting the files, we can
-                                    // also check the file size while we're here,
-                                    // provided the size limit is defined; if a single
-                                    // file is above the individual size limit, unzipped,
-                                    // we give up on unpacking this zip archive as well:
-                                    if (fileSizeLimit != null && entry.getSize() > fileSizeLimit) {
-                                        // TODO why no log and warning message?
-                                        throw new FileExceedsMaxSizeException(
-                                            MessageFormat.format(BundleUtil.getStringFromBundle("file.addreplace.error.file_exceeds_limit"), bytesToHumanReadable(entry.getSize()),
-                                                bytesToHumanReadable(fileSizeLimit)));
-                                    }
-                                    // Similarly, we want to check if saving all these unpacked
-                                    // files is going to push the disk usage over the
-                                    // quota:
-                                    if (storageQuotaLimit != null) {
-                                        combinedUnzippedFileSize = combinedUnzippedFileSize + entry.getSize();
-                                        if (combinedUnzippedFileSize > storageQuotaLimit) {
-                                            //throw new FileExceedsStorageQuotaException(MessageFormat.format(BundleUtil.getStringFromBundle("file.addreplace.error.quota_exceeded"), bytesToHumanReadable(combinedUnzippedFileSize), bytesToHumanReadable(storageQuotaLimit)));
-                                            // change of plans: if the unzipped content inside exceeds the remaining quota,
-                                            // we reject the upload outright, rather than accepting the zip
-                                            // file as is.
-                                            // TODO why no log and warning message?
-                                            throw new CommandExecutionException(
-                                                MessageFormat.format(BundleUtil.getStringFromBundle("file.addreplace.error.unzipped.quota_exceeded"), bytesToHumanReadable(storageQuotaLimit)), this);
-                                        }
-                                    }
+                            numberOfUnpackableFiles++;
+                            if (numberOfUnpackableFiles > fileNumberLimit) {
+                                logger.warning("Zip upload - too many files in the zip to process individually.");
+                                warningMessage = "The number of files in the zip archive is over the limit (" + fileNumberLimit
+                                                 + "); please upload a zip archive with fewer files, if you want them to be ingested "
+                                                 + "as individual DataFiles.";
+                                throw new IOException();
+                            }
+                            // In addition to counting the files, we can
+                            // also check the file size while we're here,
+                            // provided the size limit is defined; if a single
+                            // file is above the individual size limit, unzipped,
+                            // we give up on unpacking this zip archive as well:
+                            if (fileSizeLimit != null && entry.getSize() > fileSizeLimit) {
+                                // TODO why no log and warning message?
+                                throw new FileExceedsMaxSizeException(
+                                    MessageFormat.format(BundleUtil.getStringFromBundle("file.addreplace.error.file_exceeds_limit"), bytesToHumanReadable(entry.getSize()),
+                                        bytesToHumanReadable(fileSizeLimit)));
+                            }
+                            // Similarly, we want to check if saving all these unpacked
+                            // files is going to push the disk usage over the
+                            // quota:
+                            if (storageQuotaLimit != null) {
+                                combinedUnzippedFileSize = combinedUnzippedFileSize + entry.getSize();
+                                if (combinedUnzippedFileSize > storageQuotaLimit) {
+                                    //throw new FileExceedsStorageQuotaException(MessageFormat.format(BundleUtil.getStringFromBundle("file.addreplace.error.quota_exceeded"), bytesToHumanReadable(combinedUnzippedFileSize), bytesToHumanReadable(storageQuotaLimit)));
+                                    // change of plans: if the unzipped content inside exceeds the remaining quota,
+                                    // we reject the upload outright, rather than accepting the zip
+                                    // file as is.
+                                    // TODO why no log and warning message?
+                                    throw new CommandExecutionException(
+                                        MessageFormat.format(BundleUtil.getStringFromBundle("file.addreplace.error.unzipped.quota_exceeded"), bytesToHumanReadable(storageQuotaLimit)), this);
                                 }
                             }
                         }
@@ -367,13 +361,7 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
                     combinedUnzippedFileSize = 0L;
 
                     try (var zipFile = openZipFile(tempFile, charset)) {
-                        var entries = Collections.list(zipFile.entries()).stream().filter(e -> {
-                            var entryName = e.getName();
-                            logger.fine("ZipEntry, file: " + entryName);
-                            return !e.isDirectory() && !entryName.isEmpty() && isNotFakeFile(toShortName(entryName));
-                        }).toList();
-
-                        for (var entry : entries) {
+                        for (var entry : filteredZipEntries(zipFile)) {
                             String storageIdentifier = FileUtil.generateStorageIdentifier();
                             File unzippedFile = new File(getFilesTempDirectory() + "/" + storageIdentifier);
                             Files.copy(zipFile.getInputStream(entry), unzippedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -669,6 +657,15 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
 
         return CreateDataFileResult.error(fileName, finalType);
     }   // end createDataFiles
+
+    private static List<? extends ZipEntry> filteredZipEntries(ZipFile zipFile) {
+        var entries = Collections.list(zipFile.entries()).stream().filter(e -> {
+            var entryName = e.getName();
+            logger.fine("ZipEntry, file: " + entryName);
+            return !e.isDirectory() && !entryName.isEmpty() && isNotFakeFile(toShortName(entryName));
+        }).toList();
+        return entries;
+    }
 
     private static ZipFile openZipFile(Path tempFile, Charset charset) throws IOException {
         if (charset != null) {
