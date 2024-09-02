@@ -38,7 +38,6 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -49,7 +48,6 @@ import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 
 import static edu.harvard.iq.dataverse.datasetutility.FileSizeChecker.bytesToHumanReadable;
 import static edu.harvard.iq.dataverse.util.FileUtil.MIME_TYPE_UNDETERMINED_DEFAULT;
@@ -368,7 +366,7 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
                             // No need to check the size of this unpacked file against the size limit,
                             // since we've already checked for that in the first pass.
                             var fileEntryName = entry.getName();
-                            var shortName = toShortName(fileEntryName);
+                            var shortName = new File(fileEntryName).getName();
                             DataFile datafile = FileUtil.createSingleDataFile(version, null, storageIdentifier, shortName,
                                 MIME_TYPE_UNDETERMINED_DEFAULT,
                                 ctxt.systemConfig().getFileFixityChecksumAlgorithm(), null, false);
@@ -662,7 +660,7 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
         var entries = Collections.list(zipFile.entries()).stream().filter(e -> {
             var entryName = e.getName();
             logger.fine("ZipEntry, file: " + entryName);
-            return !e.isDirectory() && !entryName.isEmpty() && isNotFakeFile(toShortName(entryName));
+            return !e.isDirectory() && !entryName.isEmpty() && isNotFakeFile(entryName);
         }).toList();
         return entries;
     }
@@ -676,14 +674,11 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
         }
     }
 
-    private static String toShortName(String fileEntryName) {
-        return fileEntryName.replaceFirst("^.*[\\/]", "");
-    }
-
-    private static boolean isNotFakeFile(String shortName) {
+    private static boolean isNotFakeFile(String fileName) {
         // check if it's a "fake" file - a zip archive entry
         // created for a MacOS X filesystem element: (these
         // start with "._")
+        var shortName = new File(fileName).getName();
         return !shortName.startsWith("._") && !shortName.startsWith(".DS_Store") && !"".equals(shortName);
     }
 
