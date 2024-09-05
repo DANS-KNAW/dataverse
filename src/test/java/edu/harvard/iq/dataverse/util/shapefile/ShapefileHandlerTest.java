@@ -63,22 +63,9 @@ public class ShapefileHandlerTest {
         }
         return Files.createFile(tempFolder.resolve(filename)).toFile();
     }
-    
-    private FileInputStream createZipReturnFilestream(List<String> file_names, String zipfile_name) throws IOException{
-        
-        File zip_file_obj = this.createAndZipFiles(file_names, zipfile_name);
-        if (zip_file_obj == null){
-            return null;
-        }
-        
-        FileInputStream file_input_stream = new FileInputStream(zip_file_obj);
 
-        return file_input_stream;
-        
-    }
-    
     /*
-        Convenience class to create .zip file and return a FileInputStream
+        Convenience method to create .zip file and return a File
     
         @param List<String> file_names - List of filenames to add to .zip.  These names will be used to create 0 length files
         @param String zipfile_name - Name of .zip file to create

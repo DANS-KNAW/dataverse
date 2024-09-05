@@ -140,9 +140,10 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
 
 
         if (newStorageIdentifier == null) {
-            if (getFilesTempDirectory() != null) {
+            var filesTempDirectory = getFilesTempDirectory();
+            if (filesTempDirectory != null) {
                 try {
-                    tempFile = Files.createTempFile(Paths.get(getFilesTempDirectory()), "tmp", "upload");
+                    tempFile = Files.createTempFile(Paths.get(filesTempDirectory), "tmp", "upload");
                     // "temporary" location is the key here; this is why we are not using
                     // the DataStore framework for this - the assumption is that
                     // temp files will always be stored on the local filesystem.
