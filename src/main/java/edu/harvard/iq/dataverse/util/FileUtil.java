@@ -514,12 +514,11 @@ public class FileUtil implements java.io.Serializable  {
              if (shp_handler.containsShapefile()){
               //  logger.info("------- shapefile FOUND ----------");
                  fileType = ShapefileHandler.SHAPEFILE_FILE_TYPE; //"application/zipped-shapefile";
-             } else {
+             }
 
-                 Optional<BagItFileHandler> bagItFileHandler = CDI.current().select(BagItFileHandlerFactory.class).get().getBagItFileHandler();
-                 if (bagItFileHandler.isPresent() && bagItFileHandler.get().isBagItPackage(fileName, f)) {
-                     fileType = BagItFileHandler.FILE_TYPE;
-                 }
+            Optional<BagItFileHandler> bagItFileHandler = BagItFileHandler.getFromCDI();
+             if(bagItFileHandler.isPresent() && bagItFileHandler.get().isBagItPackage(fileName, f)) {
+                 fileType = BagItFileHandler.FILE_TYPE;
              }
         } 
         

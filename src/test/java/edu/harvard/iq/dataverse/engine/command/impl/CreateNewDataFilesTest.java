@@ -3,7 +3,6 @@ package edu.harvard.iq.dataverse.engine.command.impl;
 import edu.harvard.iq.dataverse.DataFile;
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetVersion;
-import edu.harvard.iq.dataverse.dataaccess.StorageIO;
 import edu.harvard.iq.dataverse.engine.command.CommandContext;
 import edu.harvard.iq.dataverse.engine.command.DataverseRequest;
 import edu.harvard.iq.dataverse.engine.command.exception.CommandException;
@@ -11,9 +10,9 @@ import edu.harvard.iq.dataverse.settings.JvmSettings;
 import edu.harvard.iq.dataverse.storageuse.UploadSessionQuotaLimit;
 import edu.harvard.iq.dataverse.util.JhoveFileType;
 import edu.harvard.iq.dataverse.util.SystemConfig;
+import edu.harvard.iq.dataverse.util.file.BagItFileHandler;
 import edu.harvard.iq.dataverse.util.testing.JvmSetting;
 import edu.harvard.iq.dataverse.util.testing.LocalJvmSettings;
-import org.assertj.core.api.ObjectArrayAssert;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,9 +28,11 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static edu.harvard.iq.dataverse.DataFile.ChecksumType.MD5;
 import static org.apache.commons.io.file.FilesUncheck.createDirectories;
 import static org.apache.commons.io.file.PathUtils.deleteDirectory;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -56,7 +57,7 @@ public class CreateNewDataFilesTest {
 
         mockTmpLookup();
         var cmd = createCmd("scripts/search/data/shape/shapefile.zip", mockDatasetVersion());
-        var ctxt = mockCommandContext(mockQuota(true, 0L));
+        var ctxt = mockCommandContext(mockSysConfig(true, 0L, MD5));
 
         assertThatThrownBy(() -> cmd.execute(ctxt))
             .isInstanceOf(CommandException.class)
@@ -73,7 +74,7 @@ public class CreateNewDataFilesTest {
 
         mockTmpLookup();
         var cmd = createCmd("scripts/search/data/shape/shapefile.zip", mockDatasetVersion());
-        var ctxt = mockCommandContext(mockQuota(true, 1000L));
+        var ctxt = mockCommandContext(mockSysConfig(true, 1000L, MD5));
 
         assertThatThrownBy(() -> cmd.execute(ctxt))
             .isInstanceOf(CommandException.class)
@@ -87,7 +88,7 @@ public class CreateNewDataFilesTest {
 
         mockTmpLookup();
         var cmd = createCmd("scripts/search/data/shape/shapefile.zip", mockDatasetVersion());
-        var ctxt = mockCommandContext(mockQuota(true, 1000000L));
+        var ctxt = mockCommandContext(mockSysConfig(true, 1000000L, MD5));
         try (MockedStatic<JhoveFileType> mockedStatic = Mockito.mockStatic(JhoveFileType.class)) {
             mockedStatic.when(JhoveFileType::getJhoveConfigFile).thenReturn("conf/jhove/jhove.conf");
 
@@ -99,29 +100,28 @@ public class CreateNewDataFilesTest {
 
     @Test
     @JvmSetting(key = JvmSettings.FILES_DIRECTORY, value = "target/test/CreateNewDataFilesTest/tmp")
-    public void execute_succeeds() throws FileNotFoundException, CommandException {
+    public void execute_does_not_unzip() throws Exception { // TODO fix warnings
         var tempDir = testDir.resolve("tmp/temp");
-        var testFile = "scripts/search/data/binary/trees.zip";
+        var testFile = "scripts/search/data/binary/3files.zip";
         createDirectories(tempDir);
 
         mockTmpLookup();
         var cmd = createCmd(testFile, mockDatasetVersion());
-        var ctxt = mockCommandContext(mockQuota(false, 1000000L));
+        var ctxt = mockCommandContext(mockSysConfig(false, 1000000L, MD5));
         try (MockedStatic<JhoveFileType> mockedStatic = Mockito.mockStatic(JhoveFileType.class)) {
             mockedStatic.when(JhoveFileType::getJhoveConfigFile).thenReturn("conf/jhove/jhove.conf");
 
+            // the test
             var result = cmd.execute(ctxt);
 
             assertThat(result.getErrors()).hasSize(0);
             assertThat(result.getDataFiles()).hasSize(1);
-
-            var dataFile = result.getDataFiles().subList(0, 1).get(0);
-            var storageId = dataFile.getStorageIdentifier();
-
-            // uploaded zip remains in tmp directory
-            assertThat(tempDir.toFile().list()).hasSize(1);
-            assertThat(tempDir.resolve(storageId).toFile().length())
-                .isEqualTo(new File(testFile).length());
+            assertThat(result.getDataFiles().stream().map(DataFile::toString))
+                .containsExactlyInAnyOrder(
+                    "[DataFile id:null label:example.zip]"
+                );
+            var ids = result.getDataFiles().stream().map(DataFile::getStorageIdentifier).toList();
+            assertThat(tempDir.toFile().list()).containsExactlyInAnyOrderElementsOf(ids);
         }
     }
 
@@ -140,25 +140,38 @@ public class CreateNewDataFilesTest {
 
         mockTmpLookup();
         var cmd = createCmd(testFile.toString(), mockDatasetVersion());
-        var ctxt = mockCommandContext(mockQuota(false, 1000000L));
+        var ctxt = mockCommandContext(mockSysConfig(false, 1000000L, MD5));
+        try (var mockedHandler = Mockito.mockStatic(BagItFileHandler.class);
+            var mockedJHoveFileType = Mockito.mockStatic(JhoveFileType.class)
+        ) {
+            var opt = mockOptional(false);
+            mockedHandler.when(BagItFileHandler::getFromCDI).thenReturn(opt);
+            mockedJHoveFileType.when(JhoveFileType::getJhoveConfigFile).thenReturn("conf/jhove/jhove.conf");
 
-        // the test
-        var result = cmd.execute(ctxt);
+            // the test
+            var result = cmd.execute(ctxt);
 
-        assertThat(result.getErrors()).hasSize(0);
-        assertThat(result.getDataFiles().stream().map(DataFile::toString))
-            .containsExactlyInAnyOrder(
-                "[DataFile id:null label:shp_dictionary.xls]",
-                "[DataFile id:null label:notes]",
-                "[DataFile id:null label:shape1.zip]",
-                "[DataFile id:null label:shape2.txt]",
-                "[DataFile id:null label:shape2.pdf]",
-                "[DataFile id:null label:shape2]",
-                "[DataFile id:null label:shape2.zip]",
-                "[DataFile id:null label:README.MD]"
-            );
-        var ids = result.getDataFiles().stream().map(DataFile::getStorageIdentifier).toList();
-        assertThat(tempDir.toFile().list()).containsExactlyInAnyOrderElementsOf(ids);
+            assertThat(result.getErrors()).hasSize(0);
+            assertThat(result.getDataFiles().stream().map(DataFile::toString))
+                .containsExactlyInAnyOrder(
+                    "[DataFile id:null label:shp_dictionary.xls]",
+                    "[DataFile id:null label:notes]",
+                    "[DataFile id:null label:shape1.zip]",
+                    "[DataFile id:null label:shape2.txt]",
+                    "[DataFile id:null label:shape2.pdf]",
+                    "[DataFile id:null label:shape2]",
+                    "[DataFile id:null label:shape2.zip]",
+                    "[DataFile id:null label:README.MD]"
+                );
+            var ids = result.getDataFiles().stream().map(DataFile::getStorageIdentifier).toList();
+            assertThat(tempDir.toFile().list()).containsExactlyInAnyOrderElementsOf(ids);
+        }
+    }
+
+    private @NotNull Optional mockOptional(boolean t) {
+        var mockedOptional = Mockito.mock(Optional.class);
+        Mockito.when(mockedOptional.isPresent()).thenReturn(t);
+        return mockedOptional;
     }
 
     // simplified version from ShapefileHandlerTest
@@ -191,10 +204,11 @@ public class CreateNewDataFilesTest {
         return ctxt;
     }
 
-    private static @NotNull SystemConfig mockQuota(boolean isStorageQuataEnforced, long maxFileUploadSizeForStore) {
+    private static @NotNull SystemConfig mockSysConfig(boolean isStorageQuataEnforced, long maxFileUploadSizeForStore, DataFile.ChecksumType checksumType) {
         var sysCfg = Mockito.mock(SystemConfig.class);
         Mockito.when(sysCfg.isStorageQuotasEnforced()).thenReturn(isStorageQuataEnforced);
         Mockito.when(sysCfg.getMaxFileUploadSizeForStore(any())).thenReturn(maxFileUploadSizeForStore);
+        Mockito.when(sysCfg.getFileFixityChecksumAlgorithm()).thenReturn(checksumType);
         return sysCfg;
     }
 
