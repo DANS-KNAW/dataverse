@@ -1,7 +1,9 @@
 package edu.harvard.iq.dataverse.engine.command.impl;
 
+import edu.harvard.iq.dataverse.DataFile;
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetVersion;
+import edu.harvard.iq.dataverse.dataaccess.StorageIO;
 import edu.harvard.iq.dataverse.engine.command.CommandContext;
 import edu.harvard.iq.dataverse.engine.command.DataverseRequest;
 import edu.harvard.iq.dataverse.engine.command.exception.CommandException;
@@ -11,6 +13,7 @@ import edu.harvard.iq.dataverse.util.JhoveFileType;
 import edu.harvard.iq.dataverse.util.SystemConfig;
 import edu.harvard.iq.dataverse.util.testing.JvmSetting;
 import edu.harvard.iq.dataverse.util.testing.LocalJvmSettings;
+import org.assertj.core.api.ObjectArrayAssert;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -135,29 +138,27 @@ public class CreateNewDataFilesTest {
             "README.MD", "shp_dictionary.xls", "notes"              // single files
         ), testDir.resolve("shapes.zip"));
 
-        // TODO mock CDI provider to allow mime type check
-
         mockTmpLookup();
         var cmd = createCmd(testFile.toString(), mockDatasetVersion());
         var ctxt = mockCommandContext(mockQuota(false, 1000000L));
 
-        try (MockedStatic<JhoveFileType> mockedStatic = Mockito.mockStatic(JhoveFileType.class)) {
-            mockedStatic.when(JhoveFileType::getJhoveConfigFile).thenReturn("conf/jhove/jhove.conf");
+        // the test
+        var result = cmd.execute(ctxt);
 
-            // the test
-            var result = cmd.execute(ctxt);
-
-            assertThat(result.getErrors()).hasSize(0);
-            assertThat(result.getDataFiles()).hasSize(1);
-
-            var dataFile = result.getDataFiles().subList(0, 1).get(0);
-            var storageId = dataFile.getStorageIdentifier();
-
-            // uploaded zip remains in tmp directory
-            assertThat(tempDir.toFile().list()).hasSize(1);
-            assertThat(tempDir.resolve(storageId).toFile().length())
-                .isEqualTo(testFile.length());
-        }
+        assertThat(result.getErrors()).hasSize(0);
+        assertThat(result.getDataFiles().stream().map(DataFile::toString))
+            .containsExactlyInAnyOrder(
+                "[DataFile id:null label:shp_dictionary.xls]",
+                "[DataFile id:null label:notes]",
+                "[DataFile id:null label:shape1.zip]",
+                "[DataFile id:null label:shape2.txt]",
+                "[DataFile id:null label:shape2.pdf]",
+                "[DataFile id:null label:shape2]",
+                "[DataFile id:null label:shape2.zip]",
+                "[DataFile id:null label:README.MD]"
+            );
+        var ids = result.getDataFiles().stream().map(DataFile::getStorageIdentifier).toList();
+        assertThat(tempDir.toFile().list()).containsExactlyInAnyOrderElementsOf(ids);
     }
 
     // simplified version from ShapefileHandlerTest
@@ -165,7 +166,7 @@ public class CreateNewDataFilesTest {
         try (ZipOutputStream zip_stream = new ZipOutputStream(new FileOutputStream(zipfile.toFile()))) {
             for (var file_name : file_names) {
                 zip_stream.putNextEntry(new ZipEntry(file_name));
-                zip_stream.write("content".getBytes(), 0, 7);
+                zip_stream.write((file_name + " content").getBytes());
                 zip_stream.closeEntry();
             }
         }
