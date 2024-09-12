@@ -57,7 +57,7 @@ public class CreateNewDataFilesTest {
 
         mockTmpLookup();
         var cmd = createCmd("scripts/search/data/shape/shapefile.zip", mockDatasetVersion());
-        var ctxt = mockCommandContext(mockSysConfig(true, 0L, MD5));
+        var ctxt = mockCommandContext(mockSysConfig(true, 0L, MD5, 10));
 
         assertThatThrownBy(() -> cmd.execute(ctxt))
             .isInstanceOf(CommandException.class)
@@ -74,7 +74,7 @@ public class CreateNewDataFilesTest {
 
         mockTmpLookup();
         var cmd = createCmd("scripts/search/data/shape/shapefile.zip", mockDatasetVersion());
-        var ctxt = mockCommandContext(mockSysConfig(true, 1000L, MD5));
+        var ctxt = mockCommandContext(mockSysConfig(true, 1000L, MD5, 10));
 
         assertThatThrownBy(() -> cmd.execute(ctxt))
             .isInstanceOf(CommandException.class)
@@ -88,7 +88,7 @@ public class CreateNewDataFilesTest {
 
         mockTmpLookup();
         var cmd = createCmd("scripts/search/data/shape/shapefile.zip", mockDatasetVersion());
-        var ctxt = mockCommandContext(mockSysConfig(true, 1000000L, MD5));
+        var ctxt = mockCommandContext(mockSysConfig(true, 1000000L, MD5, 0));
         try (MockedStatic<JhoveFileType> mockedStatic = Mockito.mockStatic(JhoveFileType.class)) {
             mockedStatic.when(JhoveFileType::getJhoveConfigFile).thenReturn("conf/jhove/jhove.conf");
 
@@ -97,17 +97,33 @@ public class CreateNewDataFilesTest {
                 .hasMessage("This file (size 56.0 KB) exceeds the remaining storage quota of 500 B.");
         }
     }
+    @Test
+    @JvmSetting(key = JvmSettings.FILES_DIRECTORY, value = "target/test/CreateNewDataFilesTest/tmp")
+    public void execute_fails_on_too_little_remaining_storage_for_unzipped_files() throws FileNotFoundException {
+        createDirectories(Path.of("target/test/CreateNewDataFilesTest/tmp/temp"));
+
+        mockTmpLookup();
+        var cmd = createCmd("scripts/search/data/shape/shapefile.zip", mockDatasetVersion());
+        var ctxt = mockCommandContext(mockSysConfig(true, 1000000L, MD5, 10));
+        try (MockedStatic<JhoveFileType> mockedStatic = Mockito.mockStatic(JhoveFileType.class)) {
+            mockedStatic.when(JhoveFileType::getJhoveConfigFile).thenReturn("conf/jhove/jhove.conf");
+
+            assertThatThrownBy(() -> cmd.execute(ctxt))
+                .isInstanceOf(CommandException.class)
+                .hasMessage("Unzipped files exceed the remaining storage quota of 500 B.");
+        }
+    }
 
     @Test
     @JvmSetting(key = JvmSettings.FILES_DIRECTORY, value = "target/test/CreateNewDataFilesTest/tmp")
-    public void execute_does_not_unzip() throws Exception { // TODO fix warnings
+    public void execute_without_shape_files() throws Exception {
         var tempDir = testDir.resolve("tmp/temp");
         var testFile = "scripts/search/data/binary/3files.zip";
         createDirectories(tempDir);
 
         mockTmpLookup();
         var cmd = createCmd(testFile, mockDatasetVersion());
-        var ctxt = mockCommandContext(mockSysConfig(false, 1000000L, MD5));
+        var ctxt = mockCommandContext(mockSysConfig(false, 1000000L, MD5, 10));
         try (MockedStatic<JhoveFileType> mockedStatic = Mockito.mockStatic(JhoveFileType.class)) {
             mockedStatic.when(JhoveFileType::getJhoveConfigFile).thenReturn("conf/jhove/jhove.conf");
 
@@ -115,10 +131,11 @@ public class CreateNewDataFilesTest {
             var result = cmd.execute(ctxt);
 
             assertThat(result.getErrors()).hasSize(0);
-            assertThat(result.getDataFiles()).hasSize(1);
             assertThat(result.getDataFiles().stream().map(DataFile::toString))
                 .containsExactlyInAnyOrder(
-                    "[DataFile id:null label:example.zip]"
+                    "[DataFile id:null label:file1.txt]",
+                    "[DataFile id:null label:file2.txt]",
+                    "[DataFile id:null label:file3.txt]"
                 );
             var ids = result.getDataFiles().stream().map(DataFile::getStorageIdentifier).toList();
             assertThat(tempDir.toFile().list()).containsExactlyInAnyOrderElementsOf(ids);
@@ -140,7 +157,7 @@ public class CreateNewDataFilesTest {
 
         mockTmpLookup();
         var cmd = createCmd(testFile.toString(), mockDatasetVersion());
-        var ctxt = mockCommandContext(mockSysConfig(false, 1000000L, MD5));
+        var ctxt = mockCommandContext(mockSysConfig(false, 1000000L, MD5, 0));
         try (var mockedHandler = Mockito.mockStatic(BagItFileHandler.class);
             var mockedJHoveFileType = Mockito.mockStatic(JhoveFileType.class)
         ) {
@@ -204,11 +221,12 @@ public class CreateNewDataFilesTest {
         return ctxt;
     }
 
-    private static @NotNull SystemConfig mockSysConfig(boolean isStorageQuataEnforced, long maxFileUploadSizeForStore, DataFile.ChecksumType checksumType) {
+    private static @NotNull SystemConfig mockSysConfig(boolean isStorageQuataEnforced, long maxFileUploadSizeForStore, DataFile.ChecksumType checksumType, int zipUploadFilesLimit) {
         var sysCfg = Mockito.mock(SystemConfig.class);
         Mockito.when(sysCfg.isStorageQuotasEnforced()).thenReturn(isStorageQuataEnforced);
         Mockito.when(sysCfg.getMaxFileUploadSizeForStore(any())).thenReturn(maxFileUploadSizeForStore);
         Mockito.when(sysCfg.getFileFixityChecksumAlgorithm()).thenReturn(checksumType);
+        Mockito.when(sysCfg.getZipUploadFilesLimit()).thenReturn(zipUploadFilesLimit);
         return sysCfg;
     }
 
