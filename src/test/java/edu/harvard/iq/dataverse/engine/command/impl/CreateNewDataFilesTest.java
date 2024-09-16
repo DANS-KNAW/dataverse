@@ -8,7 +8,6 @@ import edu.harvard.iq.dataverse.engine.command.DataverseRequest;
 import edu.harvard.iq.dataverse.engine.command.exception.CommandException;
 import edu.harvard.iq.dataverse.settings.JvmSettings;
 import edu.harvard.iq.dataverse.storageuse.UploadSessionQuotaLimit;
-import edu.harvard.iq.dataverse.util.FileUtil;
 import edu.harvard.iq.dataverse.util.JhoveFileType;
 import edu.harvard.iq.dataverse.util.SystemConfig;
 import edu.harvard.iq.dataverse.util.testing.JvmSetting;
@@ -16,24 +15,16 @@ import edu.harvard.iq.dataverse.util.testing.LocalJvmSettings;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import static edu.harvard.iq.dataverse.DataFile.ChecksumType.MD5;
 import static org.apache.commons.io.file.FilesUncheck.createDirectories;
@@ -97,11 +88,10 @@ public class CreateNewDataFilesTest {
     @JvmSetting(key = JvmSettings.FILES_DIRECTORY, value = "target/test/CreateNewDataFilesTest/tmp")
     public void execute_without_shape_files() throws Exception {
         var tempDir = testDir.resolve("tmp/temp");
-        var testFile = "scripts/search/data/binary/3files.zip";
         createDirectories(tempDir);
 
         mockTmpLookup();
-        var cmd = createCmd(testFile, mockDatasetVersion());
+        var cmd = createCmd("src/test/resources/own-cloud-downloads/greetings.zip", mockDatasetVersion());
         var ctxt = mockCommandContext(mockSysConfig(false, 1000000L, MD5, 10));
         try (MockedStatic<JhoveFileType> mockedStatic = Mockito.mockStatic(JhoveFileType.class)) {
             mockedStatic.when(JhoveFileType::getJhoveConfigFile).thenReturn("conf/jhove/jhove.conf");
@@ -112,9 +102,8 @@ public class CreateNewDataFilesTest {
             assertThat(result.getErrors()).hasSize(0);
             assertThat(result.getDataFiles().stream().map(DataFile::toString))
                 .containsExactlyInAnyOrder(
-                    "[DataFile id:null label:file1.txt]",
-                    "[DataFile id:null label:file2.txt]",
-                    "[DataFile id:null label:file3.txt]"
+                    "[DataFile id:null label:hello.txt]",
+                    "[DataFile id:null label:goodbye.txt]"
                 );
             var ids = result.getDataFiles().stream().map(DataFile::getStorageIdentifier).toList();
             assertThat(tempDir.toFile().list()).containsExactlyInAnyOrderElementsOf(ids);
@@ -127,16 +116,9 @@ public class CreateNewDataFilesTest {
         var tempDir = testDir.resolve("tmp/temp");
         createDirectories(tempDir);
 
-        File testFile = createAndZipFiles(Arrays.asList(
-            "shape1.shp", "shape1.shx", "shape1.dbf", "shape1.prj", "shape1.fbn", "shape1.fbx", // 1st shapefile
-            "shape2.shp", "shape2.shx", "shape2.dbf", "shape2.prj", // 2nd shapefile
-            "shape2.txt", "shape2.pdf", "shape2",                   // single files, same basename as 2nd shapefile
-            "README.MD", "shp_dictionary.xls", "notes"              // single files
-        ), testDir.resolve("shapes.zip"));
-
         mockTmpLookup();
-        var cmd = createCmd(testFile.toString(), mockDatasetVersion());
-        var ctxt = mockCommandContext(mockSysConfig(false, 1000000L, MD5, 0));
+        var cmd = createCmd("src/test/resources/own-cloud-downloads/shapes.zip", mockDatasetVersion());
+        var ctxt = mockCommandContext(mockSysConfig(false, 100000000L, MD5, 10));
         try (var mockedJHoveFileType = Mockito.mockStatic(JhoveFileType.class)) {
             mockedJHoveFileType.when(JhoveFileType::getJhoveConfigFile).thenReturn("conf/jhove/jhove.conf");
 
@@ -158,21 +140,6 @@ public class CreateNewDataFilesTest {
             var ids = result.getDataFiles().stream().map(DataFile::getStorageIdentifier).toList();
             assertThat(tempDir.toFile().list()).containsExactlyInAnyOrderElementsOf(ids);
         }
-    }
-
-    // simplified version from ShapefileHandlerTest
-    private File createAndZipFiles(List<String> file_names, Path zipfile) throws IOException {
-        // TODO provoke java.util.zip.ZipException: only DEFLATED entries can have EXT descriptor
-        //  and test target/test/CreateNewDataFilesTest/shapes.zip on VM/demo
-        //  write a test that tries to read it with ZipInputStream
-        try (ZipOutputStream zip_stream = new ZipOutputStream(new FileOutputStream(zipfile.toFile()))) {
-            for (var file_name : file_names) {
-                zip_stream.putNextEntry(new ZipEntry(file_name));
-                zip_stream.write((file_name + " content").getBytes());
-                zip_stream.closeEntry();
-            }
-        }
-        return zipfile.toFile();
     }
 
     private static @NotNull CreateNewDataFilesCommand createCmd(String name, DatasetVersion dsVersion) throws FileNotFoundException {

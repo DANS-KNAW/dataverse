@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.text.MessageFormat;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +14,6 @@ import java.util.*;
 
 import java.nio.file.Files;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static java.text.MessageFormat.format;
 
 import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
@@ -338,6 +336,7 @@ public class ShapefileHandler{
                 }
                 logger.fine("Write zip file: " + outpath);
                 try(var inputStream = zipfileInput.getInputStream(origEntry)) {
+                    Files.createDirectories(new File(outpath).getParentFile().toPath());
                     Files.copy(inputStream, Path.of(outpath), StandardCopyOption.REPLACE_EXISTING);
                 }
             } // end outer while
