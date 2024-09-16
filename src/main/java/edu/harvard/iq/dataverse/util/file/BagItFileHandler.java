@@ -11,7 +11,6 @@ import edu.harvard.iq.dataverse.util.bagit.BagValidator;
 import edu.harvard.iq.dataverse.util.bagit.data.FileDataProvider;
 import edu.harvard.iq.dataverse.util.bagit.data.FileDataProviderFactory;
 import edu.harvard.iq.dataverse.util.bagit.data.FileUtilWrapper;
-import jakarta.enterprise.inject.spi.CDI;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,10 +42,6 @@ public class BagItFileHandler {
         this.fileDataProviderFactory = fileDataProviderFactory;
         this.bagValidator = bagValidator;
         this.postProcessor = postProcessor;
-    }
-
-    public static Optional<BagItFileHandler> getFromCDI() {
-        return CDI.current().select(BagItFileHandlerFactory.class).get().getBagItFileHandler();
     }
 
     public boolean isBagItPackage(String uploadedFilename, File file) throws IOException {
