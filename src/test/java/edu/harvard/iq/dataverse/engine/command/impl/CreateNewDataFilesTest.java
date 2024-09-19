@@ -86,7 +86,7 @@ public class CreateNewDataFilesTest {
 
     @Test
     @JvmSetting(key = JvmSettings.FILES_DIRECTORY, value = "target/test/CreateNewDataFilesTest/tmp")
-    public void execute_without_shape_files() throws Exception {
+    public void execute_loads_individual_files_from_uploaded_zip() throws Exception {
         var tempDir = testDir.resolve("tmp/temp");
         createDirectories(tempDir);
 
@@ -100,19 +100,20 @@ public class CreateNewDataFilesTest {
             var result = cmd.execute(ctxt);
 
             assertThat(result.getErrors()).hasSize(0);
-            assertThat(result.getDataFiles().stream().map(DataFile::toString))
-                .containsExactlyInAnyOrder(
-                    "[DataFile id:null label:hello.txt]",
-                    "[DataFile id:null label:goodbye.txt]"
-                );
-            var ids = result.getDataFiles().stream().map(DataFile::getStorageIdentifier).toList();
-            assertThat(tempDir.toFile().list()).containsExactlyInAnyOrderElementsOf(ids);
+            assertThat(result.getDataFiles().stream().map(dataFile ->
+                dataFile.getFileMetadata().getDirectoryLabel() + "/" + dataFile.getDisplayName()
+            )).containsExactlyInAnyOrder(
+                "DD-1576/goodbye.txt", "DD-1576/hello.txt"
+            );
+            var storageIds = result.getDataFiles().stream().map(DataFile::getStorageIdentifier).toList();
+            assertThat(tempDir.toFile().list())
+                .containsExactlyInAnyOrderElementsOf(storageIds);
         }
     }
 
     @Test
     @JvmSetting(key = JvmSettings.FILES_DIRECTORY, value = "target/test/CreateNewDataFilesTest/tmp")
-    public void execute_with_2_shapes_does_not_check_zipUploadFilesLimit() throws Exception {
+    public void execute_rezips_sets_of_shape_files_from_uploaded_zip() throws Exception {
         var tempDir = testDir.resolve("tmp/temp");
         createDirectories(tempDir);
 
@@ -126,19 +127,22 @@ public class CreateNewDataFilesTest {
             var result = cmd.execute(ctxt);
 
             assertThat(result.getErrors()).hasSize(0);
-            assertThat(result.getDataFiles().stream().map(DataFile::toString))
-                .containsExactlyInAnyOrder(
-                    "[DataFile id:null label:shp_dictionary.xls]",
-                    "[DataFile id:null label:notes]",
-                    "[DataFile id:null label:shape1.zip]",
-                    "[DataFile id:null label:shape2.txt]",
-                    "[DataFile id:null label:shape2.pdf]",
-                    "[DataFile id:null label:shape2]",
-                    "[DataFile id:null label:shape2.zip]",
-                    "[DataFile id:null label:README.MD]"
-                );
-            var ids = result.getDataFiles().stream().map(DataFile::getStorageIdentifier).toList();
-            assertThat(tempDir.toFile().list()).containsExactlyInAnyOrderElementsOf(ids);
+            assertThat(result.getDataFiles().stream().map(dataFile ->
+                (dataFile.getFileMetadata().getDirectoryLabel() + "/" + dataFile.getDisplayName())
+                    .replaceAll(".*temp/shp_[-0-9]*/", "")
+            )).containsExactlyInAnyOrder(
+                "dataDir/shape1.zip",
+                "dataDir/shape2/shape2",
+                "dataDir/shape2/shape2.pdf",
+                "dataDir/shape2/shape2.txt",
+                "dataDir/shape2/shape2.zip",
+                "dataDir/extra/shp_dictionary.xls",
+                "dataDir/extra/notes",
+                "dataDir/extra/README.MD"
+            );
+            var storageIds = result.getDataFiles().stream().map(DataFile::getStorageIdentifier).toList();
+            assertThat(tempDir.toFile().list())
+                .containsExactlyInAnyOrderElementsOf(storageIds);
         }
     }
 
