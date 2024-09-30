@@ -300,14 +300,6 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
                     int numberOfUnpackableFiles = 0;
 
                     /**
-                     * Perform a quick check for how many individual files are
-                     * inside this zip archive. If it's above the limit, we can
-                     * give up right away, without doing any unpacking.
-                     * This should be a fairly inexpensive operation, we just need
-                     * to read the directory at the end of the file.
-                     */
-
-                    /**
                      * Note that we can't just use zipFile.size(),
                      * unfortunately, since that's the total number of entries,
                      * some of which can be directories. So we need to go
