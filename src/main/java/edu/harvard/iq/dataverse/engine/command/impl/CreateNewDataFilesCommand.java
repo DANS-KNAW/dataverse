@@ -361,13 +361,20 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
 
                     try (var zipFile = openZipFile(tempFile, charset)) {
                         for (var entry : filteredZipEntries(zipFile)) {
+                            if (datafiles.size() > fileNumberLimit) {
+                                logger.warning("Zip upload - too many files.");
+                                warningMessage = "The number of files in the zip archive is over the limit (" + fileNumberLimit
+                                        + "); please upload a zip archive with fewer files, if you want them to be ingested "
+                                        + "as individual DataFiles.";
+                                throw new IOException();
+                            }
                             String storageIdentifier = FileUtil.generateStorageIdentifier();
                             File unzippedFile = new File(getFilesTempDirectory() + "/" + storageIdentifier);
                             Files.copy(zipFile.getInputStream(entry), unzippedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                             // No need to check the size of this unpacked file against the size limit,
                             // since we've already checked for that in the first pass.
                             var fileEntryName = entry.getName();
-                            var shortName = new File(fileEntryName).getName();
+                            var shortName = getShortName(fileEntryName);
                             DataFile datafile = FileUtil.createSingleDataFile(version, null, storageIdentifier, shortName,
                                 MIME_TYPE_UNDETERMINED_DEFAULT,
                                 ctxt.systemConfig().getFileFixityChecksumAlgorithm(), null, false);
@@ -679,8 +686,12 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
         // check if it's a "fake" file - a zip archive entry
         // created for a MacOS X filesystem element: (these
         // start with "._")
-        var shortName = new File(fileName).getName();
+        var shortName = getShortName(fileName);
         return !shortName.startsWith("._") && !shortName.startsWith(".DS_Store") && !"".equals(shortName);
+    }
+
+    private static String getShortName(String fileName) {
+        return fileName.replaceFirst("^.*[\\/]", "");
     }
 
     @Override

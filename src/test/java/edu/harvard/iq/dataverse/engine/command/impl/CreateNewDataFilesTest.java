@@ -56,7 +56,7 @@ public class CreateNewDataFilesTest {
     public void execute_fails_to_upload_when_tmp_does_not_exist() throws FileNotFoundException {
 
         mockTmpLookup();
-        var cmd = createCmd("scripts/search/data/shape/shapefile.zip", mockDatasetVersion());
+        var cmd = createCmd("scripts/search/data/shape/shapefile.zip", mockDatasetVersion(), 1000L, 500L);
         var ctxt = mockCommandContext(mockSysConfig(true, 0L, MD5, 10));
 
         assertThatThrownBy(() -> cmd.execute(ctxt))
@@ -73,7 +73,7 @@ public class CreateNewDataFilesTest {
         createDirectories(Path.of("target/test/CreateNewDataFilesTest/tmp/temp"));
 
         mockTmpLookup();
-        var cmd = createCmd("scripts/search/data/binary/3files.zip", mockDatasetVersion());
+        var cmd = createCmd("scripts/search/data/binary/3files.zip", mockDatasetVersion(), 1000L, 500L);
         var ctxt = mockCommandContext(mockSysConfig(true, 50L, MD5, 0));
         try (var mockedStatic = Mockito.mockStatic(JhoveFileType.class)) {
             mockedStatic.when(JhoveFileType::getJhoveConfigFile).thenReturn("conf/jhove/jhove.conf");
@@ -91,7 +91,7 @@ public class CreateNewDataFilesTest {
         createDirectories(tempDir);
 
         mockTmpLookup();
-        var cmd = createCmd("src/test/resources/own-cloud-downloads/greetings.zip", mockDatasetVersion());
+        var cmd = createCmd("src/test/resources/own-cloud-downloads/greetings.zip", mockDatasetVersion(), 1000L, 500L);
         var ctxt = mockCommandContext(mockSysConfig(false, 1000000L, MD5, 10));
         try (MockedStatic<JhoveFileType> mockedStatic = Mockito.mockStatic(JhoveFileType.class)) {
             mockedStatic.when(JhoveFileType::getJhoveConfigFile).thenReturn("conf/jhove/jhove.conf");
@@ -118,7 +118,7 @@ public class CreateNewDataFilesTest {
         createDirectories(tempDir);
 
         mockTmpLookup();
-        var cmd = createCmd("src/test/resources/own-cloud-downloads/shapes.zip", mockDatasetVersion());
+        var cmd = createCmd("src/test/resources/own-cloud-downloads/shapes.zip", mockDatasetVersion(), 1000L, 500L);
         var ctxt = mockCommandContext(mockSysConfig(false, 100000000L, MD5, 10));
         try (var mockedJHoveFileType = Mockito.mockStatic(JhoveFileType.class)) {
             mockedJHoveFileType.when(JhoveFileType::getJhoveConfigFile).thenReturn("conf/jhove/jhove.conf");
@@ -146,7 +146,7 @@ public class CreateNewDataFilesTest {
         }
     }
 
-    private static @NotNull CreateNewDataFilesCommand createCmd(String name, DatasetVersion dsVersion) throws FileNotFoundException {
+    private static @NotNull CreateNewDataFilesCommand createCmd(String name, DatasetVersion dsVersion, long allocatedQuotaLimit, long usedQuotaLimit) throws FileNotFoundException {
         return new CreateNewDataFilesCommand(
             Mockito.mock(DataverseRequest.class),
             dsVersion,
@@ -154,7 +154,7 @@ public class CreateNewDataFilesTest {
             "example.zip",
             "application/zip",
             null,
-            new UploadSessionQuotaLimit(1000L, 500L),
+            new UploadSessionQuotaLimit(allocatedQuotaLimit, usedQuotaLimit),
             "sha");
     }
 
