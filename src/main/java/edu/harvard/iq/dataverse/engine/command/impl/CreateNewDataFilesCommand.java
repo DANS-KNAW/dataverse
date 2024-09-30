@@ -364,13 +364,14 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
                                         + "as individual DataFiles.";
                                 throw new IOException();
                             }
+                            var fileEntryName = entry.getName();
+                            var shortName = getShortName(fileEntryName);
+                            logger.fine("ZipEntry, file: " + fileEntryName);
                             String storageIdentifier = FileUtil.generateStorageIdentifier();
                             File unzippedFile = new File(getFilesTempDirectory() + "/" + storageIdentifier);
                             Files.copy(zipFile.getInputStream(entry), unzippedFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                             // No need to check the size of this unpacked file against the size limit,
                             // since we've already checked for that in the first pass.
-                            var fileEntryName = entry.getName();
-                            var shortName = getShortName(fileEntryName);
                             DataFile datafile = FileUtil.createSingleDataFile(version, null, storageIdentifier, shortName,
                                 MIME_TYPE_UNDETERMINED_DEFAULT,
                                 ctxt.systemConfig().getFileFixityChecksumAlgorithm(), null, false);
