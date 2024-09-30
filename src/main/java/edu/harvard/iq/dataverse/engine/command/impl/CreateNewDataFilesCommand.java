@@ -331,10 +331,7 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
                             // file is above the individual size limit, unzipped,
                             // we give up on unpacking this zip archive as well:
                             if (fileSizeLimit != null && entry.getSize() > fileSizeLimit) {
-                                // TODO why no log and warning message?
-                                throw new FileExceedsMaxSizeException(
-                                    MessageFormat.format(BundleUtil.getStringFromBundle("file.addreplace.error.file_exceeds_limit"), bytesToHumanReadable(entry.getSize()),
-                                        bytesToHumanReadable(fileSizeLimit)));
+                                throw new FileExceedsMaxSizeException(MessageFormat.format(BundleUtil.getStringFromBundle("file.addreplace.error.file_exceeds_limit"), bytesToHumanReadable(entry.getSize()), bytesToHumanReadable(fileSizeLimit)));
                             }
                             // Similarly, we want to check if saving all these unpacked
                             // files is going to push the disk usage over the
@@ -347,8 +344,7 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
                                     // we reject the upload outright, rather than accepting the zip
                                     // file as is.
                                     // TODO why no log and warning message?
-                                    throw new CommandExecutionException(
-                                        MessageFormat.format(BundleUtil.getStringFromBundle("file.addreplace.error.unzipped.quota_exceeded"), bytesToHumanReadable(storageQuotaLimit)), this);
+                                    throw new CommandExecutionException(MessageFormat.format(BundleUtil.getStringFromBundle("file.addreplace.error.unzipped.quota_exceeded"), bytesToHumanReadable(storageQuotaLimit)), this);
                                 }
                             }
                         }
