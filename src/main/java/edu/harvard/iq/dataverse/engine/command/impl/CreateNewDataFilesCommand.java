@@ -289,6 +289,15 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
                      */
 
                     /**
+                     * Perform a quick check for how many individual files are
+                     * inside this zip archive. If it's above the limit, we can
+                     * give up right away, without doing any unpacking.
+                     * This should be a fairly inexpensive operation, we just need
+                     * to read the directory at the end of the file.
+                     */
+
+
+                    /**
                      * The ZipFile constructors in openZipFile will throw ZipException -
                      * a type of IOException - if there's something wrong 
                      * with this file as a zip. There's no need to intercept it
