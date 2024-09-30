@@ -297,8 +297,16 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
                      * then attempt to save it as is.
                      */
 
-                    int numberOfUnpackableFiles = 0; 
-                     
+                    int numberOfUnpackableFiles = 0;
+
+                    /**
+                     * Perform a quick check for how many individual files are
+                     * inside this zip archive. If it's above the limit, we can
+                     * give up right away, without doing any unpacking.
+                     * This should be a fairly inexpensive operation, we just need
+                     * to read the directory at the end of the file.
+                     */
+
                     /**
                      * Note that we can't just use zipFile.size(),
                      * unfortunately, since that's the total number of entries,
@@ -309,13 +317,6 @@ public class CreateNewDataFilesCommand extends AbstractCommand<CreateDataFileRes
 
                     try (var zipFile = openZipFile(tempFile, charset)) {
                         for (var entry : filteredZipEntries(zipFile)) {
-                        /**
-                         * Perform a quick check for how many individual files are
-                         * inside this zip archive. If it's above the limit, we can
-                         * give up right away, without doing any unpacking.
-                         * This should be a fairly inexpensive operation, we just need
-                         * to read the directory at the end of the file.
-                         */
                             logger.fine("inside first zip pass; this entry: " + entry.getName());
                             numberOfUnpackableFiles++;
                             if (numberOfUnpackableFiles > fileNumberLimit) {
