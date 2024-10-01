@@ -101,6 +101,29 @@ public class IngestServiceShapefileHelper {
 
     }
 
+    private FileInputStream getFileInputStream(File fileObject){
+        if (fileObject==null){
+            return null;
+        }
+        try {
+            return new FileInputStream(fileObject);
+        } catch (FileNotFoundException ex) {
+            logger.severe("Failed to create FileInputStream from File: " + fileObject.getAbsolutePath());
+            return null;
+        }
+    }
+
+    private void closeFileInputStream(FileInputStream fis){
+        if (fis==null){
+            return;
+        }
+        try {
+            fis.close();
+        } catch (IOException ex) {
+            logger.info("Failed to close FileInputStream");
+        }
+    }
+
     public boolean processFile() {
        
        if ((!isValidFile(this.zippedShapefile))||(!isValidFolder(this.rezipFolder))){
