@@ -1,22 +1,20 @@
 package edu.harvard.iq.dataverse.util;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 import java.util.HashMap;
 import java.util.*;
 
 import java.nio.file.Files;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import java.util.logging.Level;
+
 import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 
@@ -42,11 +40,10 @@ import org.apache.commons.io.FileUtils;
  *                                  "shape1.pdf", "README.md", "shape_notes.txt"
  * 
  *  Code Example:  
- *          FileInputStream shp_file_input_stream = new FileInputStream(new File("zipped_shapefile.zip"))
- *          ShapefileHandler shp_handler = new ShapefileHandler(shp_file_input_stream);
+ *          ShapefileHandler shp_handler = new ShapefileHandler(new File("zipped_shapefile.zip"));
  *          if (shp_handler.containsShapefile()){
  *              File rezip_folder = new File("~/folder_for_rezipping");
- *              boolean rezip_success = shp_handler.rezipShapefileSets(shp_file_input_stream, rezip_folder );
+ *              boolean rezip_success = shp_handler.rezipShapefileSets(rezip_folder );
  *              if (!rezip_success){
  *                  // rezip failed, should be an error message (String) available
                     System.out.println(shp_handler.error_message);
@@ -73,7 +70,8 @@ public class ShapefileHandler{
     public final static String SHP_XML_EXTENSION = "shp.xml";
     public final static String BLANK_EXTENSION = "__PLACEHOLDER-FOR-BLANK-EXTENSION__";
     public final static List<String> SHAPEFILE_ALL_EXTENSIONS = Arrays.asList("shp", "shx", "dbf", "prj", "sbn", "sbx", "fbn", "fbx", "ain", "aih", "ixs", "mxs", "atx", "cpg", "qpj", "qmd", SHP_XML_EXTENSION);
-    
+    private final File zipFile;
+
     public boolean DEBUG = false;
         
     private boolean zipFileProcessed = false;
@@ -97,9 +95,6 @@ public class ShapefileHandler{
     
     private List<File> finalRezippedFiles = new ArrayList<>();
     
-    private String outputFolder = "unzipped";
-    private String rezippedFolder = "rezipped";
-
     // Debug helper
     private void msg(String s){
         //logger.info(s);
@@ -115,40 +110,28 @@ public class ShapefileHandler{
     }
 
     /*
-        Constructor, start with filename
-    */
-    public ShapefileHandler(String filename){
-
-        if (filename==null){
-            this.addErrorMessage("The filename was null");
+         Constructor, start with File
+     */
+    public ShapefileHandler(File zip_file) throws IOException {
+        zipFile = zip_file;
+        if (zip_file == null) {
+            this.addErrorMessage("The file was null");
             return;
         }
-        
-        FileInputStream zip_file_stream;
-        try {
-            zip_file_stream = new FileInputStream(new File(filename));
-        } catch (FileNotFoundException ex) {
-            this.addErrorMessage("The file was not found");
-            return;
-        }
-        
-       this.examineZipfile(zip_file_stream);
 
+        try (var zip_file_object = new ZipFile(zip_file)) {
+            this.examineZipfile(zip_file_object);
+        }
+        catch (FileNotFoundException ex) {
+            // While this constructor had a FileInputStream as argument:
+            //  FileUtil.determineFileType threw this exception before calling the constructor with a FileInputStream
+            //  IngestServiceShapefileHelper.processFile won´t call this constructor if the file is not valid hence does not exist.
+            //  When the file would have disappeared in the meantime, it would have produced a slightly different error message.
+            logger.severe("File not found: " + zip_file.getAbsolutePath());
+            throw ex;
+        }
     }
 
-   
-   /*
-        Constructor, start with FileInputStream
-    */
-   public ShapefileHandler(FileInputStream zip_file_stream){
-
-        if (zip_file_stream==null){
-            this.addErrorMessage("The zip_file_stream was null");
-            return;
-        }
-        this.examineZipfile(zip_file_stream);
-    }
-    
     public List<File> getFinalRezippedFiles(){
         return this.finalRezippedFiles;
     }
@@ -290,26 +273,19 @@ public class ShapefileHandler{
         subfolders in the FileMetadata of the newly created DataFiles. 
         (-- L.A. 09/2020) 
     */
-    private boolean unzipFilesToDirectory(FileInputStream zipfile_input_stream, File target_directory){
+    private boolean unzipFilesToDirectory(ZipFile zipfileInput, File target_directory){
         logger.fine("unzipFilesToDirectory: " + target_directory.getAbsolutePath() );
 
-        if (zipfile_input_stream== null){
-            this.addErrorMessage("unzipFilesToDirectory. The zipfile_input_stream is null.");
-            return false;
-        }
         if (!target_directory.isDirectory()){
              this.addErrorMessage("This directory does not exist: " + target_directory.getAbsolutePath());
             return false;
         }
 
-       List<String> unzippedFileNames = new ArrayList<>(); 
+       List<String> unzippedFileNames = new ArrayList<>();
        
-       ZipInputStream zipStream = new ZipInputStream(zipfile_input_stream);
 
-       ZipEntry origEntry;
-        byte[] buffer = new byte[2048];
         try {
-            while((origEntry = zipStream.getNextEntry())!=null){
+            for(var origEntry : Collections.list(zipfileInput.entries())){
                 
                 String zentryFileName = origEntry.getName();
                 logger.fine("\nOriginal entry name: " + origEntry);
@@ -359,15 +335,10 @@ public class ShapefileHandler{
                     unzippedFileNames.add(outpath);
                 }
                 logger.fine("Write zip file: " + outpath);
-                FileOutputStream fileOutputStream;
-                long fsize = 0;
-                fileOutputStream = new FileOutputStream(outpath);
-                int len;// = 0;
-                while ((len = zipStream.read(buffer)) > 0){
-                    fileOutputStream.write(buffer, 0, len);
-                    fsize+=len;
-                } // end while
-                fileOutputStream.close();
+                try(var inputStream = zipfileInput.getInputStream(origEntry)) {
+                    Files.createDirectories(new File(outpath).getParentFile().toPath());
+                    Files.copy(inputStream, Path.of(outpath), StandardCopyOption.REPLACE_EXISTING);
+                }
             } // end outer while
         } catch (IOException ex) {
             for (StackTraceElement el : ex.getStackTrace()){
@@ -376,19 +347,13 @@ public class ShapefileHandler{
             this.addErrorMessage("Failed to open ZipInputStream entry" +  ex.getMessage());
             return false;
         }
-
-        try {
-             zipStream.close();
-        } catch (IOException ex) {
-             Logger.getLogger(ShapefileHandler.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    return true;
+        return true;
     }
     /*
         Rezip the shapefile(s) into a given directory
         Assumes that the zipfile_input_stream has already been checked!
     */
-    public boolean rezipShapefileSets(FileInputStream zipfile_input_stream, File rezippedFolder) throws IOException{
+    public boolean rezipShapefileSets(File rezippedFolder) throws IOException{
         logger.fine("rezipShapefileSets");
         //msgt("rezipShapefileSets");
         if (!this.zipFileProcessed){
@@ -397,10 +362,6 @@ public class ShapefileHandler{
         }
         if (!this.containsShapefile()){
              this.addErrorMessage("There are no shapefiles here!");
-            return false;
-        }
-        if (zipfile_input_stream== null){
-            this.addErrorMessage("The zipfile_input_stream is null.");
             return false;
         }
         if (rezippedFolder == null){
@@ -432,9 +393,11 @@ public class ShapefileHandler{
         
         
         // Unzip files!
-        if (!this.unzipFilesToDirectory(zipfile_input_stream, dir_for_unzipping)){
-            this.addErrorMessage("Failed to unzip files.");
-            return false;
+        try(var zipfileObject = new ZipFile(zipFile)) {
+            if (!this.unzipFilesToDirectory(zipfileObject, dir_for_unzipping)) {
+                this.addErrorMessage("Failed to unzip files.");
+                return false;
+            }
         }
         // Redistribute files!
         String target_dirname = rezippedFolder.getAbsolutePath();
@@ -680,16 +643,9 @@ public class ShapefileHandler{
     /**************************************
      * Iterate through the zip file contents.
      * Does it contain any shapefiles?
-     *
-     * @param FileInputStream zip_file_stream
      */
-    private boolean examineZipfile(FileInputStream zip_file_stream){
+    private boolean examineZipfile(ZipFile zip_file){
        // msgt("examineZipfile");
-        
-        if (zip_file_stream==null){
-               this.addErrorMessage("The zip file stream was null");
-               return false;
-           }
         
        // Clear out file lists
        this.filesListInDir.clear();
@@ -697,10 +653,7 @@ public class ShapefileHandler{
        this.fileGroups.clear();
        
        try{
-            ZipInputStream zipStream = new ZipInputStream(zip_file_stream);
-            ZipEntry entry;
-            
-            while((entry = zipStream.getNextEntry())!=null){
+           for(var entry : Collections.list(zip_file.entries())){
 
                  String zentryFileName = entry.getName();
                  //msg("zip entry: " + entry.getName());
@@ -738,8 +691,6 @@ public class ShapefileHandler{
                     this.filesizeHash.put(unzipFilePath, entry.getSize());
                 }
            } // end while
-           
-           zipStream.close();
 
            if (this.filesListInDir.isEmpty()){
                errorMessage = "No files in zipStream";
@@ -749,22 +700,10 @@ public class ShapefileHandler{
            this.zipFileProcessed = true;
            return true;
 
-       }catch(ZipException ex){
-               this.addErrorMessage("ZipException");
-               msgt("ZipException");
-               return false;
-
-       }catch(IOException ex){
-           //ex.printStackTrace(); 
-           this.addErrorMessage("IOException File name");
-           msgt("IOException");
-           return false;
        }catch(IllegalArgumentException ex){
            this.addErrorMessage("IllegalArgumentException when parsing zipfile");
            msgt("IllegalArgumentException when parsing zipfile");
            return false;
-           
-       }finally{
            
        }
 
