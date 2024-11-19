@@ -202,15 +202,16 @@ public class UpdateDatasetVersionCommand extends AbstractDatasetCommand<Dataset>
 
             DatasetFieldUtil.tidyUpFields(editVersion.getDatasetFields(), true);
 
-            registerExternalVocabValuesIfAny(ctxt, editVersion, cvocSetting);
-
             //Set creator and create date for files if needed
             for (DataFile dataFile : theDataset.getFiles()) {
                 if (dataFile.getCreateDate() == null) {
                     dataFile.setCreateDate(getTimestamp());
                     dataFile.setCreator((AuthenticatedUser) getUser());
+                    ctxt.em().merge(dataFile);
                 }
             }
+
+            registerExternalVocabValuesIfAny(ctxt, editVersion, cvocSetting);
 
             // Remove / delete any files that were removed
 
