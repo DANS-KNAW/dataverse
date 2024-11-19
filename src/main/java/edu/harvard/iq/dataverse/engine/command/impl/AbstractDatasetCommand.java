@@ -1,5 +1,6 @@
 package edu.harvard.iq.dataverse.engine.command.impl;
 
+import edu.harvard.iq.dataverse.DataFile;
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetField;
 import edu.harvard.iq.dataverse.DatasetFieldServiceBean;
@@ -18,18 +19,25 @@ import edu.harvard.iq.dataverse.engine.command.exception.CommandExecutionExcepti
 import edu.harvard.iq.dataverse.engine.command.exception.IllegalCommandException;
 import edu.harvard.iq.dataverse.pidproviders.PidProvider;
 import edu.harvard.iq.dataverse.pidproviders.PidUtil;
+import edu.harvard.iq.dataverse.pidproviders.doi.fake.FakeDOIProvider;
 import edu.harvard.iq.dataverse.util.BundleUtil;
 
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static java.util.stream.Collectors.joining;
 
 import jakarta.ejb.EJB;
+import jakarta.json.JsonObject;
 import jakarta.validation.ConstraintViolation;
 import edu.harvard.iq.dataverse.settings.JvmSettings;
+import edu.harvard.iq.dataverse.settings.SettingsServiceBean;
 
 /**
  *
@@ -217,8 +225,88 @@ public abstract class AbstractDatasetCommand<T> extends AbstractCommand<T> {
         return timestamp;
     }
 
-    protected void checkSystemMetadataKeyIfNeeded(DatasetVersion newVersion, DatasetVersion persistedVersion) throws IllegalCommandException {
-        Set<MetadataBlock> changedMDBs = DatasetVersionDifference.getBlocksWithChanges(newVersion, persistedVersion);
+    protected void registerFilePidsIfNeeded(Dataset theDataset, CommandContext ctxt, boolean b) throws CommandException {
+        // Register file PIDs if needed
+        PidProvider pidGenerator = ctxt.dvObjects().getEffectivePidGenerator(getDataset());
+        boolean shouldRegister = !pidGenerator.registerWhenPublished() &&
+                ctxt.systemConfig().isFilePIDsEnabledForCollection(getDataset().getOwner()) &&
+                pidGenerator.canCreatePidsLike(getDataset().getGlobalId());
+        if (shouldRegister) {
+            for (DataFile dataFile : theDataset.getFiles()) {
+                logger.fine(dataFile.getId() + " is registered?: " + dataFile.isIdentifierRegistered());
+                if (!dataFile.isIdentifierRegistered()) {
+                    // pre-register a persistent id
+                    registerFileExternalIdentifier(dataFile, pidGenerator, ctxt, true);
+                }
+            }
+        }
+    }
+
+    private void registerFileExternalIdentifier(DataFile dataFile, PidProvider pidProvider, CommandContext ctxt, boolean retry) throws CommandException {
+
+        if (!dataFile.isIdentifierRegistered()) {
+
+            if (pidProvider instanceof FakeDOIProvider) {
+                retry = false; // No reason to allow a retry with the FakeProvider (even if it allows
+                               // pre-registration someday), so set false for efficiency
+            }
+            try {
+                if (pidProvider.alreadyRegistered(dataFile)) {
+                    int attempts = 0;
+                    if (retry) {
+                        do {
+                            pidProvider.generatePid(dataFile);
+                            logger.log(Level.INFO, "Attempting to register external identifier for datafile {0} (trying: {1}).",
+                                    new Object[] { dataFile.getId(), dataFile.getIdentifier() });
+                            attempts++;
+                        } while (pidProvider.alreadyRegistered(dataFile) && attempts <= FOOLPROOF_RETRIAL_ATTEMPTS_LIMIT);
+                    }
+                    if (!retry) {
+                        logger.warning("Reserving File PID for: " + getDataset().getId() + ", fileId: " + dataFile.getId() + ", during publication failed.");
+                        throw new CommandExecutionException(BundleUtil.getStringFromBundle("abstractDatasetCommand.filePidNotReserved", Arrays.asList(getDataset().getIdentifier())), this);
+                    }
+                    if (attempts > FOOLPROOF_RETRIAL_ATTEMPTS_LIMIT) {
+                        // Didn't work - we existed the loop with too many tries
+                        throw new CommandExecutionException("This dataset may not be published because its identifier is already in use by another dataset; "
+                                + "gave up after " + attempts + " attempts. Current (last requested) identifier: " + dataFile.getIdentifier(), this);
+                    }
+                }
+                // Invariant: DataFile identifier does not exist in the remote registry
+                try {
+                    pidProvider.createIdentifier(dataFile);
+                    dataFile.setGlobalIdCreateTime(getTimestamp());
+                    dataFile.setIdentifierRegistered(true);
+                } catch (Throwable ex) {
+                    logger.info("Call to globalIdServiceBean.createIdentifier failed: " + ex);
+                }
+
+            } catch (Throwable e) {
+                if (e instanceof CommandException) {
+                    throw (CommandException) e;
+                }
+                throw new CommandException(BundleUtil.getStringFromBundle("file.register.error", pidProvider.getProviderInformation()), this);
+            }
+        } else {
+            throw new IllegalCommandException("This datafile may not have a PID because its id registry service is not supported.", this);
+        }
+
+    }
+
+
+    void checkSystemMetadataKeyIfNeeded(DatasetVersion newVersion, DatasetVersion persistedVersion) throws IllegalCommandException {
+        checkSystemMetadataKeyIfNeeded(DatasetVersionDifference.getBlocksWithChanges(newVersion, persistedVersion));
+    }
+
+    protected void checkSystemMetadataKeyIfNeeded(DatasetVersionDifference dvDifference) throws IllegalCommandException {
+        List<List<DatasetField[]>> changeListsByBlock = dvDifference.getDetailDataByBlock();
+        Set<MetadataBlock> changedMDBs = new HashSet<>();
+        for (List<DatasetField[]> changeList : changeListsByBlock) {
+            changedMDBs.add(changeList.get(0)[0].getDatasetFieldType().getMetadataBlock());
+        }
+        checkSystemMetadataKeyIfNeeded(changedMDBs);
+    }
+
+    private void checkSystemMetadataKeyIfNeeded(Set<MetadataBlock> changedMDBs) throws IllegalCommandException {
         for (MetadataBlock mdb : changedMDBs) {
             logger.fine(mdb.getName() + " has been changed");
             String smdbString = JvmSettings.MDB_SYSTEM_KEY_FOR.lookupOptional(mdb.getName())
@@ -235,10 +323,15 @@ public abstract class AbstractDatasetCommand<T> extends AbstractCommand<T> {
     }
 
     protected void registerExternalVocabValuesIfAny(CommandContext ctxt, DatasetVersion newVersion) {
+        registerExternalVocabValuesIfAny(ctxt, newVersion, ctxt.settings().getValueForKey(SettingsServiceBean.Key.CVocConf));
+    }
+    protected void registerExternalVocabValuesIfAny(CommandContext ctxt, DatasetVersion newVersion, String cvocSetting) {
+        Map<Long,JsonObject> cvocConf = ctxt.dsField().getCVocConf(true, cvocSetting);
         for (DatasetField df : newVersion.getFlatDatasetFields()) {
-            logger.fine("Found id: " + df.getDatasetFieldType().getId());
-            if (ctxt.dsField().getCVocConf(true).containsKey(df.getDatasetFieldType().getId())) {
-                ctxt.dsField().registerExternalVocabValues(df);
+            long typeId = df.getDatasetFieldType().getId();
+            if (cvocConf.containsKey(typeId)) {
+                ctxt.dsField().registerExternalVocabValues(df, cvocConf.get(typeId));
+
             }
         }
     }
