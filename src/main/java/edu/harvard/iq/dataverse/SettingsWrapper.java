@@ -92,7 +92,10 @@ public class SettingsWrapper implements java.io.Serializable {
     private String appVersionWithBuildNumber = null; 
     
     private Boolean shibPassiveLoginEnabled = null; 
-    
+
+    // DANS Shib login without discofeed
+    private Boolean shibIdpSelectEnabled = null;
+
     private String footerCopyrightAndYear = null; 
     
     //External Vocabulary support
@@ -782,7 +785,14 @@ public class SettingsWrapper implements java.io.Serializable {
         }
         return shibPassiveLoginEnabled;
     }
-    
+    // DANS Shib login without discofeed
+    public boolean isShibIdpSelectEnabled() {
+        if (shibIdpSelectEnabled == null) {
+            shibIdpSelectEnabled = systemConfig.isShibIdpSelectEnabled();
+        }
+        return shibIdpSelectEnabled;
+    }
+
     // Caching this result may not be saving much, *currently* (since the value is 
     // stored in the bundle). -- L.A. 5.8
     public String getFooterCopyrightAndYear() {

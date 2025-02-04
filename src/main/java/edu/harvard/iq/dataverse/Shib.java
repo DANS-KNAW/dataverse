@@ -19,13 +19,12 @@ import edu.harvard.iq.dataverse.validation.EMailValidator;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import jakarta.ejb.EJB;
 import jakarta.ejb.EJBException;
@@ -60,13 +59,11 @@ public class Shib implements java.io.Serializable {
     SettingsServiceBean settingsService;
 	@EJB
 	SystemConfig systemConfig;
-    @EJB
-    UserServiceBean userService;
 
     HttpServletRequest request;
 
     private String userPersistentId;
-    private String internalUserIdentifier;
+    private String internalUserIdentifer;
     AuthenticatedUserDisplayInfo displayInfo;
     /**
      * @todo Remove this boolean some day? Now the mockups show a popup. Should
@@ -214,8 +211,8 @@ public class Shib implements java.io.Serializable {
         }
 
         String usernameAssertion = getValueFromAssertion(ShibUtil.usernameAttribute);
-        internalUserIdentifier = ShibUtil.generateFriendlyLookingUserIdentifier(usernameAssertion, emailAddress);
-        logger.log(Level.FINE, "friendly looking identifier (backend will enforce uniqueness): {0}", internalUserIdentifier);
+        internalUserIdentifer = ShibUtil.generateFriendlyLookingUserIdentifer(usernameAssertion, emailAddress);
+        logger.fine("friendly looking identifer (backend will enforce uniqueness):" + internalUserIdentifer);
 
         String shibAffiliationAttribute = settingsService.getValueForKey(SettingsServiceBean.Key.ShibAffiliationAttribute);
         String affiliation = (StringUtils.isNotBlank(shibAffiliationAttribute))
@@ -262,7 +259,6 @@ public class Shib implements java.io.Serializable {
             state = State.REGULAR_LOGIN_INTO_EXISTING_SHIB_ACCOUNT;
             logger.fine("Found user based on " + userPersistentId + ". Logging in.");
             logger.fine("Updating display info for " + au.getName());
-            userService.updateLastLogin(au);
             authSvc.updateAuthenticatedUser(au, displayInfo);
             logInUserAndSetShibAttributes(au);
             String prettyFacesHomePageString = getPrettyFacesHomePageString(false);
@@ -331,7 +327,7 @@ public class Shib implements java.io.Serializable {
         AuthenticatedUser au = null;
         try {
             au = authSvc.createAuthenticatedUser(
-                    new UserRecordIdentifier(shibAuthProvider.getId(), lookupStringPerAuthProvider), internalUserIdentifier, displayInfo, true);
+                    new UserRecordIdentifier(shibAuthProvider.getId(), lookupStringPerAuthProvider), internalUserIdentifer, displayInfo, true);
         } catch (EJBException ex) {
             /**
              * @todo Show the ConstraintViolationException, if any.
@@ -359,7 +355,7 @@ public class Shib implements java.io.Serializable {
         visibleTermsOfUse = false;
         ShibAuthenticationProvider shibAuthProvider = new ShibAuthenticationProvider();
         String lookupStringPerAuthProvider = userPersistentId;
-        UserIdentifier userIdentifier = new UserIdentifier(lookupStringPerAuthProvider, internalUserIdentifier);
+        UserIdentifier userIdentifier = new UserIdentifier(lookupStringPerAuthProvider, internalUserIdentifer);
         logger.fine("builtin username: " + builtinUsername);
         AuthenticatedUser builtInUserToConvert = authSvc.canLogInAsBuiltinUser(builtinUsername, builtinPassword);
         if (builtInUserToConvert != null) {
@@ -422,7 +418,11 @@ public class Shib implements java.io.Serializable {
         if (attribute != null) {
             String attributeValue = attribute.toString();
             if(systemConfig.isShibAttributeCharacterSetConversionEnabled()) {
-                attributeValue = new String(attributeValue.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+                try {
+                    attributeValue = new String(attributeValue.getBytes("ISO-8859-1"), "UTF-8");
+                } catch (UnsupportedEncodingException e) {
+                    logger.warning("Character conversion failed for Shib attribute (key, value) = (" + key + ", " + attributeValue + ") ; ignoring it");
+                }
             }
             String trimmedValue = attributeValue.trim();
             if (!trimmedValue.isEmpty()) {
@@ -462,9 +462,9 @@ public class Shib implements java.io.Serializable {
         if (attributeValue.isEmpty()) {
             throw new Exception(key + " was empty");
         }
-        if (systemConfig.isShibAttributeCharacterSetConversionEnabled()) {
-            attributeValue= new String( attributeValue.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
-        }
+		if(systemConfig.isShibAttributeCharacterSetConversionEnabled()) {
+			attributeValue= new String( attributeValue.getBytes("ISO-8859-1"), "UTF-8");
+		}
         String trimmedValue = attributeValue.trim();
         logger.fine("The SAML assertion for \"" + key + "\" (required) was \"" + attributeValue + "\" and was trimmed to \"" + trimmedValue + "\".");
         return trimmedValue;
