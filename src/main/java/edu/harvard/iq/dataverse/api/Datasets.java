@@ -28,6 +28,7 @@ import edu.harvard.iq.dataverse.datasetutility.OptionalFileParams;
 import edu.harvard.iq.dataverse.engine.command.Command;
 import edu.harvard.iq.dataverse.engine.command.DataverseRequest;
 import edu.harvard.iq.dataverse.engine.command.exception.CommandException;
+import edu.harvard.iq.dataverse.engine.command.exception.PermissionException;
 import edu.harvard.iq.dataverse.engine.command.exception.UnforcedCommandException;
 import edu.harvard.iq.dataverse.engine.command.impl.*;
 import edu.harvard.iq.dataverse.export.DDIExportServiceBean;
@@ -37,6 +38,7 @@ import edu.harvard.iq.dataverse.externaltools.ExternalToolHandler;
 import edu.harvard.iq.dataverse.globus.GlobusServiceBean;
 import edu.harvard.iq.dataverse.globus.GlobusUtil;
 import edu.harvard.iq.dataverse.ingest.IngestServiceBean;
+import edu.harvard.iq.dataverse.ingest.IngestUtil;
 import edu.harvard.iq.dataverse.makedatacount.*;
 import edu.harvard.iq.dataverse.makedatacount.MakeDataCountLoggingServiceBean.MakeDataCountEntry;
 import edu.harvard.iq.dataverse.metrics.MetricsUtil;
@@ -102,6 +104,7 @@ import static edu.harvard.iq.dataverse.api.ApiConstants.*;
 import static edu.harvard.iq.dataverse.util.json.JsonPrinter.*;
 import static edu.harvard.iq.dataverse.util.json.NullSafeJsonBuilder.jsonObjectBuilder;
 import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
+import static jakarta.ws.rs.core.Response.Status.FORBIDDEN;
 
 @Path("datasets")
 public class Datasets extends AbstractApiBean {
@@ -245,7 +248,7 @@ public class Datasets extends AbstractApiBean {
                     build();
         } catch (Exception wr) {
             logger.warning(wr.getMessage());
-            return error(Response.Status.FORBIDDEN, "Export Failed");
+            return error(FORBIDDEN, "Export Failed");
         }
     }
 
@@ -1224,7 +1227,7 @@ public class Datasets extends AbstractApiBean {
                     if (user.isSuperuser()) {
                         updateCurrent = true;
                     } else {
-                        return error(Response.Status.FORBIDDEN, "Only superusers can update the current version");
+                        return error(FORBIDDEN, "Only superusers can update the current version");
                     }
                     break;
                 default:
@@ -1336,7 +1339,7 @@ public class Datasets extends AbstractApiBean {
         try {
             AuthenticatedUser user = getRequestAuthenticatedUserOrDie(crc);
             if (!user.isSuperuser()) {
-                return error(Response.Status.FORBIDDEN, "Only superusers can release migrated datasets");
+                return error(FORBIDDEN, "Only superusers can release migrated datasets");
             }
 
             Dataset ds = findDatasetOrDie(id);
@@ -1483,7 +1486,7 @@ public class Datasets extends AbstractApiBean {
          */
 
         if ((!authenticatedUser.isSuperuser() && (dataset.getLatestVersion().getVersionState() != DatasetVersion.VersionState.DRAFT) ) || !permissionService.userOn(authenticatedUser, dataset).has(Permission.EditDataset)) {
-            return error(Status.FORBIDDEN, "Either the files are released and user is not a superuser or user does not have EditDataset permissions");
+            return error(FORBIDDEN, "Either the files are released and user is not a superuser or user does not have EditDataset permissions");
         }
 
         // check if embargoes are allowed(:MaxEmbargoDurationInMonths), gets the :MaxEmbargoDurationInMonths setting variable, if 0 or not set(null) return 400
@@ -1554,7 +1557,7 @@ public class Datasets extends AbstractApiBean {
                 }
             }
             if (badFiles) {
-                return Response.status(Status.FORBIDDEN)
+                return Response.status(FORBIDDEN)
                         .entity(NullSafeJsonBuilder.jsonObjectBuilder().add("status", ApiConstants.STATUS_ERROR)
                                 .add("message", "You do not have permission to embargo the following files")
                                 .add("files", restrictedFiles).build())
@@ -1624,7 +1627,7 @@ public class Datasets extends AbstractApiBean {
         // check if files are unreleased(DRAFT?)
         //ToDo - here and below - check the release status of files and not the dataset state (draft dataset version still can have released files)
         if ((!authenticatedUser.isSuperuser() && (dataset.getLatestVersion().getVersionState() != DatasetVersion.VersionState.DRAFT) ) || !permissionService.userOn(authenticatedUser, dataset).has(Permission.EditDataset)) {
-            return error(Status.FORBIDDEN, "Either the files are released and user is not a superuser or user does not have EditDataset permissions");
+            return error(FORBIDDEN, "Either the files are released and user is not a superuser or user does not have EditDataset permissions");
         }
 
         // check if embargoes are allowed(:MaxEmbargoDurationInMonths), gets the :MaxEmbargoDurationInMonths setting variable, if 0 or not set(null) return 400
@@ -1673,7 +1676,7 @@ public class Datasets extends AbstractApiBean {
                 }
             }
             if (badFiles) {
-                return Response.status(Status.FORBIDDEN)
+                return Response.status(FORBIDDEN)
                         .entity(NullSafeJsonBuilder.jsonObjectBuilder().add("status", ApiConstants.STATUS_ERROR)
                                 .add("message", "The following files do not have embargoes or you do not have permission to remove their embargoes")
                                 .add("files", restrictedFiles).build())
@@ -1739,7 +1742,7 @@ public class Datasets extends AbstractApiBean {
         // client is superadmin or (client has EditDataset permission on these files and files are unreleased)
         // check if files are unreleased(DRAFT?)
         if ((!authenticatedUser.isSuperuser() && (dataset.getLatestVersion().getVersionState() != DatasetVersion.VersionState.DRAFT) ) || !permissionService.userOn(authenticatedUser, dataset).has(Permission.EditDataset)) {
-            return error(Status.FORBIDDEN, "Either the files are released and user is not a superuser or user does not have EditDataset permissions");
+            return error(FORBIDDEN, "Either the files are released and user is not a superuser or user does not have EditDataset permissions");
         }
 
         // check if retentions are allowed(:MinRetentionDurationInMonths), gets the :MinRetentionDurationInMonths setting variable, if 0 or not set(null) return 400
@@ -1844,7 +1847,7 @@ public class Datasets extends AbstractApiBean {
                 }
             }
             if (badFiles) {
-                return Response.status(Status.FORBIDDEN)
+                return Response.status(FORBIDDEN)
                         .entity(NullSafeJsonBuilder.jsonObjectBuilder().add("status", ApiConstants.STATUS_ERROR)
                                 .add("message", "You do not have permission to set a retention period for the following files")
                                 .add("files", restrictedFiles).build())
@@ -1914,7 +1917,7 @@ public class Datasets extends AbstractApiBean {
         // check if files are unreleased(DRAFT?)
         //ToDo - here and below - check the release status of files and not the dataset state (draft dataset version still can have released files)
         if ((!authenticatedUser.isSuperuser() && (dataset.getLatestVersion().getVersionState() != DatasetVersion.VersionState.DRAFT) ) || !permissionService.userOn(authenticatedUser, dataset).has(Permission.EditDataset)) {
-            return error(Status.FORBIDDEN, "Either the files are released and user is not a superuser or user does not have EditDataset permissions");
+            return error(FORBIDDEN, "Either the files are released and user is not a superuser or user does not have EditDataset permissions");
         }
 
         // check if retentions are allowed(:MinRetentionDurationInMonths), gets the :MinRetentionDurationInMonths setting variable, if 0 or not set(null) return 400
@@ -1974,7 +1977,7 @@ public class Datasets extends AbstractApiBean {
                 }
             }
             if (badFiles) {
-                return Response.status(Status.FORBIDDEN)
+                return Response.status(FORBIDDEN)
                         .entity(NullSafeJsonBuilder.jsonObjectBuilder().add("status", ApiConstants.STATUS_ERROR)
                                 .add("message", "The following files do not have retention periods or you do not have permission to remove their retention periods")
                                 .add("files", restrictedFiles).build())
@@ -2063,7 +2066,7 @@ public class Datasets extends AbstractApiBean {
         try {
             User u = getRequestUser(crc);
             if (!u.isSuperuser()) {
-                return error(Response.Status.FORBIDDEN, "Not a superuser");
+                return error(FORBIDDEN, "Not a superuser");
             }
             Dataset dataset = findDatasetOrDie(idSupplied);
 
@@ -2205,7 +2208,7 @@ public class Datasets extends AbstractApiBean {
             boolean canUpdateThumbnail = false;
             canUpdateThumbnail = permissionSvc.requestOn(createDataverseRequest(getRequestUser(crc)), dataset).canIssue(UpdateDatasetThumbnailCommand.class);
             if (!canUpdateThumbnail) {
-                return error(Response.Status.FORBIDDEN, "You are not permitted to list dataset thumbnail candidates.");
+                return error(FORBIDDEN, "You are not permitted to list dataset thumbnail candidates.");
             }
             JsonArrayBuilder data = Json.createArrayBuilder();
             boolean considerDatasetLogoAsCandidate = true;
@@ -2324,7 +2327,7 @@ public class Datasets extends AbstractApiBean {
             DatasetLock lock = datasetService.addDatasetLock(dataset.getId(), DatasetLock.Reason.DcmUpload, user.getId(), "script downloaded");
             if (lock == null) {
                 logger.log(Level.WARNING, "Failed to lock the dataset (dataset id={0})", dataset.getId());
-                return error(Response.Status.FORBIDDEN, "Failed to lock the dataset (dataset id="+dataset.getId()+")");
+                return error(FORBIDDEN, "Failed to lock the dataset (dataset id="+dataset.getId()+")");
             }
             return ok(scriptRequestResponse.getScript(), MediaType.valueOf(MediaType.TEXT_PLAIN), null);
         } catch (WrappedResponse wr) {
@@ -2360,7 +2363,7 @@ public class Datasets extends AbstractApiBean {
             return error(Response.Status.BAD_REQUEST, "Authentication is required.");
         }
         if (!authenticatedUser.isSuperuser()) {
-            return error(Response.Status.FORBIDDEN, "Superusers only.");
+            return error(FORBIDDEN, "Superusers only.");
         }
         String statusMessageFromDcm = jsonFromDcm.getString("status");
         try {
@@ -2514,7 +2517,7 @@ public class Datasets extends AbstractApiBean {
             if (dsv.isDraft() && permissionSvc.requestOn(createDataverseRequest(user), ds).has(Permission.PublishDataset)) {
                 return response(req -> ok(dsv.getExternalStatusLabel()==null ? "":dsv.getExternalStatusLabel()), user);
             } else {
-                return error(Response.Status.FORBIDDEN, "You are not permitted to view the curation status of this dataset.");
+                return error(FORBIDDEN, "You are not permitted to view the curation status of this dataset.");
             }
         } catch (WrappedResponse wr) {
             return wr.getResponse();
@@ -2574,7 +2577,7 @@ public class Datasets extends AbstractApiBean {
             canUpdateDataset = permissionSvc.requestOn(createDataverseRequest(getRequestUser(crc)), dataset)
                     .canIssue(UpdateDatasetVersionCommand.class);
             if (!canUpdateDataset) {
-                return error(Response.Status.FORBIDDEN, "You are not permitted to upload files to this dataset.");
+                return error(FORBIDDEN, "You are not permitted to upload files to this dataset.");
             }
             S3AccessIO<DataFile> s3io = FileUtil.getS3AccessForDirectUpload(dataset);
             if (s3io == null) {
@@ -2653,7 +2656,7 @@ public class Datasets extends AbstractApiBean {
                 allowed = true;
             }
             if (!allowed) {
-                return error(Response.Status.FORBIDDEN,
+                return error(FORBIDDEN,
                         "You are not permitted to abort file uploads with the supplied parameters.");
             }
             try {
@@ -2708,7 +2711,7 @@ public class Datasets extends AbstractApiBean {
                 allowed = true;
             }
             if (!allowed) {
-                return error(Response.Status.FORBIDDEN,
+                return error(FORBIDDEN,
                         "You are not permitted to complete file uploads with the supplied parameters.");
             }
             List<PartETag> eTagList = new ArrayList<PartETag>();
@@ -2804,7 +2807,7 @@ public class Datasets extends AbstractApiBean {
         
         for (DatasetVersion dv : dataset.getVersions()) {
             if (dv.isHasPackageFile()) {
-                return error(Response.Status.FORBIDDEN,
+                return error(FORBIDDEN,
                         BundleUtil.getStringFromBundle("file.api.alreadyHasPackageFile")
                 );
             }
@@ -3130,7 +3133,7 @@ public class Datasets extends AbstractApiBean {
             try {
                 AuthenticatedUser user = getRequestAuthenticatedUserOrDie(crc);
                 if (!user.isSuperuser()) {
-                    return error(Response.Status.FORBIDDEN, "This API end point can be used by superusers only.");
+                    return error(FORBIDDEN, "This API end point can be used by superusers only.");
                 }
                 Dataset dataset = findDatasetOrDie(id);
                 
@@ -3180,12 +3183,12 @@ public class Datasets extends AbstractApiBean {
             try {
                 AuthenticatedUser user = getRequestAuthenticatedUserOrDie(crc);
                 if (!user.isSuperuser()) {
-                    return error(Response.Status.FORBIDDEN, "This API end point can be used by superusers only.");
+                    return error(FORBIDDEN, "This API end point can be used by superusers only.");
                 }
                 Dataset dataset = findDatasetOrDie(id);
                 DatasetLock lock = dataset.getLockFor(lockType);
                 if (lock != null) {
-                    return error(Response.Status.FORBIDDEN, "dataset already locked with lock type " + lockType);
+                    return error(FORBIDDEN, "dataset already locked with lock type " + lockType);
                 }
                 lock = new DatasetLock(lockType, user);
                 execCommand(new AddLockCommand(req, dataset, lock));
@@ -3218,7 +3221,7 @@ public class Datasets extends AbstractApiBean {
             return error(Response.Status.UNAUTHORIZED, "Authentication is required.");
         }
         if (!apiUser.isSuperuser()) {
-            return error(Response.Status.FORBIDDEN, "Superusers only.");
+            return error(FORBIDDEN, "Superusers only.");
         }
         
         // Locks can be optinally filtered by type, user or both.
@@ -3489,7 +3492,7 @@ public class Datasets extends AbstractApiBean {
             return error(Response.Status.BAD_REQUEST, "Authentication is required.");
         }
         if (!user.isSuperuser()) {
-            return error(Response.Status.FORBIDDEN, "Superusers only.");
+            return error(FORBIDDEN, "Superusers only.");
         }
 
         Dataset dataset;
@@ -3526,7 +3529,7 @@ public class Datasets extends AbstractApiBean {
             return error(Response.Status.BAD_REQUEST, "Authentication is required.");
         }
         if (!user.isSuperuser()) {
-            return error(Response.Status.FORBIDDEN, "Superusers only.");
+            return error(FORBIDDEN, "Superusers only.");
         }
 
         Dataset dataset;
@@ -3551,7 +3554,7 @@ public class Datasets extends AbstractApiBean {
         try {
             AuthenticatedUser user = getRequestAuthenticatedUserOrDie(crc);
             if (!user.isSuperuser()) {
-                return error(Response.Status.FORBIDDEN, "Superusers only.");
+                return error(FORBIDDEN, "Superusers only.");
             }
         } catch (WrappedResponse wr) {
             return wr.getResponse();
@@ -3585,7 +3588,7 @@ public class Datasets extends AbstractApiBean {
             return error(Response.Status.UNAUTHORIZED, "Authentication is required.");
         }
         if (!user.isSuperuser()) {
-            return error(Response.Status.FORBIDDEN, "Superusers only.");
+            return error(FORBIDDEN, "Superusers only.");
         }
 
         Dataset dataset;
@@ -3626,7 +3629,7 @@ public class Datasets extends AbstractApiBean {
             return error(Response.Status.BAD_REQUEST, "Authentication is required.");
         }
         if (!user.isSuperuser()) {
-            return error(Response.Status.FORBIDDEN, "Superusers only.");
+            return error(FORBIDDEN, "Superusers only.");
         }
 
         Dataset dataset;
@@ -3667,7 +3670,7 @@ public class Datasets extends AbstractApiBean {
             String[] labelArray = systemConfig.getCurationLabels().get(dataset.getEffectiveCurationLabelSetName());
             return response(req -> ok(String.join(",", labelArray)), getRequestUser(crc));
         } else {
-            return error(Response.Status.FORBIDDEN, "You are not permitted to view the allowed curation labels for this dataset.");
+            return error(FORBIDDEN, "You are not permitted to view the allowed curation labels for this dataset.");
         }
     }
 
@@ -4019,7 +4022,7 @@ public class Datasets extends AbstractApiBean {
         try {
             authUser = getRequestAuthenticatedUserOrDie(crc);
         } catch (WrappedResponse ex) {
-            return error(Response.Status.FORBIDDEN, BundleUtil.getStringFromBundle("file.addreplace.error.auth")
+            return error(FORBIDDEN, BundleUtil.getStringFromBundle("file.addreplace.error.auth")
             );
         }
 
@@ -4049,7 +4052,7 @@ public class Datasets extends AbstractApiBean {
 
         for (DatasetVersion dv : dataset.getVersions()) {
             if (dv.isHasPackageFile()) {
-                return error(Response.Status.FORBIDDEN, BundleUtil.getStringFromBundle("file.api.alreadyHasPackageFile")
+                return error(FORBIDDEN, BundleUtil.getStringFromBundle("file.api.alreadyHasPackageFile")
                 );
             }
         }
@@ -4424,7 +4427,7 @@ public class Datasets extends AbstractApiBean {
 
         for (DatasetVersion dv : dataset.getVersions()) {
             if (dv.isHasPackageFile()) {
-                return error(Response.Status.FORBIDDEN,
+                return error(FORBIDDEN,
                         BundleUtil.getStringFromBundle("file.api.alreadyHasPackageFile")
                 );
             }
@@ -4500,7 +4503,7 @@ public class Datasets extends AbstractApiBean {
 
         for (DatasetVersion dv : dataset.getVersions()) {
             if (dv.isHasPackageFile()) {
-                return error(Response.Status.FORBIDDEN,
+                return error(FORBIDDEN,
                         BundleUtil.getStringFromBundle("file.api.alreadyHasPackageFile")
                 );
             }
@@ -4522,6 +4525,151 @@ public class Datasets extends AbstractApiBean {
 
     }
 
+    @POST
+    @AuthRequired
+    @Path("{id}/files/metadata")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateMultipleFileMetadata(@Context ContainerRequestContext crc, String jsonData,
+        @PathParam("id") String datasetId) throws DataFileTagException, CommandException {
+        try {
+            DataverseRequest req = createDataverseRequest(getRequestUser(crc));
+            Dataset dataset = findDatasetOrDie(datasetId);
+            User authUser = getRequestUser(crc);
+
+            // Verify that the user has EditDataset permission
+            if (!permissionSvc.requestOn(createDataverseRequest(authUser), dataset).has(Permission.EditDataset)) {
+                return error(Response.Status.FORBIDDEN, "You do not have permission to edit this dataset.");
+            }
+
+            // Parse the JSON array
+            JsonArray jsonArray = JsonUtil.getJsonArray(jsonData);
+
+            // Get the latest version of the dataset
+            DatasetVersion latestVersion = dataset.getLatestVersion();
+            List<FileMetadata> currentFileMetadatas = latestVersion.getFileMetadatas();
+
+            // Quick checks to verify all file ids in the JSON array are valid
+            Set<Long> validFileIds = currentFileMetadatas.stream().map(fm -> fm.getDataFile().getId())
+                .collect(Collectors.toSet());
+
+            // Extract all file IDs from the JSON array
+            Set<Long> jsonFileIds = jsonArray.stream().map(JsonValue::asJsonObject).map(jsonObj -> {
+                try {
+                    return jsonObj.getJsonNumber("dataFileId").longValueExact();
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }).collect(Collectors.toSet());
+
+            if (jsonFileIds.size() != jsonArray.size()) {
+                return error(BAD_REQUEST, "One or more invalid dataFileId values were provided");
+            }
+
+            // Check if all JSON file IDs are valid
+            if (!validFileIds.containsAll(jsonFileIds)) {
+                Set<Long> invalidIds = new HashSet<>(jsonFileIds);
+                invalidIds.removeAll(validFileIds);
+                return error(BAD_REQUEST,
+                    "The following files are not part of the current version of the Dataset. dataFileIds: " + invalidIds);
+            }
+
+            // Create editable fileMetadata if needed
+            if (!latestVersion.isDraft()) {
+                latestVersion = dataset.getOrCreateEditVersion();
+                currentFileMetadatas = latestVersion.getFileMetadatas();
+            }
+
+            // Create a map of fileId to FileMetadata for quick lookup
+            Map<Long, FileMetadata> fileMetadataMap = currentFileMetadatas.stream()
+                .collect(Collectors.toMap(fm -> fm.getDataFile().getId(), fm -> fm));
+
+            boolean publicInstall = settingsSvc.isTrueForKey(SettingsServiceBean.Key.PublicInstall, false);
+
+            int filesUpdated = 0;
+            for (JsonValue jsonValue : jsonArray) {
+                JsonObject jsonObj = jsonValue.asJsonObject();
+                Long fileId = jsonObj.getJsonNumber("dataFileId").longValueExact();
+
+                FileMetadata fmd = fileMetadataMap.get(fileId);
+
+                if (fmd == null) {
+                    return error(BAD_REQUEST,
+                        "File with dataFileId " + fileId + " is not part of the current version of the Dataset.");
+                }
+
+                // Handle restriction
+                if (jsonObj.containsKey("restrict")) {
+                    boolean restrict = jsonObj.getBoolean("restrict");
+                    if (restrict != fmd.isRestricted()) {
+                        if (publicInstall && restrict) {
+                            return error(BAD_REQUEST, "Restricting files is not permitted on a public installation.");
+                        }
+                        fmd.setRestricted(restrict);
+                        if (!fmd.getDataFile().isReleased()) {
+                            fmd.getDataFile().setRestricted(restrict);
+                        }
+
+                    } else {
+                        // This file is already restricted or already unrestricted
+                        String text = restrict ? "restricted" : "unrestricted";
+                        return error(BAD_REQUEST, "File (dataFileId:" + fileId + ") is already " + text);
+                    }
+                }
+
+                // Load optional params
+                OptionalFileParams optionalFileParams = new OptionalFileParams(jsonObj.toString());
+
+                // Check for filename conflicts
+                String incomingLabel = null;
+                if (jsonObj.containsKey("label")) {
+                    incomingLabel = jsonObj.getString("label");
+                }
+                String incomingDirectoryLabel = null;
+                if (jsonObj.containsKey("directoryLabel")) {
+                    incomingDirectoryLabel = jsonObj.getString("directoryLabel");
+                }
+                String existingLabel = fmd.getLabel();
+                String existingDirectoryLabel = fmd.getDirectoryLabel();
+                String pathPlusFilename = IngestUtil.getPathAndFileNameToCheck(incomingLabel, incomingDirectoryLabel,
+                    existingLabel, existingDirectoryLabel);
+
+                // Create a copy of the fileMetadataMap without the current fmd
+                Map<Long, FileMetadata> fileMetadataMapCopy = new HashMap<>(fileMetadataMap);
+                fileMetadataMapCopy.remove(fileId);
+
+                List<FileMetadata> fmdListMinusCurrentFile = new ArrayList<>(fileMetadataMapCopy.values());
+
+                if (IngestUtil.conflictsWithExistingFilenames(pathPlusFilename, fmdListMinusCurrentFile)) {
+                    return error(BAD_REQUEST, BundleUtil.getStringFromBundle("files.api.metadata.update.duplicateFile",
+                        Arrays.asList(pathPlusFilename)));
+                }
+
+                // Apply optional params
+                optionalFileParams.addOptionalParams(fmd);
+
+                // Store updated FileMetadata
+                fileMetadataMap.put(fileId, fmd);
+                filesUpdated++;
+            }
+
+            latestVersion.setFileMetadatas(new ArrayList<>(fileMetadataMap.values()));
+            // Update the dataset version with all changes
+            UpdateDatasetVersionCommand updateCmd = new UpdateDatasetVersionCommand(dataset, req);
+            dataset = execCommand(updateCmd);
+
+            return ok("File metadata updates have been completed for " + filesUpdated + " files.");
+        } catch (WrappedResponse wr) {
+            return error(BAD_REQUEST,
+                "An error has occurred attempting to update the requested DataFiles, likely related to permissions.");
+        } catch (JsonException ex) {
+            logger.log(Level.WARNING, "Dataset metadata update: exception while parsing JSON: {0}", ex);
+            return error(BAD_REQUEST, BundleUtil.getStringFromBundle("file.addreplace.error.parsing"));
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Dataset metadata update: exception while processing:{0}", e);
+            return error(Response.Status.INTERNAL_SERVER_ERROR, "Error updating metadata for DataFiles: " + e);
+        }
+    }
+
     /**
      * API to find curation assignments and statuses
      *
@@ -4537,7 +4685,7 @@ public class Datasets extends AbstractApiBean {
         try {
             AuthenticatedUser user = getRequestAuthenticatedUserOrDie(crc);
             if (!user.isSuperuser()) {
-                return error(Response.Status.FORBIDDEN, "Superusers only.");
+                return error(FORBIDDEN, "Superusers only.");
             }
         } catch (WrappedResponse wr) {
             return wr.getResponse();
@@ -4600,7 +4748,7 @@ public class Datasets extends AbstractApiBean {
         try {
             AuthenticatedUser au = getRequestAuthenticatedUserOrDie(crc);
             if (!au.isSuperuser()) {
-                return error(Response.Status.FORBIDDEN, "Superusers only.");
+                return error(FORBIDDEN, "Superusers only.");
             }
             DataverseRequest req = createDataverseRequest(au);
             DatasetVersion dsv = getDatasetVersionOrDie(req, versionNumber, findDatasetOrDie(datasetId), uriInfo,
@@ -4633,7 +4781,7 @@ public class Datasets extends AbstractApiBean {
             AuthenticatedUser au = getRequestAuthenticatedUserOrDie(crc);
 
             if (!au.isSuperuser()) {
-                return error(Response.Status.FORBIDDEN, "Superusers only.");
+                return error(FORBIDDEN, "Superusers only.");
             }
             
             //Verify we have valid json after removing any HTML tags (the status gets displayed in the UI, so we want plain text).
@@ -4688,7 +4836,7 @@ public class Datasets extends AbstractApiBean {
         try {
             AuthenticatedUser au = getRequestAuthenticatedUserOrDie(crc);
             if (!au.isSuperuser()) {
-                return error(Response.Status.FORBIDDEN, "Superusers only.");
+                return error(FORBIDDEN, "Superusers only.");
             }
 
             DataverseRequest req = createDataverseRequest(au);
@@ -4894,7 +5042,7 @@ public class Datasets extends AbstractApiBean {
             return error(Response.Status.BAD_REQUEST, "Authentication is required.");
         }
         if (!user.isSuperuser()) {
-            return error(Response.Status.FORBIDDEN, "Superusers only.");
+            return error(FORBIDDEN, "Superusers only.");
         }
 
         Dataset dataset;
@@ -4906,7 +5054,7 @@ public class Datasets extends AbstractApiBean {
         }
         Optional<Boolean> gbAtRequestOpt = JvmSettings.GUESTBOOK_AT_REQUEST.lookupOptional(Boolean.class);
         if (!gbAtRequestOpt.isPresent()) {
-            return error(Response.Status.FORBIDDEN, "Guestbook Entry At Request cannot be set. This server is not configured to allow it.");
+            return error(FORBIDDEN, "Guestbook Entry At Request cannot be set. This server is not configured to allow it.");
         }
         String choice = Boolean.valueOf(gbAtRequest).toString();
         dataset.setGuestbookEntryAtRequest(choice);
@@ -4928,7 +5076,7 @@ public class Datasets extends AbstractApiBean {
             return error(Response.Status.BAD_REQUEST, "Authentication is required.");
         }
         if (!user.isSuperuser()) {
-            return error(Response.Status.FORBIDDEN, "Superusers only.");
+            return error(FORBIDDEN, "Superusers only.");
         }
 
         Dataset dataset;
@@ -5021,7 +5169,7 @@ public class Datasets extends AbstractApiBean {
             return error(Response.Status.UNAUTHORIZED, "Authentication is required.");
         }
         if (!user.isSuperuser()) {
-            return error(Response.Status.FORBIDDEN, "Superusers only.");
+            return error(FORBIDDEN, "Superusers only.");
         }
 
         Dataset dataset;
@@ -5055,7 +5203,7 @@ public class Datasets extends AbstractApiBean {
             return error(Response.Status.BAD_REQUEST, "Authentication is required.");
         }
         if (!user.isSuperuser()) {
-            return error(Response.Status.FORBIDDEN, "Superusers only.");
+            return error(FORBIDDEN, "Superusers only.");
         }
 
         Dataset dataset;
@@ -5071,4 +5219,67 @@ public class Datasets extends AbstractApiBean {
         return ok("Pid Generator reset to default: " + dataset.getEffectivePidGenerator().getId());
     }
 
+    @PUT
+    @AuthRequired
+    @Path("{id}/deleteFiles")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response deleteDatasetFiles(@Context ContainerRequestContext crc, @PathParam("id") String id,
+        JsonArray fileIds) {
+        try {
+            getRequestAuthenticatedUserOrDie(crc);
+        } catch (WrappedResponse ex) {
+            return ex.getResponse();
+        }
+        return response(req -> {
+            Dataset dataset = findDatasetOrDie(id);
+            // Convert JsonArray to List<Long>
+            List<Long> fileIdList = new ArrayList<>();
+            for (JsonValue value : fileIds) {
+                fileIdList.add(((JsonNumber) value).longValue());
+            }
+            // Find the files to be deleted
+            List<FileMetadata> filesToDelete = dataset.getOrCreateEditVersion().getFileMetadatas().stream()
+                .filter(fileMetadata -> fileIdList.contains(fileMetadata.getDataFile().getId()))
+                .collect(Collectors.toList());
+
+            if (filesToDelete.isEmpty()) {
+                return badRequest("No files found with the provided IDs.");
+            }
+
+            if (filesToDelete.size() != fileIds.size()) {
+                return badRequest(
+                    "Some files listed are not present in the latest dataset version and cannot be deleted.");
+            }
+            try {
+
+                UpdateDatasetVersionCommand update_cmd = new UpdateDatasetVersionCommand(dataset, req, filesToDelete);
+
+                commandEngine.submit(update_cmd);
+                for (FileMetadata fm : filesToDelete) {
+                    DataFile dataFile = fm.getDataFile();
+                    boolean deletePhysicalFile = !dataFile.isReleased();
+                    if (deletePhysicalFile) {
+                        try {
+                            fileService.finalizeFileDelete(dataFile.getId(),
+                                fileService.getPhysicalFileToDelete(dataFile));
+                        } catch (IOException ioex) {
+                            logger.warning("Failed to delete the physical file associated with the deleted datafile id="
+                                + dataFile.getId() + ", storage location: "
+                                + fileService.getPhysicalFileToDelete(dataFile));
+                        }
+                    }
+                }
+            } catch (PermissionException ex) {
+                return error(FORBIDDEN, "You do not have permission to delete files ont this dataset.");
+            } catch (CommandException ex) {
+                return error(BAD_REQUEST,
+                    "File deletes failed for dataset ID " + id + " (CommandException): " + ex.getMessage());
+            } catch (EJBException ex) {
+                return error(jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR,
+                    "File deletes failed for dataset ID " + id + "(EJBException): " + ex.getMessage());
+            }
+            return ok(fileIds.size() + " files deleted successfully");
+
+        }, getRequestUser(crc));
+    }
 }
