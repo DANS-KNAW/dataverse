@@ -9,6 +9,7 @@ import edu.harvard.iq.dataverse.search.IndexAsync;
 import edu.harvard.iq.dataverse.search.IndexResponse;
 import edu.harvard.iq.dataverse.search.IndexServiceBean;
 import edu.harvard.iq.dataverse.search.SolrIndexServiceBean;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -145,14 +146,20 @@ public class DataverseRoleServiceBean implements java.io.Serializable {
     }
 
     public void revoke(RoleAssignment ra) {
-        if (!em.contains(ra)) {
-            ra = em.merge(ra);
-        }
-        em.remove(ra);
+        delete(ra);
         /**
          * @todo update permissionModificationTime here.
          */
         indexAsync.indexRole(ra);
+    }
+
+    private void delete(RoleAssignment ra) {
+        em.createNamedQuery("RoleAssignment.deleteByAssigneeIdentifier_RoleIdDefinition_PointId")
+            .setParameter("assigneeIdentifier", ra.getAssigneeIdentifier())
+            .setParameter("roleId", ra.getRole().getId())
+            .setParameter("definitionPointId", ra.getDefinitionPoint().getId())
+            .executeUpdate();
+        em.remove(ra);
     }
 
     // "nuclear" remove-all roles for a user or group: 
@@ -162,16 +169,14 @@ public class DataverseRoleServiceBean implements java.io.Serializable {
     public void revokeAll(RoleAssignee assignee) {
         Set<DvObject> reindexSet = new HashSet<>();
 
-        for (RoleAssignment ra : roleAssigneeService.getAssignmentsFor(assignee.getIdentifier())) {
-            if (!em.contains(ra)) {
-                ra = em.merge(ra);
+        try {
+            for (RoleAssignment ra : roleAssigneeService.getAssignmentsFor(assignee.getIdentifier())) {
+                delete(ra);
+                reindexSet.add(ra.getDefinitionPoint());
             }
-            em.remove(ra);
-
-            reindexSet.add(ra.getDefinitionPoint());
+        } finally {
+            indexAsync.indexRoles(reindexSet);
         }
-
-        indexAsync.indexRoles(reindexSet);
     }
 
     public RoleAssignmentSet roleAssignments(User user, Dataverse dv) {
