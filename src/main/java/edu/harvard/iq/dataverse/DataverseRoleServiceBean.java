@@ -1,5 +1,6 @@
 package edu.harvard.iq.dataverse;
 
+import java.sql.Timestamp;
 import edu.harvard.iq.dataverse.authorization.DataverseRole;
 import edu.harvard.iq.dataverse.authorization.Permission;
 import edu.harvard.iq.dataverse.authorization.RoleAssignee;
@@ -9,6 +10,8 @@ import edu.harvard.iq.dataverse.search.IndexAsync;
 import edu.harvard.iq.dataverse.search.IndexResponse;
 import edu.harvard.iq.dataverse.search.IndexServiceBean;
 import edu.harvard.iq.dataverse.search.SolrIndexServiceBean;
+
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -145,14 +148,23 @@ public class DataverseRoleServiceBean implements java.io.Serializable {
     }
 
     public void revoke(RoleAssignment ra) {
+        mergeAndRemove(ra);
+        indexAsync.indexRole(ra);
+    }
+
+    private void mergeAndRemove(RoleAssignment ra) {
         if (!em.contains(ra)) {
             ra = em.merge(ra);
         }
+        // without general cascading: Manually merge related entities
+        if (ra.getDefinitionPoint() != null) {
+            ra.getDefinitionPoint().roleAssignments.forEach(em::merge);
+        }
+        if (ra.getRole() != null) {
+            em.merge(ra.getRole());
+        }
         em.remove(ra);
-        /**
-         * @todo update permissionModificationTime here.
-         */
-        indexAsync.indexRole(ra);
+        ra.getDefinitionPoint().setPermissionModificationTime(Timestamp.from(Instant.now()));
     }
 
     // "nuclear" remove-all roles for a user or group: 
@@ -163,11 +175,7 @@ public class DataverseRoleServiceBean implements java.io.Serializable {
         Set<DvObject> reindexSet = new HashSet<>();
 
         for (RoleAssignment ra : roleAssigneeService.getAssignmentsFor(assignee.getIdentifier())) {
-            if (!em.contains(ra)) {
-                ra = em.merge(ra);
-            }
-            em.remove(ra);
-
+            mergeAndRemove(ra);
             reindexSet.add(ra.getDefinitionPoint());
         }
 
