@@ -28,6 +28,7 @@ public class DataverseConverter implements Converter {
 
     @Override
     public Object getAsObject(FacesContext facesContext, UIComponent component, String submittedValue) {
+
         if (submittedValue == null || !submittedValue.matches("[0-9]+")) {
             logger.fine("Submitted value is not a host dataverse number but: " + submittedValue);
             return CDI.current().select(DatasetPage.class).get().getSelectedHostDataverse();
