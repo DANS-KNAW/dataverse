@@ -700,7 +700,6 @@ public class Dataset extends DvObjectContainer {
         }
         return 0;
     }
-
     public String getCitation() {
         return getCitation(false, getLatestVersion());
     }
