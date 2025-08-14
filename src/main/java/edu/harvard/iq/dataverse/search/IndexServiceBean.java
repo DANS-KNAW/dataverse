@@ -1205,7 +1205,11 @@ public class IndexServiceBean {
                                         solrInputDocument.addField(solrFieldFacetable, topicClassificationTerm);
                                     }
                                 } else {
-                                    solrInputDocument.addField(solrFieldFacetable, dsf.getValuesWithoutNaValues());
+                                    var values = dsf.getValuesWithoutNaValues();
+                                    for (int i = 0; i < values.size() ; i++) {
+                                        values.set(i, values.get(i).replace("&apos;", "'"));
+                                    }
+                                    solrInputDocument.addField(solrFieldFacetable, values);
                                 }
                             }
                         }
