@@ -28,6 +28,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -53,6 +54,8 @@ import jakarta.ejb.EJB;
 import jakarta.ejb.EJBException;
 import jakarta.ejb.Stateless;
 import jakarta.ejb.TransactionAttribute;
+
+import static edu.harvard.iq.dataverse.DatasetField.NA_VALUE;
 import static jakarta.ejb.TransactionAttributeType.REQUIRES_NEW;
 
 import jakarta.inject.Inject;
@@ -263,7 +266,7 @@ public class IndexServiceBean {
         Set<String> langs = settingsService.getConfiguredLanguages();
         for (ControlledVocabularyValue dataverseSubject : dataverse.getDataverseSubjects()) {
             String subject = dataverseSubject.getStrValue();
-            if (!subject.equals(DatasetField.NA_VALUE)) {
+            if (!subject.equals(NA_VALUE)) {
              // Index in all used languages (display and metadata languages
                 for(String locale: langs) {
                     solrInputDocument.addField(SearchFields.DATAVERSE_SUBJECT, dataverseSubject.getLocaleStrValue(locale));
@@ -1158,7 +1161,7 @@ public class IndexServiceBean {
                              */
                             if (dsf.getControlledVocabularyValues().isEmpty()) {
                                 for (DatasetFieldValue dfv : dsf.getDatasetFieldValues()) {
-                                    if (dfv.getValue() == null || dfv.getValue().equals(DatasetField.NA_VALUE)) {
+                                    if (dfv.getValue() == null || dfv.getValue().equals(NA_VALUE)) {
                                         continue;
                                     }
                                     solrInputDocument.addField(solrFieldSearchable, dfv.getValue());
@@ -1169,7 +1172,7 @@ public class IndexServiceBean {
                                 }
                             } else {
                                 for (ControlledVocabularyValue controlledVocabularyValue : dsf.getControlledVocabularyValues()) {
-                                    if (controlledVocabularyValue.getStrValue().equals(DatasetField.NA_VALUE)) {
+                                    if (controlledVocabularyValue.getStrValue().equals(NA_VALUE)) {
                                         continue;
                                     }
 
