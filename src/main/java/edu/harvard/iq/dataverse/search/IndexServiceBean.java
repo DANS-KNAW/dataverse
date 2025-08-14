@@ -1208,10 +1208,8 @@ public class IndexServiceBean {
                                         solrInputDocument.addField(solrFieldFacetable, topicClassificationTerm);
                                     }
                                 } else {
-                                    var values = dsf.getValuesWithoutNaValues();
-                                    for (int i = 0; i < values.size() ; i++) {
-                                        values.set(i, values.get(i).replace("&apos;", "'"));
-                                    }
+                                    var values = dsf.getDisplayValues(); // for proper display of facets with &apos;
+                                    values.removeAll(Arrays.asList(NA_VALUE));
                                     solrInputDocument.addField(solrFieldFacetable, values);
                                 }
                             }
