@@ -1650,8 +1650,8 @@ public class DatasetPage implements java.io.Serializable {
         return displayTitle;
     }
 
-    public void setDisplayTitle(String displayCitation) {
-        this.displayCitation = displayTitle;
+    public void setDisplayTitle(String displayTitle) {
+        this.displayTitle = displayTitle;
     }
 
     public String getDropBoxSelection() {
