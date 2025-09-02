@@ -9,10 +9,6 @@ import edu.harvard.iq.dataverse.authorization.DataverseRole;
 import edu.harvard.iq.dataverse.dataaccess.DataAccess;
 import edu.harvard.iq.dataverse.dataaccess.FileAccessIO;
 import edu.harvard.iq.dataverse.dataaccess.GlobusOverlayAccessIO;
-import edu.harvard.iq.dataverse.dataaccess.RemoteOverlayAccessIO;
-import edu.harvard.iq.dataverse.dataaccess.S3AccessIO;
-import edu.harvard.iq.dataverse.dataaccess.StorageIO;
-import edu.harvard.iq.dataverse.dataaccess.SwiftAccessIO;
 import edu.harvard.iq.dataverse.export.ExportService;
 import edu.harvard.iq.dataverse.search.IndexServiceBean;
 import edu.harvard.iq.dataverse.RoleAssignment;
@@ -31,9 +27,7 @@ import edu.harvard.iq.dataverse.pidproviders.PidProvider;
 import edu.harvard.iq.dataverse.pidproviders.PidUtil;
 import edu.harvard.iq.dataverse.search.IndexResponse;
 
-import java.io.File;
 import java.nio.file.Files;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -43,7 +37,7 @@ import java.util.logging.Logger;
 
 import edu.harvard.iq.dataverse.batch.util.LoggingUtil;
 import java.io.IOException;
-import java.util.concurrent.Future;
+
 import org.apache.solr.client.solrj.SolrServerException;
 
 /**
