@@ -6,12 +6,21 @@ import edu.harvard.iq.dataverse.DatasetVersion;
 import edu.harvard.iq.dataverse.Dataverse;
 import edu.harvard.iq.dataverse.GlobalId;
 import edu.harvard.iq.dataverse.authorization.DataverseRole;
+import edu.harvard.iq.dataverse.dataaccess.DataAccess;
+import edu.harvard.iq.dataverse.dataaccess.FileAccessIO;
+import edu.harvard.iq.dataverse.dataaccess.GlobusOverlayAccessIO;
+import edu.harvard.iq.dataverse.dataaccess.RemoteOverlayAccessIO;
+import edu.harvard.iq.dataverse.dataaccess.S3AccessIO;
+import edu.harvard.iq.dataverse.dataaccess.StorageIO;
+import edu.harvard.iq.dataverse.dataaccess.SwiftAccessIO;
 import edu.harvard.iq.dataverse.export.ExportService;
 import edu.harvard.iq.dataverse.search.IndexServiceBean;
 import edu.harvard.iq.dataverse.RoleAssignment;
 import edu.harvard.iq.dataverse.authorization.Permission;
 import edu.harvard.iq.dataverse.authorization.users.AuthenticatedUser;
 import static edu.harvard.iq.dataverse.dataset.DatasetUtil.deleteDatasetLogo;
+import static java.text.MessageFormat.format;
+
 import edu.harvard.iq.dataverse.engine.command.AbstractVoidCommand;
 import edu.harvard.iq.dataverse.engine.command.CommandContext;
 import edu.harvard.iq.dataverse.engine.command.DataverseRequest;
@@ -21,6 +30,10 @@ import edu.harvard.iq.dataverse.engine.command.exception.PermissionException;
 import edu.harvard.iq.dataverse.pidproviders.PidProvider;
 import edu.harvard.iq.dataverse.pidproviders.PidUtil;
 import edu.harvard.iq.dataverse.search.IndexResponse;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -99,14 +112,6 @@ public class DestroyDatasetCommand extends AbstractVoidCommand {
             ctxt.em().remove(ra);
         }
 
-        ExportService exportService = ExportService.getInstance();
-        try {
-            exportService.clearAllCachedFormats(doomed);
-        }
-        catch (IOException e) {
-            logger.log(Level.WARNING, "Export service could not clear all cached formats:", e.getMessage());
-        }
-
         if (!managedDoomed.isHarvested()) {
             //also, lets delete the uploaded thumbnails!
             deleteDatasetLogo(managedDoomed);
@@ -124,7 +129,29 @@ public class DestroyDatasetCommand extends AbstractVoidCommand {
                 }
             }
         }
-        
+
+        // CACHED EXPORTS
+        var exportService = ExportService.getInstance();
+        try {
+            exportService.clearAllCachedFormats(managedDoomed);
+        }
+        catch (IOException e) {
+            var msg = format("Failed to delete cached exports of {0}: {1} ", managedDoomed.getIdentifier(), e.getClass().getSimpleName());
+            logger.log(Level.WARNING, msg, e.getMessage());
+        }
+
+        // DIRECTORY
+        try {
+            var storageIO = DataAccess.getStorageIO(managedDoomed);
+            if (storageIO instanceof FileAccessIO<Dataset> || storageIO instanceof GlobusOverlayAccessIO<Dataset>) {
+                Files.delete(storageIO.getAuxObjectAsPath(".").getParent());
+            }
+        }
+        catch (IOException e) {
+            var msg = format("Failed to delete dataset directory of {0}: {1} ", managedDoomed.getIdentifier(), e.getClass().getSimpleName());
+            logger.log(Level.WARNING, msg, e.getMessage());
+        }
+
         toReIndex = managedDoomed.getOwner();
 
         // add potential Solr IDs of datasets to list for deletion
