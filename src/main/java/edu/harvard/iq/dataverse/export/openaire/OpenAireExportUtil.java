@@ -1271,13 +1271,17 @@ public class OpenAireExportUtil {
      */
     public static void writeGeoLocationsElement(XMLStreamWriter xmlw, DatasetVersionDTO datasetVersionDTO, String language) throws XMLStreamException {
         // geoLocation -> geoLocationPlace
-        String geoLocationPlace = dto2Primitive(datasetVersionDTO, DatasetFieldConstant.productionPlace);
+        List<String> geoLocationPlaces = dto2MultiplePrimitive(datasetVersionDTO, DatasetFieldConstant.productionPlace);
         boolean geoLocations_check = false;
 
         // write geoLocations
         geoLocations_check = writeOpenTag(xmlw, "geoLocations", geoLocations_check);
-        writeGeolocationPlace(xmlw, geoLocationPlace, language);
-                
+        if (geoLocationPlaces != null) {
+            for (String geoLocationPlace : geoLocationPlaces) {
+                writeGeolocationPlace(xmlw, geoLocationPlace, language);
+            }
+        }
+
         // get DatasetFieldConstant.geographicBoundingBox
         for (Map.Entry<String, MetadataBlockDTO> entry : datasetVersionDTO.getMetadataBlocks().entrySet()) {
             MetadataBlockDTO value = entry.getValue();
@@ -1296,6 +1300,26 @@ public class OpenAireExportUtil {
         }
 
         writeEndTag(xmlw, geoLocations_check);
+    }
+
+    /**
+     *
+     * @param datasetVersionDTO
+     * @param datasetFieldTypeName
+     * @return List<String> Multiple Primitive
+     *
+     */
+    private static List<String> dto2MultiplePrimitive(DatasetVersionDTO datasetVersionDTO, String datasetFieldTypeName) {
+        // give the single value of the given metadata
+        for (Map.Entry<String, MetadataBlockDTO> entry : datasetVersionDTO.getMetadataBlocks().entrySet()) {
+            MetadataBlockDTO value = entry.getValue();
+            for (FieldDTO fieldDTO : value.getFields()) {
+                if (datasetFieldTypeName.equals(fieldDTO.getTypeName())) {
+                    return fieldDTO.getMultiplePrimitive();
+                }
+            }
+        }
+        return null;
     }
 
     /**
