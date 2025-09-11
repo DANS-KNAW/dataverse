@@ -71,7 +71,6 @@ import jakarta.ws.rs.core.Response.Status;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
-import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -4874,7 +4873,7 @@ public class Datasets extends AbstractApiBean {
         }
         JsonObjectBuilder responseJson;
         if (isAnonymizedAccess) {
-            List<String> anonymizedFieldTypeNamesList = new ArrayList<>(Arrays.asList(anonymizedFieldTypeNames.split(",\\s")));
+            List<String> anonymizedFieldTypeNamesList = new ArrayList<>(Arrays.asList(anonymizedFieldTypeNames.split(SettingsWrapper.COMMA_BETWEEN_OPTIONAL_WHITE_SPACE)));
             responseJson = json(dsv, anonymizedFieldTypeNamesList, true, returnOwners);
         } else {
             responseJson = json(dsv, null, true, returnOwners);
@@ -4900,7 +4899,7 @@ public class Datasets extends AbstractApiBean {
         }
         JsonObjectBuilder responseJson;
         if (isAnonymizedAccess) {
-            List<String> anonymizedFieldTypeNamesList = new ArrayList<>(Arrays.asList(anonymizedFieldTypeNames.split(",\\s")));
+            List<String> anonymizedFieldTypeNamesList = new ArrayList<>(Arrays.asList(anonymizedFieldTypeNames.split(SettingsWrapper.COMMA_BETWEEN_OPTIONAL_WHITE_SPACE)));
             responseJson = json(dsv, anonymizedFieldTypeNamesList, true, returnOwners);
         } else {
             responseJson = json(dsv, null, true, returnOwners);
