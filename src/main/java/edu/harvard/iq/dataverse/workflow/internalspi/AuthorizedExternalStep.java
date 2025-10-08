@@ -21,7 +21,9 @@ import org.apache.hc.client5.http.classic.methods.*;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.net.URIBuilder;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 
 /**
  * A workflow step that sends a HTTP request, and then pauses, waiting for an
@@ -127,7 +129,18 @@ public class AuthorizedExternalStep implements WorkflowStep {
         }
     
         request.setHeader("Content-Type", params.getOrDefault("contentType", "text/plain"));
-    
+
+
+        String bodyKey = (rollback ? "rollbackBody" : "body");
+        if (params.containsKey(bodyKey) && (request instanceof HttpPost || request instanceof HttpPut)) {
+            String body = params.get(bodyKey);
+            request.setEntity(
+                new StringEntity(process(body, templateParams),
+                    ContentType.create(request.getFirstHeader("Content-Type").getValue())
+                )
+            );
+        }
+
         return request;
     }
     
