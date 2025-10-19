@@ -120,8 +120,34 @@
                                         </h:outputFormat>
                                     </p>
                                 </h:form>
-
+                                <!-- DANS Shib login without discofeed; idpselect is not done here! - Start -->
+                                <div jsf:rendered="#{!settingsWrapper.shibIdpSelectEnabled}">
                                 <div class="form-horizontal">
+                                    <div class="form-group text-left">
+                                        <div class="col-sm-12" >
+                                            <form action="/Shibboleth.sso/Login" method="POST" autocomplete="OFF" class="form-inline">
+                                                <input type="hidden" name="SAMLDS" value="1"/>
+                                                <input name="target" value="#{systemConfig.dataverseSiteUrl}/shib.xhtml" type="hidden"/>
+                                                <!-- <div class="IdPSelectTextDiv help-block"></div> -->
+                                                <div class="form-group">
+                                                    <div class="col-sm-9 button-block">
+                                                        <button id="login" name="login" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only btn btn-default" onclick="return true;" type="submit" role="button" aria-disabled="false">
+                                                            <!-- <span class="ui-button-text ui-c text-nowrap">#{bundle['login.institution']}</span> -->
+                                                            <!-- #{bundle['login.institution']} used to be 'Institutional Login' -->
+                                                            <span class="ui-button-text ui-c text-nowrap">
+                                                                <h:outputText value="#{LoginPage.getLoginButtonText()}"/>
+                                                            </span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                                <!-- DANS Shib login without discofeed - End -->
+                                <div jsf:rendered="#{settingsWrapper.shibIdpSelectEnabled}">
+                                <div class="form-horizontal" >
                                     <div class="form-group text-left">
                                         <label class="col-sm-4 control-label">
                                             #{bundle['auth.providers.title.shib']}
@@ -161,6 +187,7 @@
                                 <script src="/resources/js/shib/idpselect_config.js"></script>
                                 <script src="/resources/js/shib/idpselect.js"></script>
                                 <script src="/resources/js/shib/idpselect_style.js"></script>
+                            </div>
                             </div>
 
                             <!--ONLY RENDER BUTTON FOR OAUTH PROVIDERS (ORCID, Google, GitHub)-->
