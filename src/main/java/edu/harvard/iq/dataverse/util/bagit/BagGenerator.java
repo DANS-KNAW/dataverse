@@ -827,7 +827,7 @@ public class BagGenerator {
         // ToDo - make configurable
         info.append(CRLF);
 
-        info.append("Organization-Address: " + WordUtils.wrap(orgAddress, 78, CRLF + " ", true));
+        info.append("Organization-Address: " + wrapAndIndent(orgAddress));
 
         info.append(CRLF);
 
@@ -847,8 +847,8 @@ public class BagGenerator {
         } else {
             info.append(
                     // FixMe - handle description having subfields better
-                    WordUtils.wrap(getSingleValue(aggregation.get(descriptionTerm.getLabel()),
-                            descriptionTextTerm.getLabel()), 78, CRLF + " ", true));
+                    wrapAndIndent(getSingleValue(aggregation.get(descriptionTerm.getLabel()),
+                            descriptionTextTerm.getLabel())));
 
             info.append(CRLF);
         }
@@ -914,6 +914,43 @@ public class BagGenerator {
             logger.fine("Multiple values found for: " + key + ": " + val);
         }
         return val;
+    }
+
+    /**
+     * Wraps the provided value to 78 characters with BagIt-compliant continuation
+     * lines and ensures that any existing newlines within the value are treated as
+     * line breaks whose subsequent lines begin with two spaces, as used elsewhere
+     * in bag-info.txt.
+     */
+    private String wrapAndIndent(String value) {
+        if (value == null) {
+            return "";
+        }
+        final String continuation = CRLF + "  "; // two-space indent for continued lines
+        // Normalize newline variants to \n for processing
+        String normalized = value.replace("\r\n", "\n").replace("\r", "\n");
+
+        // Split on existing newlines and wrap each segment separately so we can
+        // inject exactly one CRLF at embedded newline boundaries and ensure the
+        // two-space indent is counted toward the 78-char width.
+        String[] segments = normalized.split("\n", -1);
+        StringBuilder out = new StringBuilder();
+        for (int i = 0; i < segments.length; i++) {
+            String segment = segments[i];
+            if (i == 0) {
+                // First segment: wrap as-is
+                out.append(WordUtils.wrap(segment, 78, continuation, true));
+            } else {
+                // Embedded newline: add a single CRLF, then add the two-space indent only once
+                // for the first line following the newline. For the content after the indent,
+                // wrap to a width of 76 so the total line length (including the two spaces)
+                // does not exceed 78. Additional wrapped lines will use the continuation
+                // (CRLF + two spaces) automatically.
+                out.append(CRLF).append("  ");
+                out.append(WordUtils.wrap(segment, 76, continuation, true));
+            }
+        }
+        return out.toString();
     }
 
     // Used in validation
