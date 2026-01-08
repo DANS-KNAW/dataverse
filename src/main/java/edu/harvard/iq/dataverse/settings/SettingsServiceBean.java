@@ -692,6 +692,7 @@ public class SettingsServiceBean {
         PostExternalSearchUrl,
         //Experimental setting to provide a display name for the POST external search service
         PostExternalSearchName,
+        BagGeneratorThreads,
         ;
 
         @Override
