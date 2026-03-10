@@ -112,7 +112,18 @@ public class COARNotifyRelationshipAnnouncement {
      * Extract a field value from the message object.
      */
     private String extractField(JsonObject msgObject, String key) {
-        return msgObject.containsKey(key) ? msgObject.getString(key) : null;
+        if (msgObject.containsKey(key)) {
+            jakarta.json.JsonValue value = msgObject.get(key);
+            if (value.getValueType() == jakarta.json.JsonValue.ValueType.STRING) {
+                return ((jakarta.json.JsonString) value).getString();
+            } else if (value.getValueType() == jakarta.json.JsonValue.ValueType.OBJECT) {
+                JsonObject obj = (JsonObject) value;
+                if (obj.containsKey("@id")) {
+                    return obj.getString("@id");
+                }
+            }
+        }
+        return null;
     }
 
     /**
