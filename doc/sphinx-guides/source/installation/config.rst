@@ -2249,9 +2249,24 @@ These archival Bags include all of the files and metadata in a given dataset ver
 
 The Dataverse Software offers an internal archive workflow which may be configured as a PostPublication workflow via an admin API call to manually submit previously published Datasets and prior versions to a configured archive such as Chronopolis. The workflow creates a `JSON-LD <http://www.openarchives.org/ore/0.9/jsonld>`_ serialized `OAI-ORE <https://www.openarchives.org/ore/>`_ map file, which is also available as a metadata export format in the Dataverse Software web interface.
 
+The size of the zipped archival Bag can be limited, and files that don't fit within that limit can either be transferred separately (placed so that they are correctly positioned according to the BagIt specification when the zipped bag in unzipped in place) or just referenced for later download (using the BagIt concept of a 'holey' bag with a list of files in a ``fetch.txt`` file) can now be configured for all archivers. These settings allow for managing large datasets by excluding files over a certain size or total data size, which can be useful for archivers with size limitations or to reduce transfer times. See the :ref:`dataverse.bagit.zip.max-file-size`, :ref:`dataverse.bagit.zip.max-data-size`, and :ref:`dataverse.bagit.zip.holey` JVM options for more details.  
+
 At present, archiving classes include the DuraCloudSubmitToArchiveCommand, LocalSubmitToArchiveCommand, GoogleCloudSubmitToArchive, and S3SubmitToArchiveCommand , which all extend the AbstractSubmitToArchiveCommand and use the configurable mechanisms discussed below. (A DRSSubmitToArchiveCommand, which works with Harvard's DRS also exists and, while specific to DRS, is a useful example of how Archivers can support single-version-only semantics and support archiving only from specified collections (with collection specific parameters)). 
 
 All current options support the :ref:`Archival Status API` calls and the same status is available in the dataset page version table (for contributors/those who could view the unpublished dataset, with more detail available to superusers).
+
+Archival Bags are created per dataset version. By default, if a version is republished (via the superuser-only 'Update Current Version' publication option in the UI/API), a new archival bag is not created for the version.
+If the archiver used is capable of deleting existing bags (Google, S3, and File Archivers) superusers can trigger a manual update of the archival bag, and, if the :ref:`dataverse.feature.archive-on-version-update` flag is set to true, this will be done automatically when 'Update Current Version' is used.
+
+Two settings that can be used with all current Archivers are:
+
+- \:BagGeneratorThreads - the number of threads to use when adding data files to the zipped bag. The default is 2. Values of 4 or more may increase performance on larger machines but may cause problems if file access is throttled
+- \:ArchiveOnlyIfEarlierVersionsAreArchived - when true, requires dataset versions to be archived in order by confirming that all prior versions have been successfully archived before allowing a new version to be archived. Default is false 
+
+These must be included in the \:ArchiverSettings for the Archiver to work
+ 
+Archival Bags are created per dataset version. By default, if a version is republished (via the superuser-only 'Update Current Version' publication option in the UI/API), a new archival bag is not created for the version.
+If the archiver used is capable of deleting existing bags (Google, S3, and File Archivers) superusers can trigger a manual update of the archival bag, and, if the :ref:`dataverse.bagit.archive-on-version-update` flag is set to true, this will be done automatically when 'Update Current Version' is used.
 
 .. _Duracloud Configuration:
 
@@ -3052,6 +3067,13 @@ Once you have a password from your provider, you should create a password alias 
   You should delete the old JVM option and the wrapped password alias, then recreate
   as described above.
 
+.. _dataverse.feature.archive-on-version-update:
+
+dataverse.feature.archive-on-version-update
++++++++++++++++++++++++++++++++++++++++++++
+
+Indicates whether archival bag creation should be triggered (if configured) when a version is updated and was already successfully archived,
+i.e via the Update-Current-Version publication option. Setting the flag true only works if the archiver being used supports deleting existing archival bags.
 
 
 .. _dataverse.pid.handlenet.key.path:
@@ -3705,12 +3727,20 @@ The email for your institution that you'd like to appear in bag-info.txt. See :r
 
 Can also be set via *MicroProfile Config API* sources, e.g. the environment variable ``DATAVERSE_BAGIT_SOURCEORG_EMAIL``.
 
+.. _dataverse.bagit.archive-on-version-update:
+
+dataverse.bagit.archive-on-version-update
++++++++++++++++++++++++++++++++++++++++++
+
+Indicates whether archival bag creation should be triggered (if configured) when a version is updated and was already successfully archived,
+i.e via the Update-Current-Version publication option. Setting the flag true only works if the archiver being used supports deleting existing archival bags.
+
 .. _dataverse.files.globus-monitoring-server:
 
 dataverse.files.globus-monitoring-server
 ++++++++++++++++++++++++++++++++++++++++
 
-This setting is required in conjunction with the ``globus-use-experimental-async-framework`` feature flag (see :ref:`feature-flags`). Setting it to true designates the Dataverse instance to serve as the dedicated polling server. It is needed so that the new framework can be used in a multi-node installation. 
+This setting is required in conjunction with the ``globus-use-experimental-async-framework`` feature flag (see :ref:`feature-flags`). Setting it to true designates the Dataverse instance to serve as the dedicated polling server. It is needed so that the new framework can be used in a multi-node installation.
 
 .. _dataverse.csl.common-styles:
 
@@ -3858,6 +3888,21 @@ This can instead be restricted to only superusers who can publish the dataset us
 
 Example: ``dataverse.coar-notify.relationship-announcement.notify-superusers-only=true``
 
+.. _dataverse.bagit.zip.holey:
+
+``dataverse.bagit.zip.holey``
+  A boolean that, if true, will cause the BagIt archiver to create a "holey" bag. In a holey bag, files that are not included in the bag are listed in the ``fetch.txt`` file with a URL from which they can be downloaded. This is used in conjunction with ``dataverse.bagit.zip.max-file-size`` and/or ``dataverse.bagit.zip.max-data-size``. Default: false.
+
+.. _dataverse.bagit.zip.max-data-size:
+
+``dataverse.bagit.zip.max-data-size``
+  The maximum total (uncompressed) size of data files (in bytes) to include in a BagIt zip archive. If the total size of the dataset files exceeds this limit, files will be excluded from the zipped bag (starting from the largest) until the total size is under the limit. Excluded files will be handled as defined by ``dataverse.bagit.zip.holey`` - just listed if that setting is true or being transferred separately and placed next to the zipped bag. When not set, there is no limit.
+
+.. _dataverse.bagit.zip.max-file-size:
+
+``dataverse.bagit.zip.max-file-size``
+  The maximum (uncompressed) size of a single file (in bytes) to include in a BagIt zip archive. Any file larger than this will be excluded. Excluded files will be handled as defined by ``dataverse.bagit.zip.holey`` - just listed if that setting is true or being transferred separately and placed next to the zipped bag. When not set, there is no limit.
+
 .. _feature-flags:
 
 Feature Flags
@@ -3897,28 +3942,28 @@ please find all known feature flags below. Any of these flags can be activated u
       - Allows the use of an OAuth user account (GitHub, Google, or ORCID) when an identity match is found during API bearer authentication. This feature enables automatic association of an incoming IdP identity with an existing OAuth user account, bypassing the need for additional user registration steps. This feature only works when the feature flag ``api-bearer-auth`` is also enabled. **Caution: Enabling this flag could result in impersonation risks if (and only if) used with a misconfigured IdP.**
       - ``Off``
     * - avoid-expensive-solr-join
-      - Changes the way Solr queries are constructed for public content (published Collections, Datasets and Files). It removes a very expensive Solr join on all such documents, improving overall performance, especially for large instances under heavy load. Before this feature flag is enabled, the corresponding indexing feature (see next feature flag) must be turned on and a full reindex performed (otherwise public objects are not going to be shown in search results). See :doc:`/admin/solr-search-index`. 
+      - Changes the way Solr queries are constructed for public content (published Collections, Datasets and Files). It removes a very expensive Solr join on all such documents, improving overall performance, especially for large instances under heavy load. Before this feature flag is enabled, the corresponding indexing feature (see next feature flag) must be turned on and a full reindex performed (otherwise public objects are not going to be shown in search results). See :doc:`/admin/solr-search-index`.
       - ``Off``
     * - add-publicobject-solr-field
-      - Adds an extra boolean field `PublicObject_b:true` for public content (published Collections, Datasets and Files). Once reindexed with these fields, we can rely on it to remove a very expensive Solr join on all such documents in Solr queries, significantly improving overall performance (by enabling the feature flag above, `avoid-expensive-solr-join`). These two flags are separate so that an instance can reindex their holdings before enabling the optimization in searches, thus avoiding having their public objects temporarily disappear from search results while the reindexing is in progress. 
+      - Adds an extra boolean field `PublicObject_b:true` for public content (published Collections, Datasets and Files). Once reindexed with these fields, we can rely on it to remove a very expensive Solr join on all such documents in Solr queries, significantly improving overall performance (by enabling the feature flag above, `avoid-expensive-solr-join`). These two flags are separate so that an instance can reindex their holdings before enabling the optimization in searches, thus avoiding having their public objects temporarily disappear from search results while the reindexing is in progress.
       - ``Off``
     * - reduce-solr-deletes
-      - Avoids deleting and recreating solr documents for dataset files when reindexing. 
+      - Avoids deleting and recreating solr documents for dataset files when reindexing.
       - ``Off``
     * - disable-return-to-author-reason
-      - Removes the reason field in the `Publish/Return To Author` dialog that was added as a required field in v6.2 and makes the reason an optional parameter in the :ref:`return-a-dataset` API call. 
+      - Removes the reason field in the `Publish/Return To Author` dialog that was added as a required field in v6.2 and makes the reason an optional parameter in the :ref:`return-a-dataset` API call.
       - ``Off``
     * - disable-dataset-thumbnail-autoselect
       - Turns off automatic selection of a dataset thumbnail from image files in that dataset. When set to ``On``, a user can still manually pick a thumbnail image or upload a dedicated thumbnail image.
       - ``Off``
     * - globus-use-experimental-async-framework
-      - Activates a new experimental implementation of Globus polling of ongoing remote data transfers that does not rely on the instance staying up continuously for the duration of the transfers and saves the state information about Globus upload requests in the database. Added in v6.4; extended in v6.6 to cover download transfers, in addition to uploads. Affects :ref:`:GlobusPollingInterval`. Note that the JVM option :ref:`dataverse.files.globus-monitoring-server` described above must also be enabled on one (and only one, in a multi-node installation) Dataverse instance. 
+      - Activates a new experimental implementation of Globus polling of ongoing remote data transfers that does not rely on the instance staying up continuously for the duration of the transfers and saves the state information about Globus upload requests in the database. Added in v6.4; extended in v6.6 to cover download transfers, in addition to uploads. Affects :ref:`:GlobusPollingInterval`. Note that the JVM option :ref:`dataverse.files.globus-monitoring-server` described above must also be enabled on one (and only one, in a multi-node installation) Dataverse instance.
       - ``Off``
     * - index-harvested-metadata-source
       - Index the nickname or the source name (See the optional ``sourceName`` field in :ref:`create-a-harvesting-client`) of the harvesting client as the "metadata source" of harvested datasets and files. If enabled, the Metadata Source facet will show separate groupings of the content harvested from different sources (by harvesting client nickname or source name) instead of the default behavior where there is one "Harvested" grouping for all harvested content.
       - ``Off``
     * - enable-version-note
-      - Turns on the ability to add/view/edit/delete per-dataset-version notes intended to provide :ref:`provenance` information about why the dataset/version was created.  
+      - Turns on the ability to add/view/edit/delete per-dataset-version notes intended to provide :ref:`provenance` information about why the dataset/version was created.
       - ``Off``
     * - shibboleth-use-wayfinder
       - This flag allows an instance to use Shibboleth with InCommon federation services. Our original Shibboleth implementation that relies on DiscoFeed can no longer be used since InCommon discontinued their old-style metadata feed. An alternative mechanism had to be implemented in order to use WayFinder service, their recommended replacements, instead.
@@ -3943,6 +3988,153 @@ please find all known feature flags below. Any of these flags can be activated u
 ``DATAVERSE_FEATURE_XXX`` (e.g. ``DATAVERSE_FEATURE_API_SESSION_AUTH=1``). These environment variables can be set in your shell before starting Payara. If you are using :doc:`Docker for development </container/dev-usage>`, you can set them in the `docker compose <https://docs.docker.com/compose/environment-variables/set-environment-variables/>`_ file.
 
 To check the status of feature flags via API, see :ref:`list-all-feature-flags` in the API Guide.
+
+.. _dataverse.feature.api-session-auth:
+
+dataverse.feature.api-session-auth
+++++++++++++++++++++++++++++++++++
+
+Enables API authentication via session cookie (JSESSIONID). **Caution: Enabling this feature flag exposes the installation to CSRF risks!** We expect this feature flag to be temporary (only used by frontend developers, see `#9063 <https://github.com/IQSS/dataverse/issues/9063>`_) and for the feature to be removed in the future.
+
+.. _dataverse.feature.api-bearer-auth:
+
+dataverse.feature.api-bearer-auth
++++++++++++++++++++++++++++++++++
+
+Enables API authentication via Bearer Token.
+
+.. _dataverse.feature.api-bearer-auth-provide-missing-claims:
+
+dataverse.feature.api-bearer-auth-provide-missing-claims
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Enables sending missing user claims in the request JSON provided during OIDC user registration, when these claims are not returned by the identity provider and are required for registration. This feature only works when the feature flag ``api-bearer-auth`` is also enabled. **Caution: Enabling this feature flag exposes the installation to potential user impersonation issues.**
+
+.. _dataverse.feature.api-bearer-auth-handle-tos-acceptance-in-idp:
+
+dataverse.feature.api-bearer-auth-handle-tos-acceptance-in-idp
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Specifies that Terms of Service acceptance is handled by the IdP, eliminating the need to include ToS acceptance boolean parameter (termsAccepted) in the OIDC user registration request body. This feature only works when the feature flag ``api-bearer-auth`` is also enabled.
+
+.. _dataverse.feature.api-bearer-auth-use-builtin-user-on-id-match:
+
+dataverse.feature.api-bearer-auth-use-builtin-user-on-id-match
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Allows the use of a built-in user account when an identity match is found during API bearer authentication. This feature enables automatic association of an incoming IdP identity with an existing built-in user account, bypassing the need for additional user registration steps. This feature only works when the feature flag ``api-bearer-auth`` is also enabled. **Caution: Enabling this flag could result in impersonation risks if (and only if) used with a misconfigured IdP.**
+
+.. _dataverse.feature.api-bearer-auth-use-shib-user-on-id-match:
+
+dataverse.feature.api-bearer-auth-use-shib-user-on-id-match
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Allows the use of a Shibboleth user account when an identity match is found during API bearer authentication. This feature enables automatic association of an incoming IdP identity with an existing Shibboleth user account, bypassing the need for additional user registration steps. This feature only works when the feature flag ``api-bearer-auth`` is also enabled. **Caution: Enabling this flag could result in impersonation risks if (and only if) used with a misconfigured IdP.**
+
+.. _dataverse.feature.api-bearer-auth-use-oauth-user-on-id-match:
+
+dataverse.feature.api-bearer-auth-use-oauth-user-on-id-match
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Allows the use of an OAuth user account (GitHub, Google, or ORCID) when an identity match is found during API bearer authentication. This feature enables automatic association of an incoming IdP identity with an existing OAuth user account, bypassing the need for additional user registration steps. This feature only works when the feature flag ``api-bearer-auth`` is also enabled. **Caution: Enabling this flag could result in impersonation risks if (and only if) used with a misconfigured IdP.**
+
+.. _dataverse.feature.avoid-expensive-solr-join:
+
+dataverse.feature.avoid-expensive-solr-join
++++++++++++++++++++++++++++++++++++++++++++
+
+Changes the way Solr queries are constructed for public content (published Collections, Datasets and Files). It removes a very expensive Solr join on all such documents, improving overall performance, especially for large instances under heavy load. Before this feature flag is enabled, the corresponding indexing feature (see next feature flag) must be turned on and a full reindex performed (otherwise public objects are not going to be shown in search results). See :doc:`/admin/solr-search-index`.
+
+.. _dataverse.feature.add-publicobject-solr-field:
+
+dataverse.feature.add-publicobject-solr-field
++++++++++++++++++++++++++++++++++++++++++++++
+
+Adds an extra boolean field `PublicObject_b:true` for public content (published Collections, Datasets and Files). Once reindexed with these fields, we can rely on it to remove a very expensive Solr join on all such documents in Solr queries, significantly improving overall performance (by enabling the feature flag above, `avoid-expensive-solr-join`). These two flags are separate so that an instance can reindex their holdings before enabling the optimization in searches, thus avoiding having their public objects temporarily disappear from search results while the reindexing is in progress.
+
+.. _dataverse.feature.reduce-solr-deletes:
+
+dataverse.feature.reduce-solr-deletes
++++++++++++++++++++++++++++++++++++++
+
+Avoids deleting and recreating solr documents for dataset files when reindexing.
+
+.. _dataverse.feature.disable-return-to-author-reason:
+
+dataverse.feature.disable-return-to-author-reason
++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Removes the reason field in the `Publish/Return To Author` dialog that was added as a required field in v6.2 and makes the reason an optional parameter in the :ref:`return-a-dataset` API call.
+
+.. _dataverse.feature.disable-dataset-thumbnail-autoselect:
+
+dataverse.feature.disable-dataset-thumbnail-autoselect
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Turns off automatic selection of a dataset thumbnail from image files in that dataset. When set to ``On``, a user can still manually pick a thumbnail image or upload a dedicated thumbnail image.
+
+.. _dataverse.feature.globus-use-experimental-async-framework:
+
+dataverse.feature.globus-use-experimental-async-framework
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Activates a new experimental implementation of Globus polling of ongoing remote data transfers that does not rely on the instance staying up continuously for the duration of the transfers and saves the state information about Globus upload requests in the database. Added in v6.4; extended in v6.6 to cover download transfers, in addition to uploads. Affects :ref:`:GlobusPollingInterval`. Note that the JVM option :ref:`dataverse.files.globus-monitoring-server` described above must also be enabled on one (and only one, in a multi-node installation) Dataverse instance.
+
+.. _dataverse.feature.index-harvested-metadata-source:
+
+dataverse.feature.index-harvested-metadata-source
++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Index the nickname or the source name (See the optional ``sourceName`` field in :ref:`create-a-harvesting-client`) of the harvesting client as the "metadata source" of harvested datasets and files. If enabled, the Metadata Source facet will show separate groupings of the content harvested from different sources (by harvesting client nickname or source name) instead of the default behavior where there is one "Harvested" grouping for all harvested content.
+
+.. _dataverse.feature.enable-version-note:
+
+dataverse.feature.enable-version-note
++++++++++++++++++++++++++++++++++++++
+
+Turns on the ability to add/view/edit/delete per-dataset-version notes intended to provide :ref:`provenance` information about why the dataset/version was created.
+
+.. _dataverse.feature.shibboleth-use-wayfinder:
+
+dataverse.feature.shibboleth-use-wayfinder
+++++++++++++++++++++++++++++++++++++++++++
+
+This flag allows an instance to use Shibboleth with InCommon federation services. Our original Shibboleth implementation that relies on DiscoFeed can no longer be used since InCommon discontinued their old-style metadata feed. An alternative mechanism had to be implemented in order to use WayFinder service, their recommended replacements, instead.
+
+.. _dataverse.feature.shibboleth-use-localhost:
+
+dataverse.feature.shibboleth-use-localhost
+++++++++++++++++++++++++++++++++++++++++++
+
+A Shibboleth-using Dataverse instance needs to make network calls to the locally-running ``shibd`` service. The default behavior is to use the address configured via the ``siteUrl`` setting. There are however situations (firewalls, etc.) where localhost would be preferable.
+
+.. _dataverse.feature.add-local-contexts-permission-check:
+
+dataverse.feature.add-local-contexts-permission-check
++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Adds a permission check to ensure that the user calling the /api/localcontexts/datasets/{id} API can edit the dataset with that id. This is currently the only use case - see https://github.com/gdcc/dataverse-external-vocab-support/tree/main/packages/local_contexts. The flag adds additional security to stop other uses, but would currently have to be used in conjunction with the api-session-auth feature flag (the security implications of which have not been fully investigated) to still allow adding Local Contexts metadata to a dataset.
+
+.. _dataverse.feature.enable-pid-failure-log:
+
+dataverse.feature.enable-pid-failure-log
+++++++++++++++++++++++++++++++++++++++++
+
+Turns on creation of a monthly log file (logs/PIDFailures_<yyyy-MM>.log) showing failed requests for dataset/file PIDs. Can be used directly or with scripts at https://github.com/gdcc/dataverse-recipes/python/pid_reports to alert admins.
+
+.. _dataverse.feature.role-assignment-history:
+
+dataverse.feature.role-assignment-history
++++++++++++++++++++++++++++++++++++++++++
+
+Turns on tracking/display of role assignments and revocations for collections, datasets, and files
+
+.. _dataverse.feature.only-update-datacite-when-needed:
+
+dataverse.feature.only-update-datacite-when-needed
+++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Only contact DataCite to update a DOI after checking to see if DataCite has outdated information (for efficiency, lighter load on DataCite, especially when using file DOIs).
 
 .. _:ApplicationServerSettings:
 
@@ -5243,6 +5435,11 @@ This setting specifies which storage system to use by identifying the particular
 
 For examples, see the specific configuration above in :ref:`BagIt Export`.
  
+:ArchiveOnlyIfEarlierVersionsAreArchived
+++++++++++++++++++++++++++++++++++++++++
+
+This setting, if true, only allows creation of an archival Bag for a dataset version if all prior versions have been successfully archived. The default is false (any version can be archived independently as long as other settings allow it)
+         
 :ArchiverSettings
 +++++++++++++++++
 
