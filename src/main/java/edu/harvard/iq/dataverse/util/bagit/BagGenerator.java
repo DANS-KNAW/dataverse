@@ -644,10 +644,6 @@ public class BagGenerator {
         // Track titles to detect duplicates
         Set<String> titles = new HashSet<>();
 
-        if ((hashtype == null) | ignorehashes) {
-            hashtype = DataFile.ChecksumType.SHA512;
-        }
-
         for (FileEntry entry : sortedFiles) {
             // Extract all needed information from the JsonObject reference
             JsonObject child = entry.jsonObject;
