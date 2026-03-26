@@ -4,13 +4,19 @@ import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetVersion;
 import edu.harvard.iq.dataverse.Dataverse;
 import edu.harvard.iq.dataverse.SettingsWrapper;
+import edu.harvard.iq.dataverse.DatasetLock.Reason;
 import edu.harvard.iq.dataverse.authorization.Permission;
 import edu.harvard.iq.dataverse.authorization.users.ApiToken;
+import edu.harvard.iq.dataverse.authorization.users.AuthenticatedUser;
 import edu.harvard.iq.dataverse.branding.BrandingUtil;
 import edu.harvard.iq.dataverse.engine.command.Command;
+import edu.harvard.iq.dataverse.engine.command.CommandContext;
 import edu.harvard.iq.dataverse.engine.command.DataverseRequest;
 import edu.harvard.iq.dataverse.engine.command.RequiredPermissions;
+import edu.harvard.iq.dataverse.engine.command.exception.CommandException;
 import edu.harvard.iq.dataverse.settings.SettingsServiceBean;
+import edu.harvard.iq.dataverse.util.bagit.OREMap;
+import edu.harvard.iq.dataverse.util.json.JsonLDTerm;
 import edu.harvard.iq.dataverse.util.json.JsonUtil;
 import edu.harvard.iq.dataverse.workflow.step.Failure;
 import edu.harvard.iq.dataverse.workflow.step.WorkflowStepResult;
@@ -34,6 +40,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import jakarta.ejb.TransactionAttribute;
+import jakarta.ejb.TransactionAttributeType;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
@@ -70,20 +78,89 @@ public class DRSSubmitToArchiveCommand extends S3SubmitToArchiveCommand implemen
     private static final String PACKAGE_ID = "package_id";
     private static final String SINGLE_VERSION = "single_version";
     private static final String DRS_ENDPOINT = "DRS_endpoint";
-    
+
 
     private static final String RSA_KEY = "dataverse.archiver.drs.rsa_key";
 
     private static final String TRUST_CERT = "trust_cert";
     private static final String TIMEOUT = "timeout";
 
+    private String archivableAncestorAlias;
+
     public DRSSubmitToArchiveCommand(DataverseRequest aRequest, DatasetVersion version) {
         super(aRequest, version);
     }
 
     @Override
-    public WorkflowStepResult performArchiveSubmission(DatasetVersion dv, ApiToken token,
-            Map<String, String> requestedSettings) {
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public DatasetVersion execute(CommandContext ctxt) throws CommandException {
+
+
+        // Check for locks while we're still in a transaction
+        Dataset dataset = version.getDataset();
+        if (dataset.getLockFor(Reason.finalizePublication) != null
+            || dataset.getLockFor(Reason.FileValidationFailed) != null) {
+            throw new CommandException("Dataset is locked and cannot be archived", this);
+        }
+
+        String settings = ctxt.settings().getValueForKey(SettingsServiceBean.Key.ArchiverSettings);
+        String[] settingsArray = settings.split(",");
+        for (String setting : settingsArray) {
+            setting = setting.trim();
+            if (!setting.startsWith(":")) {
+                logger.warning("Invalid Archiver Setting: " + setting);
+            } else {
+                requestedSettings.put(setting, ctxt.settings().get(setting));
+            }
+        }
+
+        // Compute archivable ancestor while we're in a transaction and entities are managed
+        JsonObject drsConfigObject = null;
+        try {
+            drsConfigObject = JsonUtil.getJsonObject(requestedSettings.get(DRS_CONFIG));
+        } catch (Exception e) {
+            logger.warning("Unable to parse " + DRS_CONFIG + " setting as a Json object");
+        }
+
+        if (drsConfigObject != null) {
+            JsonObject adminMetadata = drsConfigObject.getJsonObject(ADMIN_METADATA);
+            if (adminMetadata != null) {
+                JsonObject collectionsObj = adminMetadata.getJsonObject(COLLECTIONS);
+                if (collectionsObj != null) {
+                    Set<String> collections = collectionsObj.keySet();
+                    Dataverse ancestor = dataset.getOwner();
+                    // Compute this while entities are still managed
+                    archivableAncestorAlias = getArchivableAncestor(ancestor, collections);
+                }
+            }
+        }
+
+        AuthenticatedUser user = getRequest().getAuthenticatedUser();
+        ApiToken token = ctxt.authentication().findApiTokenByUser(user);
+        if (token == null) {
+            //No un-expired token
+            token = ctxt.authentication().generateApiTokenForUser(user);
+        }
+        if (!preconditionsMet(version, token, requestedSettings)) {
+            JsonObjectBuilder statusObjectBuilder = Json.createObjectBuilder();
+            statusObjectBuilder.add(DatasetVersion.ARCHIVAL_STATUS, DatasetVersion.ARCHIVAL_STATUS_FAILURE);
+            statusObjectBuilder.add(DatasetVersion.ARCHIVAL_STATUS_MESSAGE,
+                "Successful archiving of earlier versions is required.");
+            version.setArchivalCopyLocation(statusObjectBuilder.build().toString());
+        } else {
+
+            String dataCiteXml = getDataCiteXml(version);
+            OREMap oreMap = new OREMap(version, false);
+            JsonObject ore = oreMap.getOREMap();
+            Map<String, JsonLDTerm> terms = getJsonLDTerms(oreMap);
+            performArchivingAndPersist(ctxt, version, dataCiteXml, ore, terms, token, requestedSettings);
+        }
+        return ctxt.em().merge(version);
+    }
+
+    @Override
+    public WorkflowStepResult performArchiveSubmission(DatasetVersion dv, String dataciteXml, JsonObject ore,
+        Map<String, JsonLDTerm> terms, ApiToken token, Map<String, String> requestedSettings) {
         logger.fine("In DRSSubmitToArchiveCommand...");
         JsonObject drsConfigObject = null;
 
@@ -97,7 +174,7 @@ public class DRSSubmitToArchiveCommand extends S3SubmitToArchiveCommand implemen
             Set<String> collections = adminMetadata.getJsonObject(COLLECTIONS).keySet();
             Dataset dataset = dv.getDataset();
             Dataverse ancestor = dataset.getOwner();
-            String alias = getArchivableAncestor(ancestor, collections);
+            String alias = archivableAncestorAlias; // Use the pre-computed alias instead of calling getArchivableAncestor again
             String spaceName = getSpaceName(dataset);
             String packageId = getFileName(spaceName, dv);
 
@@ -106,14 +183,14 @@ public class DRSSubmitToArchiveCommand extends S3SubmitToArchiveCommand implemen
                     for (DatasetVersion version : dataset.getVersions()) {
                         if (version.getArchivalCopyLocation() != null) {
                             return new Failure("DRS Archiver fail: version " + version.getFriendlyVersionNumber()
-                                    + " already archived.");
+                                + " already archived.");
                         }
                     }
                 }
 
                 JsonObject collectionConfig = adminMetadata.getJsonObject(COLLECTIONS).getJsonObject(alias);
 
-                WorkflowStepResult s3Result = super.performArchiveSubmission(dv, token, requestedSettings);
+                WorkflowStepResult s3Result = super.performArchiveSubmission(dv, dataciteXml, ore, terms, token, requestedSettings);
 
                 JsonObjectBuilder statusObject = Json.createObjectBuilder();
                 statusObject.add(DatasetVersion.ARCHIVAL_STATUS, DatasetVersion.ARCHIVAL_STATUS_FAILURE);
@@ -157,9 +234,9 @@ public class DRSSubmitToArchiveCommand extends S3SubmitToArchiveCommand implemen
                         // use the TrustSelfSignedStrategy to allow Self Signed Certificates
                         try {
                             SSLContext sslContext = SSLContextBuilder.create().loadTrustMaterial(new TrustAllStrategy())
-                                    .build();
+                                .build();
                             client = HttpClients.custom().setSSLContext(sslContext)
-                                    .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).build();
+                                .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).build();
                         } catch (KeyManagementException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
@@ -187,14 +264,14 @@ public class DRSSubmitToArchiveCommand extends S3SubmitToArchiveCommand implemen
                         //RSAPublicKey publicKey;
                         /*
                          * If public key is needed: encoded = Base64.decodeBase64(publicKeyPEM);
-                         * 
+                         *
                          * KeyFactory keyFactory = KeyFactory.getInstance("RS256"); X509EncodedKeySpec
                          * keySpec = new X509EncodedKeySpec(encoded); return (RSAPublicKey)
                          * keyFactory.generatePublic(keySpec); RSAPublicKey publicKey = new
                          * RSAPublicKey(System.getProperty(RS256_KEY));
                          */
                         Algorithm algorithmRSA = Algorithm.RSA256(null, privKey);
-                        
+
                         String body = drsConfigString;
                         String jwtString = createJWTString(algorithmRSA, BrandingUtil.getInstallationBrandName(), body, jwtTimeout);
                         logger.fine("JWT: " + jwtString);
@@ -208,41 +285,41 @@ public class DRSSubmitToArchiveCommand extends S3SubmitToArchiveCommand implemen
                         try (CloseableHttpResponse response = client.execute(ingestPost)) {
                             int code = response.getStatusLine().getStatusCode();
                             String responseBody = new String(response.getEntity().getContent().readAllBytes(),
-                                    StandardCharsets.UTF_8);
+                                StandardCharsets.UTF_8);
                             if (code == 202) {
                                 logger.fine("Status: " + code);
                                 logger.fine("Response" + responseBody);
                                 JsonObject responseObject = JsonUtil.getJsonObject(responseBody);
                                 if (responseObject.containsKey(DatasetVersion.ARCHIVAL_STATUS)
-                                        && responseObject.containsKey(DatasetVersion.ARCHIVAL_STATUS_MESSAGE)) {
+                                    && responseObject.containsKey(DatasetVersion.ARCHIVAL_STATUS_MESSAGE)) {
                                     String status = responseObject.getString(DatasetVersion.ARCHIVAL_STATUS);
                                     if (status.equals(DatasetVersion.ARCHIVAL_STATUS_PENDING) || status.equals(DatasetVersion.ARCHIVAL_STATUS_FAILURE)
-                                            || status.equals(DatasetVersion.ARCHIVAL_STATUS_SUCCESS)) {
+                                        || status.equals(DatasetVersion.ARCHIVAL_STATUS_SUCCESS)) {
                                         statusObject.addAll(Json.createObjectBuilder(responseObject));
                                         switch (status) {
-                                        case DatasetVersion.ARCHIVAL_STATUS_PENDING:
-                                            logger.info("DRS Ingest successfully started for: " + packageId + " : "
+                                            case DatasetVersion.ARCHIVAL_STATUS_PENDING:
+                                                logger.info("DRS Ingest successfully started for: " + packageId + " : "
                                                     + responseObject.toString());
-                                            break;
-                                        case DatasetVersion.ARCHIVAL_STATUS_FAILURE:
-                                            logger.severe("DRS Ingest Failed for: " + packageId + " : "
+                                                break;
+                                            case DatasetVersion.ARCHIVAL_STATUS_FAILURE:
+                                                logger.severe("DRS Ingest Failed for: " + packageId + " : "
                                                     + responseObject.toString());
-                                            return new Failure("DRS Archiver fail in Ingest call");
-                                        case DatasetVersion.ARCHIVAL_STATUS_SUCCESS:
-                                            // We don't expect this from DRS
-                                            logger.warning("Unexpected Status: " + status);
+                                                return new Failure("DRS Archiver fail in Ingest call");
+                                            case DatasetVersion.ARCHIVAL_STATUS_SUCCESS:
+                                                // We don't expect this from DRS
+                                                logger.warning("Unexpected Status: " + status);
                                         }
                                     } else {
                                         logger.severe("DRS Ingest Failed for: " + packageId + " with returned status: "
-                                                + status);
+                                            + status);
                                         return new Failure(
-                                                "DRS Archiver fail in Ingest call with returned status: " + status);
+                                            "DRS Archiver fail in Ingest call with returned status: " + status);
                                     }
                                 } else {
                                     logger.severe("DRS Ingest Failed for: " + packageId
-                                            + " - response does not include status and message");
+                                        + " - response does not include status and message");
                                     return new Failure(
-                                            "DRS Archiver fail in Ingest call \" - response does not include status and message");
+                                        "DRS Archiver fail in Ingest call - response does not include status and message");
                                 }
                             } else {
                                 logger.severe("DRS Ingest Failed for: " + packageId + " with status code: " + code);
@@ -256,11 +333,11 @@ public class DRSSubmitToArchiveCommand extends S3SubmitToArchiveCommand implemen
                         }
                     } catch (URISyntaxException e) {
                         return new Failure(
-                                "DRS Archiver workflow step failed: unable to parse " + DRS_ENDPOINT );
+                            "DRS Archiver workflow step failed: unable to parse " + DRS_ENDPOINT );
                     } catch (JWTCreationException exception) {
                         // Invalid Signing configuration / Couldn't convert Claims.
                         return new Failure(
-                                "DRS Archiver JWT Creation failure: " + exception.getMessage() );
+                            "DRS Archiver JWT Creation failure: " + exception.getMessage() );
 
                     }
                     // execute
@@ -279,7 +356,7 @@ public class DRSSubmitToArchiveCommand extends S3SubmitToArchiveCommand implemen
                     dv.setArchivalCopyLocation(statusObject.build().toString());
                     return new Failure("DRS Archiver fail in initial S3 Archiver transfer");
                 }
-                
+
             } else {
                 logger.fine("DRS Archiver: No matching collection found - will not archive: " + packageId);
                 return WorkflowStepResult.OK;
@@ -301,7 +378,7 @@ public class DRSSubmitToArchiveCommand extends S3SubmitToArchiveCommand implemen
         return spaceName + ("_datacite.v" + dv.getFriendlyVersionNumber()).replace('.','_');
     }
 
-    
+
     public static String createJWTString(Algorithm algorithmRSA, String installationBrandName, String body, int expirationInMinutes) throws IOException {
         String canonicalBody = new JsonCanonicalizer(body).getEncodedString();
         logger.fine("Canonical body: " + canonicalBody);
@@ -310,8 +387,8 @@ public class DRSSubmitToArchiveCommand extends S3SubmitToArchiveCommand implemen
             installationBrandName = BrandingUtil.getInstallationBrandName();
         }
         return JWT.create().withIssuer(installationBrandName).withIssuedAt(Date.from(Instant.now()))
-                .withExpiresAt(Date.from(Instant.now().plusSeconds(60 * expirationInMinutes)))
-                .withKeyId("defaultDataverse").withClaim("bodySHA256Hash", digest).sign(algorithmRSA);
+            .withExpiresAt(Date.from(Instant.now().plusSeconds(60 * expirationInMinutes)))
+            .withKeyId("defaultDataverse").withClaim("bodySHA256Hash", digest).sign(algorithmRSA);
     }
 
     private static String getArchivableAncestor(Dataverse ancestor, Set<String> collections) {
@@ -351,16 +428,16 @@ public class DRSSubmitToArchiveCommand extends S3SubmitToArchiveCommand implemen
         }
         return false;
     }
-    
+
     // DRS Archiver supports single-version semantics if the SINGLE_VERSION key in
     // the DRS_CONFIG is true
     // These methods make that choices visible on the page (cached via
     // SettingsWrapper) or in the API (using SettingServiceBean), both using the
     // same underlying logic
-    
+
     public static boolean isSingleVersion(SettingsWrapper sw) {
-            String config = sw.get(DRS_CONFIG, null);
-            return isSingleVersion(config);
+        String config = sw.get(DRS_CONFIG, null);
+        return isSingleVersion(config);
     }
 
     public static boolean isSingleVersion(SettingsServiceBean ss) {
