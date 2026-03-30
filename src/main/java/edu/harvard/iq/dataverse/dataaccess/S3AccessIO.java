@@ -1130,9 +1130,9 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
             }
 
             response.add("urls", urls);
-            response.add("abort", "/api/datasets/mpupload?globalid=" + globalId + "&uploadid=" + uploadId
+            response.add("abort", "/api/datasets/mpupload?globalid=" + key + "&uploadid=" + uploadId
                     + "&storageidentifier=" + storageIdentifier);
-            response.add("complete", "/api/datasets/mpupload?globalid=" + globalId + "&uploadid=" + uploadId
+            response.add("complete", "/api/datasets/mpupload?globalid=" + key + "&uploadid=" + uploadId
                     + "&storageidentifier=" + storageIdentifier);
 
             s3Presigner.close();
