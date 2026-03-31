@@ -20,6 +20,7 @@ import static edu.harvard.iq.dataverse.api.LDNInbox.objectKey;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
+import jakarta.json.JsonValue;
 import jakarta.ws.rs.BadRequestException;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -120,7 +121,15 @@ public class COARNotifyRelationshipAnnouncement {
      * Extract a field value from the message object.
      */
     private String extractField(JsonObject msgObject, String key) {
-        return msgObject.containsKey(key) ? msgObject.getString(key) : null;
+        if (msgObject.containsKey(key)) {
+            JsonValue value = msgObject.get(key);
+            if (value.getValueType() == JsonValue.ValueType.OBJECT) {
+                return ((JsonObject) value).getString("@id", null);
+            } else if (value.getValueType() == JsonValue.ValueType.STRING) {
+                return msgObject.getString(key);
+            }
+        }
+        return null;
     }
 
     /**
