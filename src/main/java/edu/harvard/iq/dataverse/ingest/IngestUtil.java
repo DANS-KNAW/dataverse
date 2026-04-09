@@ -167,8 +167,10 @@ public class IngestUtil {
      */
     public static List<String> getPathsAndFileNames(List<FileMetadata> fileMetadatas) {
         List<String> allFileNamesWithPaths = new ArrayList<>();
+        Set<String> allPaths = new HashSet<>();
         for (FileMetadata fileMetadata : fileMetadatas) {
             String directoryLabel = fileMetadata.getDirectoryLabel();
+            allPaths.add(directoryLabel);
             String path = "";
             if (directoryLabel != null) {
                 path = directoryLabel + "/";
@@ -176,6 +178,7 @@ public class IngestUtil {
             String pathAndfileName = path + fileMetadata.getLabel();
             allFileNamesWithPaths.add(pathAndfileName);
         }
+        allFileNamesWithPaths.addAll(allPaths);
         return allFileNamesWithPaths;
     }
 
