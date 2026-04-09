@@ -170,7 +170,7 @@ public class IngestUtil {
         Set<String> allPaths = new HashSet<>();
         for (FileMetadata fileMetadata : fileMetadatas) {
             String directoryLabel = fileMetadata.getDirectoryLabel();
-            allPaths.add(directoryLabel);
+            allPaths.add(directoryLabel); // TODO add parents too
             String path = "";
             if (directoryLabel != null) {
                 path = directoryLabel + "/";
@@ -264,6 +264,9 @@ public class IngestUtil {
                 String existingPath = makePathName(existingDir, existingName);
 
                 if (!existingPath.isEmpty()) {
+                    if (existingDir != null && !existingDir.isEmpty()) {
+                        pathNamesExisting.add(existingDir); // TODO add parents too
+                    }
                     pathNamesExisting.add(existingPath);
 
                     // if it's a tabular file, we need to also restore the original file name; otherwise, we may miss a 
