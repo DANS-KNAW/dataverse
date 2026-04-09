@@ -170,13 +170,12 @@ public class IngestUtil {
         Set<String> allPaths = new HashSet<>();
         for (FileMetadata fileMetadata : fileMetadatas) {
             String directoryLabel = fileMetadata.getDirectoryLabel();
-            allPaths.add(directoryLabel); // TODO add parents too
             String path = "";
             if (directoryLabel != null) {
                 path = directoryLabel + "/";
             }
             String pathAndfileName = path + fileMetadata.getLabel();
-            allFileNamesWithPaths.add(pathAndfileName);
+            allFileNamesWithPaths.addAll(getPathAndParents(pathAndfileName));
         }
         allFileNamesWithPaths.addAll(allPaths);
         return allFileNamesWithPaths;
@@ -264,10 +263,7 @@ public class IngestUtil {
                 String existingPath = makePathName(existingDir, existingName);
 
                 if (!existingPath.isEmpty()) {
-                    if (existingDir != null && !existingDir.isEmpty()) {
-                        pathNamesExisting.add(existingDir); // TODO add parents too
-                    }
-                    pathNamesExisting.add(existingPath);
+                    pathNamesExisting.addAll(getPathAndParents(existingPath));
 
                     // if it's a tabular file, we need to also restore the original file name; otherwise, we may miss a 
                     // match. e.g. stata file foobar.dta becomes foobar.tab once ingested!
@@ -288,6 +284,23 @@ public class IngestUtil {
         }
 
         return pathNamesExisting;
+    }
+
+    public static List<String> getPathAndParents(String directory) {
+        List<String> paths = new ArrayList<>();
+        if (directory == null || directory.isEmpty()) {
+            return paths;
+        }
+        String current = directory;
+        while (current != null && !current.isEmpty()) {
+            paths.add(current);
+            int lastSlash = current.lastIndexOf('/');
+            if (lastSlash == -1) {
+                break;
+            }
+            current = current.substring(0, lastSlash);
+        }
+        return paths;
     }
 
     /**
