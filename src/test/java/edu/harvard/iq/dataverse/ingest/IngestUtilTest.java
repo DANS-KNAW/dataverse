@@ -24,7 +24,7 @@ import org.dataverse.unf.UnfException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-
+import static org.assertj.core.api.Assertions.assertThat;
 public class IngestUtilTest {
 
     String logFile = "/tmp/testLogFile";
@@ -261,8 +261,9 @@ public class IngestUtilTest {
         datasetVersion.setVersionNumber(1L);
         datasetVersion.setFileMetadatas(new ArrayList<>());
 
-        // create datafiles
         List<DataFile> dataFileList = new ArrayList<>();
+
+        // create datafiles
         DataFile datafile1 = new DataFile("application/octet-stream");
         datafile1.setStorageIdentifier("subdir/datafile1.txt");
         datafile1.setFilesize(200);
@@ -329,27 +330,43 @@ public class IngestUtilTest {
 
         dataFileList.add(datafile3);
 
+        // create a file that conflicts a directory name
+        DataFile datafile4 = new DataFile("application/octet-stream");
+        datafile4.setStorageIdentifier("x");
+        datafile4.setFilesize(200);
+        datafile4.setModificationTime(new Timestamp(new Date().getTime()));
+        datafile4.setCreateDate(new Timestamp(new Date().getTime()));
+        datafile4.setPermissionModificationTime(new Timestamp(new Date().getTime()));
+        datafile4.setOwner(dataset);
+        datafile4.setIngestDone();
+        datafile4.setChecksumType(DataFile.ChecksumType.SHA1);
+        datafile4.setChecksumValue("Unknown");
+
+        // set metadata and add version
+        FileMetadata fmd4 = new FileMetadata();
+        fmd4.setId(4L);
+        fmd4.setLabel("subdir");
+        fmd4.setDataFile(datafile4);
+        datafile4.getFileMetadatas().add(fmd4);
+
+        dataFileList.add(datafile4);
+
+        // precondition
+        assertThat(dataFileList.stream()
+            .map(dataFile -> dataFile.getLatestFileMetadata().getLabel())
+            .toList()
+        ).containsExactlyInAnyOrderElementsOf(
+            List.of("datafile1.txt", "datafile2.txt", "datafile2.txt", "subdir")
+        );
+
         IngestUtil.checkForDuplicateFileNamesFinal(datasetVersion, dataFileList, null);
 
-        boolean file1NameAltered = false;
-        boolean file2NameAltered = false;
-        boolean file3NameAltered = true;
-        for (DataFile df : dataFileList) {
-            if (df.getFileMetadata().getLabel().equals("datafile1-1.txt")) {
-                file1NameAltered = true;
-            }
-            if (df.getFileMetadata().getLabel().equals("datafile2-1.txt")) {
-                file2NameAltered = true;
-            }
-            if (df.getFileMetadata().getLabel().equals("datafile2.txt")) {
-                file3NameAltered = false;
-            }
-        }
-
-        // check filenames are unique
-        assertTrue(file1NameAltered);
-        assertTrue(file2NameAltered);
-        assertFalse(file3NameAltered);
+        assertThat(dataFileList.stream()
+            .map(dataFile -> dataFile.getLatestFileMetadata().getLabel())
+            .toList()
+        ).containsExactlyInAnyOrderElementsOf(
+            List.of("datafile1-1.txt", "datafile2-1.txt", "datafile2.txt", "subdir-1")
+        );
 
         // add duplicate file in root
         datasetVersion.getFileMetadatas().add(fmd3);
@@ -358,22 +375,12 @@ public class IngestUtilTest {
         // try to add data files with "-1" duplicates and see if it gets incremented to "-2"
         IngestUtil.checkForDuplicateFileNamesFinal(datasetVersion, dataFileList, null);
 
-        for (DataFile df : dataFileList) {
-            if (df.getFileMetadata().getLabel().equals("datafile1-2.txt")) {
-                file1NameAltered = true;
-            }
-            if (df.getFileMetadata().getLabel().equals("datafile2-2.txt")) {
-                file2NameAltered = true;
-            }
-            if (df.getFileMetadata().getLabel().equals("datafile2-1.txt")) {
-                file3NameAltered = true;
-            }
-        }
-
-        // check filenames are unique
-        assertTrue(file1NameAltered);
-        assertTrue(file2NameAltered);
-        assertTrue(file3NameAltered);
+        assertThat(dataFileList.stream()
+            .map(dataFile -> dataFile.getLatestFileMetadata().getLabel())
+            .toList()
+        ).containsExactlyInAnyOrderElementsOf(
+            List.of("datafile1-2.txt", "datafile2-2.txt", "datafile2-1.txt", "subdir-1")
+        );
     }
 
     @Test
