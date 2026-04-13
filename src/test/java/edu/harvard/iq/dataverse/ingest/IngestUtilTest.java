@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import jakarta.validation.ConstraintViolation;
 import org.dataverse.unf.UNFUtil;
@@ -261,103 +262,45 @@ public class IngestUtilTest {
         datasetVersion.setVersionNumber(1L);
         datasetVersion.setFileMetadatas(new ArrayList<>());
 
-        List<DataFile> dataFileList = new ArrayList<>();
-
-        // create datafiles
-        DataFile datafile1 = new DataFile("application/octet-stream");
-        datafile1.setStorageIdentifier("subdir/datafile1.txt");
-        datafile1.setFilesize(200);
-        datafile1.setModificationTime(new Timestamp(new Date().getTime()));
-        datafile1.setCreateDate(new Timestamp(new Date().getTime()));
-        datafile1.setPermissionModificationTime(new Timestamp(new Date().getTime()));
-        datafile1.setOwner(dataset);
-        datafile1.setIngestDone();
-        datafile1.setChecksumType(DataFile.ChecksumType.SHA1);
-        datafile1.setChecksumValue("Unknown");
-
-        // set metadata and add version
-        FileMetadata fmd1 = new FileMetadata();
-        fmd1.setId(1L);
-        fmd1.setLabel("datafile1.txt");
-        fmd1.setDirectoryLabel("subdir");
-        fmd1.setDataFile(datafile1);
-        datafile1.getFileMetadatas().add(fmd1);
-        datasetVersion.getFileMetadatas().add(fmd1);
-        fmd1.setDatasetVersion(datasetVersion);
-
-        dataFileList.add(datafile1);
-
-        DataFile datafile2 = new DataFile("application/octet-stream");
-        datafile2.setStorageIdentifier("subdir/datafile2.txt");
-        datafile2.setFilesize(200);
-        datafile2.setModificationTime(new Timestamp(new Date().getTime()));
-        datafile2.setCreateDate(new Timestamp(new Date().getTime()));
-        datafile2.setPermissionModificationTime(new Timestamp(new Date().getTime()));
-        datafile2.setOwner(dataset);
-        datafile2.setIngestDone();
-        datafile2.setChecksumType(DataFile.ChecksumType.SHA1);
-        datafile2.setChecksumValue("Unknown");
-
-        // set metadata and add version
-        FileMetadata fmd2 = new FileMetadata();
-        fmd2.setId(2L);
-        fmd2.setLabel("datafile2.txt");
-        fmd2.setDirectoryLabel("subdir");
-        fmd2.setDataFile(datafile2);
-        datafile2.getFileMetadatas().add(fmd2);
-        datasetVersion.getFileMetadatas().add(fmd2);
-        fmd2.setDatasetVersion(datasetVersion);
-
-        dataFileList.add(datafile2);
-
-        DataFile datafile3 = new DataFile("application/octet-stream");
-        datafile3.setStorageIdentifier("datafile2.txt");
-        datafile3.setFilesize(200);
-        datafile3.setModificationTime(new Timestamp(new Date().getTime()));
-        datafile3.setCreateDate(new Timestamp(new Date().getTime()));
-        datafile3.setPermissionModificationTime(new Timestamp(new Date().getTime()));
-        datafile3.setOwner(dataset);
-        datafile3.setIngestDone();
-        datafile3.setChecksumType(DataFile.ChecksumType.SHA1);
-        datafile3.setChecksumValue("Unknown");
-
-        // set metadata and add version
-        FileMetadata fmd3 = new FileMetadata();
-        fmd3.setId(3L);
-        fmd3.setLabel("datafile2.txt");
-        fmd3.setDataFile(datafile3);
-        datafile3.getFileMetadatas().add(fmd3);
-
-        dataFileList.add(datafile3);
-
-        // create a file that conflicts a directory name
-        DataFile datafile4 = new DataFile("application/octet-stream");
-        datafile4.setStorageIdentifier("x");
-        datafile4.setFilesize(200);
-        datafile4.setModificationTime(new Timestamp(new Date().getTime()));
-        datafile4.setCreateDate(new Timestamp(new Date().getTime()));
-        datafile4.setPermissionModificationTime(new Timestamp(new Date().getTime()));
-        datafile4.setOwner(dataset);
-        datafile4.setIngestDone();
-        datafile4.setChecksumType(DataFile.ChecksumType.SHA1);
-        datafile4.setChecksumValue("Unknown");
-
-        // set metadata and add version
-        FileMetadata fmd4 = new FileMetadata();
-        fmd4.setId(4L);
-        fmd4.setLabel("subdir");
-        fmd4.setDataFile(datafile4);
-        datafile4.getFileMetadatas().add(fmd4);
-
-        dataFileList.add(datafile4);
-
-        // precondition
-        assertThat(dataFileList.stream()
-            .map(dataFile -> dataFile.getLatestFileMetadata().getLabel())
-            .toList()
-        ).containsExactlyInAnyOrderElementsOf(
-            List.of("datafile1.txt", "datafile2.txt", "datafile2.txt", "subdir")
+        List<DataFile> dataFileList =  new ArrayList<>();
+        List<FileMetadata> fileMetadataList = new ArrayList<>();
+        var labels = Arrays.asList(
+            Arrays.asList("datafile1.txt", "subdir"),
+            Arrays.asList("datafile2.txt", "subdir"),
+            Arrays.asList("datafile2.txt", null),
+            Arrays.asList("subdir", null)
         );
+        for (int i=0; i<4; i++) {
+            var fileLabel = labels.get(i).get(0);
+            var dirLabel = labels.get(i).get(1);
+            var storageIdentifier = null == dirLabel ? fileLabel : dirLabel + "/" + fileLabel;
+
+            DataFile datafile = new DataFile("application/octet-stream");
+            datafile.setStorageIdentifier(storageIdentifier);
+            datafile.setFilesize(200);
+            datafile.setModificationTime(new Timestamp(new Date().getTime()));
+            datafile.setCreateDate(new Timestamp(new Date().getTime()));
+            datafile.setPermissionModificationTime(new Timestamp(new Date().getTime()));
+            datafile.setOwner(dataset);
+            datafile.setIngestDone();
+            datafile.setChecksumType(DataFile.ChecksumType.SHA1);
+            datafile.setChecksumValue("Unknown");
+            dataFileList.add(datafile);
+
+            FileMetadata fmd = new FileMetadata();
+            fmd.setId((long) (i + 1));
+            fmd.setLabel(fileLabel);
+            fmd.setDirectoryLabel(dirLabel);
+            fmd.setDataFile(datafile);
+            datafile.getFileMetadatas().add(fmd);
+            fileMetadataList.add(fmd);
+        }
+
+        // add version to first and second file
+        datasetVersion.getFileMetadatas().add(fileMetadataList.get(0));
+        fileMetadataList.get(0).setDatasetVersion(datasetVersion);
+        datasetVersion.getFileMetadatas().add(fileMetadataList.get(1));
+        fileMetadataList.get(1).setDatasetVersion(datasetVersion);
 
         IngestUtil.checkForDuplicateFileNamesFinal(datasetVersion, dataFileList, null);
 
@@ -368,9 +311,9 @@ public class IngestUtilTest {
             List.of("datafile1-1.txt", "datafile2-1.txt", "datafile2.txt", "subdir-1")
         );
 
-        // add duplicate file in root
-        datasetVersion.getFileMetadatas().add(fmd3);
-        fmd3.setDatasetVersion(datasetVersion);
+        // add third file as duplicate file in root
+        datasetVersion.getFileMetadatas().add(fileMetadataList.get(2));
+        fileMetadataList.get(2).setDatasetVersion(datasetVersion);
 
         // try to add data files with "-1" duplicates and see if it gets incremented to "-2"
         IngestUtil.checkForDuplicateFileNamesFinal(datasetVersion, dataFileList, null);
