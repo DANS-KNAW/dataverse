@@ -265,14 +265,18 @@ public class IngestUtilTest {
         List<DataFile> dataFileList =  new ArrayList<>();
         List<FileMetadata> fileMetadataList = new ArrayList<>();
         var labels = Arrays.asList(
-            Arrays.asList("datafile1.txt", "subdir"),
-            Arrays.asList("datafile2.txt", "subdir"),
-            Arrays.asList("datafile2.txt", null),
-            Arrays.asList("subdir", null)
-        );
-        for (int i=0; i<4; i++) {
-            var fileLabel = labels.get(i).get(0);
-            var dirLabel = labels.get(i).get(1);
+            Arrays.asList("subdir", "datafile1.txt" ),
+            Arrays.asList("subdir", "datafile2.txt"),
+            Arrays.asList(null, "datafile2.txt"),
+            Arrays.asList(null, "subdir"),
+            Arrays.asList("sub/dir","datafile5.txt"),
+            Arrays.asList("sub", "dir"),
+            Arrays.asList("sub/dirX","datafile7.txt"),
+            Arrays.asList("sub", "dirX")
+            );
+        for (int i=0; i<labels.size(); i++) {
+            var dirLabel = labels.get(i).get(0);
+            var fileLabel = labels.get(i).get(1);
             var storageIdentifier = null == dirLabel ? fileLabel : dirLabel + "/" + fileLabel;
 
             DataFile datafile = new DataFile("application/octet-stream");
@@ -296,11 +300,11 @@ public class IngestUtilTest {
             fileMetadataList.add(fmd);
         }
 
-        // add version to first and second file
-        datasetVersion.getFileMetadatas().add(fileMetadataList.get(0));
-        fileMetadataList.get(0).setDatasetVersion(datasetVersion);
-        datasetVersion.getFileMetadatas().add(fileMetadataList.get(1));
-        fileMetadataList.get(1).setDatasetVersion(datasetVersion);
+        // add version
+        for(int i : List.of(0,1,5)) {
+            datasetVersion.getFileMetadatas().add(fileMetadataList.get(i));
+            fileMetadataList.get(i).setDatasetVersion(datasetVersion);
+        }
 
         IngestUtil.checkForDuplicateFileNamesFinal(datasetVersion, dataFileList, null);
 
@@ -308,7 +312,7 @@ public class IngestUtilTest {
             .map(dataFile -> dataFile.getLatestFileMetadata().getLabel())
             .toList()
         ).containsExactlyInAnyOrderElementsOf(
-            List.of("datafile1-1.txt", "datafile2-1.txt", "datafile2.txt", "subdir-1")
+            List.of("datafile1-1.txt", "datafile2-1.txt", "datafile2.txt", "subdir-1", "datafile5.txt", "dir-1", "datafile7.txt", "dirX")
         );
 
         // add third file as duplicate file in root
@@ -322,7 +326,7 @@ public class IngestUtilTest {
             .map(dataFile -> dataFile.getLatestFileMetadata().getLabel())
             .toList()
         ).containsExactlyInAnyOrderElementsOf(
-            List.of("datafile1-2.txt", "datafile2-2.txt", "datafile2-1.txt", "subdir-1")
+            List.of("datafile1-2.txt", "datafile2-2.txt", "datafile2-1.txt", "subdir-1", "datafile5.txt", "dir-2", "datafile7.txt", "dirX")
         );
     }
 
