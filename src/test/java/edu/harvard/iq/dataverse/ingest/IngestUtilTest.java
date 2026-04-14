@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 import jakarta.validation.ConstraintViolation;
 import org.dataverse.unf.UNFUtil;
@@ -252,7 +251,7 @@ public class IngestUtilTest {
         Dataset dataset = makeDataset();
 
         // create dataset version
-        DatasetVersion datasetVersion = dataset.getOrCreateEditVersion();
+        DatasetVersion datasetVersion = dataset.getLatestVersion();
         datasetVersion.setCreateTime(dateFmt.parse("20001012"));
         datasetVersion.setLastUpdateTime(datasetVersion.getLastUpdateTime());
         datasetVersion.setId(MocksFactory.nextId());
@@ -262,25 +261,47 @@ public class IngestUtilTest {
         datasetVersion.setVersionNumber(1L);
         datasetVersion.setFileMetadatas(new ArrayList<>());
 
+        class params {
+            String dir;
+            String fileLabel;
+            String storageIdentifier;
+            int iteration;
+
+            public params(int iteration, String dir, String fileLabel) {
+                this.dir = dir;
+                this.fileLabel = fileLabel;
+                this.iteration = iteration;
+                this.storageIdentifier = dir + "/" + fileLabel;
+            }
+        }
+        var paramsList = Arrays.asList(
+            new params(0, "subdir", "datafile1.txt"),
+            new params(0, "subdir", "datafile2.txt"),
+            new params(1, null, "datafile2.txt"),
+            new params(2, "foo","bar"),
+            new params(2, null, "foo"), // file/dir conflict: "foo"
+            new params(2, null, "bar"),
+            new params(2, "bar/foo","pint"), // file/dir conflict: "bar"
+            new params(2, "bar/foo/pint", "beer")  // file/dir conflict: "bar/foo/pint"
+        );
+        var expected = Arrays.asList(
+            List.of("subdir/datafile1-1.txt", "subdir/datafile2-1.txt"),
+            List.of("subdir/datafile1-2.txt", "subdir/datafile2-2.txt", "null/datafile2-1.txt"),
+            List.of(
+                "subdir/datafile1-3.txt", "subdir/datafile2-3.txt", "null/datafile2-2.txt",
+                "foo/bar-1",
+                "null/foo-1",
+                "null/bar-1",
+                "bar/foo/pint-1",
+                "bar/foo/pint/beer-1")
+        );
         List<DataFile> dataFileList =  new ArrayList<>();
         List<FileMetadata> fileMetadataList = new ArrayList<>();
-        var labels = Arrays.asList(
-            Arrays.asList("subdir", "datafile1.txt" ),
-            Arrays.asList("subdir", "datafile2.txt"),
-            Arrays.asList(null, "datafile2.txt"),
-            Arrays.asList(null, "subdir"),
-            Arrays.asList("sub/dir","datafile5.txt"),
-            Arrays.asList("sub", "dir"),
-            Arrays.asList("sub/dirX","datafile7.txt"),
-            Arrays.asList("sub", "dirX")
-            );
-        for (int i=0; i<labels.size(); i++) {
-            var dirLabel = labels.get(i).get(0);
-            var fileLabel = labels.get(i).get(1);
-            var storageIdentifier = null == dirLabel ? fileLabel : dirLabel + "/" + fileLabel;
+        for (int i=0; i<paramsList.size(); i++) {
+            var params = paramsList.get(i);
 
             DataFile datafile = new DataFile("application/octet-stream");
-            datafile.setStorageIdentifier(storageIdentifier);
+            datafile.setStorageIdentifier(params.storageIdentifier);
             datafile.setFilesize(200);
             datafile.setModificationTime(new Timestamp(new Date().getTime()));
             datafile.setCreateDate(new Timestamp(new Date().getTime()));
@@ -293,41 +314,29 @@ public class IngestUtilTest {
 
             FileMetadata fmd = new FileMetadata();
             fmd.setId((long) (i + 1));
-            fmd.setLabel(fileLabel);
-            fmd.setDirectoryLabel(dirLabel);
+            fmd.setLabel(params.fileLabel);
+            fmd.setDirectoryLabel(params.dir);
             fmd.setDataFile(datafile);
             datafile.getFileMetadatas().add(fmd);
             fileMetadataList.add(fmd);
         }
 
-        // add version
-        for(int i : List.of(0,1,5)) {
-            datasetVersion.getFileMetadatas().add(fileMetadataList.get(i));
-            fileMetadataList.get(i).setDatasetVersion(datasetVersion);
+        for (int i=0; i<expected.size(); i++) {
+            for (int j = 0; j < paramsList.size(); j++) {
+                var params = paramsList.get(j);
+                if (params.iteration == i) {
+                    var fmd = fileMetadataList.get(j);
+                    datasetVersion.getFileMetadatas().add(fmd);
+                    fmd.setDatasetVersion(datasetVersion);
+                }
+            }
+            // TODO dataFileList should not have the same instances as datasetVersion.getFileMetadatas()
+            IngestUtil.checkForDuplicateFileNamesFinal(datasetVersion, dataFileList, null);
+
+            assertThat(datasetVersion.getFileMetadatas().stream()
+                .map(fmd -> fmd.getDirectoryLabel() + "/" + fmd.getLabel()).toList()
+            ).containsExactlyInAnyOrderElementsOf(expected.get(i));
         }
-
-        IngestUtil.checkForDuplicateFileNamesFinal(datasetVersion, dataFileList, null);
-
-        assertThat(dataFileList.stream()
-            .map(dataFile -> dataFile.getLatestFileMetadata().getLabel())
-            .toList()
-        ).containsExactlyInAnyOrderElementsOf(
-            List.of("datafile1-1.txt", "datafile2-1.txt", "datafile2.txt", "subdir-1", "datafile5.txt", "dir-1", "datafile7.txt", "dirX")
-        );
-
-        // add third file as duplicate file in root
-        datasetVersion.getFileMetadatas().add(fileMetadataList.get(2));
-        fileMetadataList.get(2).setDatasetVersion(datasetVersion);
-
-        // try to add data files with "-1" duplicates and see if it gets incremented to "-2"
-        IngestUtil.checkForDuplicateFileNamesFinal(datasetVersion, dataFileList, null);
-
-        assertThat(dataFileList.stream()
-            .map(dataFile -> dataFile.getLatestFileMetadata().getLabel())
-            .toList()
-        ).containsExactlyInAnyOrderElementsOf(
-            List.of("datafile1-2.txt", "datafile2-2.txt", "datafile2-1.txt", "subdir-1", "datafile5.txt", "dir-2", "datafile7.txt", "dirX")
-        );
     }
 
     @Test
