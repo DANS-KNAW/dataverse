@@ -279,21 +279,32 @@ public class IngestUtilTest {
             new params(0, "subdir", "datafile2.txt"),
             new params(1, null, "datafile2.txt"),
             new params(2, "foo","bar"),
-            new params(2, null, "foo"), // file/dir conflict: "foo"
-            new params(2, null, "bar"),
-            new params(2, "bar/foo","pint"), // file/dir conflict: "bar"
-            new params(2, "bar/foo/pint", "beer")  // file/dir conflict: "bar/foo/pint"
+            new params(3, null, "foo"), // file/dir conflict: "foo"
+            new params(3, null, "bar"),
+            new params(4, "bar/foo","pint"), // file/dir conflict: "bar"
+            new params(5, "bar/foo/pint", "beer")  // file/dir conflict: "bar/foo/pint"
         );
         var expected = Arrays.asList(
-            List.of("subdir/datafile1-1.txt", "subdir/datafile2-1.txt"),
-            List.of("subdir/datafile1-2.txt", "subdir/datafile2-2.txt", "null/datafile2-1.txt"),
-            List.of(
+            List.of( // 0
+                "subdir/datafile1-1.txt", "subdir/datafile2-1.txt", "null/datafile2.txt",
+                "foo/bar", "null/foo", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( // 1
+                "subdir/datafile1-2.txt", "subdir/datafile2-2.txt", "null/datafile2-1.txt",
+                "foo/bar", "null/foo", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( // 2
                 "subdir/datafile1-3.txt", "subdir/datafile2-3.txt", "null/datafile2-2.txt",
-                "foo/bar-1",
-                "null/foo-1",
-                "null/bar-1",
-                "bar/foo/pint-1",
-                "bar/foo/pint/beer-1")
+                "foo/bar-1", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( // 3
+                "subdir/datafile1-4.txt", "subdir/datafile2-4.txt", "null/datafile2-3.txt",
+                "foo/bar-2", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( // 4
+                "subdir/datafile1-5.txt", "subdir/datafile2-5.txt", "null/datafile2-4.txt",
+                "foo/bar-3", "null/foo-3", "null/bar-2", "bar/foo/pint-1", "bar/foo/pint/beer"),
+            // TODO should end with "bar-2/foo/pint", "bar/foo/pint/beer" ONCE IMPLEMENTED
+            List.of( // 5
+                "subdir/datafile1-6.txt", "subdir/datafile2-6.txt", "null/datafile2-5.txt",
+                "foo/bar-4", "null/foo-4", "null/bar-3", "bar/foo/pint-2", "bar/foo/pint/beer-1")
+            // TODO should end with "bar-2/foo/pint", "bar-2/foo/pint-1/beer" ONCE IMPLEMENTED
         );
         List<DataFile> dataFileList =  new ArrayList<>();
         List<FileMetadata> fileMetadataList = new ArrayList<>();
@@ -323,20 +334,53 @@ public class IngestUtilTest {
 
         for (int i=0; i<expected.size(); i++) {
             for (int j = 0; j < paramsList.size(); j++) {
+                // add files to dataset of current and previous iterations
                 var params = paramsList.get(j);
-                if (params.iteration == i) {
-                    var fmd = fileMetadataList.get(j);
+                if (params.iteration <= i) {
+                    var fmd = deepClone(fileMetadataList.get(j));
                     datasetVersion.getFileMetadatas().add(fmd);
                     fmd.setDatasetVersion(datasetVersion);
                 }
             }
-            // TODO dataFileList should not have the same instances as datasetVersion.getFileMetadatas()
+            //            var actualDatasetPaths = datasetVersion.getFileMetadatas().stream()
+            //                .map(fmd -> fmd.getDirectoryLabel() + "/" + fmd.getLabel()).toList();
+            //            System.out.println(actualDatasetPaths); // assert does not work
+
+            // method under test
             IngestUtil.checkForDuplicateFileNamesFinal(datasetVersion, dataFileList, null);
 
-            assertThat(datasetVersion.getFileMetadatas().stream()
-                .map(fmd -> fmd.getDirectoryLabel() + "/" + fmd.getLabel()).toList()
-            ).containsExactlyInAnyOrderElementsOf(expected.get(i));
+            var actualPaths = fileMetadataList.stream()
+                .map(fmd -> fmd.getDirectoryLabel() + "/" + fmd.getLabel()).toList();
+            assertThat(actualPaths)
+                .withFailMessage("Iteration %d \n  expected %s \n  but got  %s", i, expected.get(i), actualPaths)
+                .containsExactlyInAnyOrderElementsOf(expected.get(i));
+
         }
+    }
+
+    private FileMetadata deepClone(FileMetadata original) {
+        FileMetadata clone = new FileMetadata();
+        clone.setId(original.getId());
+        clone.setLabel(original.getLabel());
+        clone.setDirectoryLabel(original.getDirectoryLabel());
+        clone.setDatasetVersion(original.getDatasetVersion());
+        if (original.getDataFile() != null) {
+            DataFile df = original.getDataFile();
+            DataFile dfClone = new DataFile(df.getContentType());
+            dfClone.setId(df.getId());
+            dfClone.setStorageIdentifier(df.getStorageIdentifier());
+            dfClone.setFilesize(df.getFilesize());
+            dfClone.setModificationTime(df.getModificationTime());
+            dfClone.setCreateDate(df.getCreateDate());
+            dfClone.setPermissionModificationTime(df.getPermissionModificationTime());
+            dfClone.setOwner(df.getOwner());
+            dfClone.setIngestDone();
+            dfClone.setChecksumType(df.getChecksumType());
+            dfClone.setChecksumValue(df.getChecksumValue());
+            clone.setDataFile(dfClone);
+            dfClone.getFileMetadatas().add(clone);
+        }
+        return clone;
     }
 
     @Test
