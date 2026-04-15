@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -262,105 +263,106 @@ public class IngestUtilTest {
         datasetVersion.setFileMetadatas(new ArrayList<>());
 
         class params {
-            String dir;
-            String fileLabel;
-            String storageIdentifier;
-            int iteration;
+            final int iteration;
+            final FileMetadata fmd;
 
             public params(int iteration, String dir, String fileLabel) {
-                this.dir = dir;
-                this.fileLabel = fileLabel;
                 this.iteration = iteration;
-                this.storageIdentifier = dir + "/" + fileLabel;
+                var storageIdentifier = dir + "/" + fileLabel;
+
+                DataFile datafile = new DataFile("application/octet-stream");
+                datafile.setStorageIdentifier(storageIdentifier);
+                datafile.setFilesize(200);
+                datafile.setModificationTime(new Timestamp(new Date().getTime()));
+                datafile.setCreateDate(new Timestamp(new Date().getTime()));
+                datafile.setPermissionModificationTime(new Timestamp(new Date().getTime()));
+                datafile.setOwner(dataset);
+                datafile.setIngestDone();
+                datafile.setChecksumType(DataFile.ChecksumType.SHA1);
+                datafile.setChecksumValue("Unknown");
+
+                fmd = new FileMetadata();
+                fmd.setId(ThreadLocalRandom.current().nextLong());
+                fmd.setLabel(fileLabel);
+                fmd.setDirectoryLabel(dir);
+                fmd.setDataFile(datafile);
+                datafile.getFileMetadatas().add(fmd);
             }
         }
+        // each iteration adds one or more files to the dataset and
+        // verifies what names would be added if all would be added (again)
+        // the adjusted names are used to add files in the next iteration
         var paramsList = Arrays.asList(
-            new params(0, "subdir", "datafile1.txt"),
-            new params(0, "subdir", "datafile2.txt"),
-            new params(1, null, "datafile2.txt"),
-            new params(2, "foo","bar"),
-            new params(3, null, "foo"), // file/dir conflict: "foo"
-            new params(3, null, "bar"),
-            new params(4, "bar/foo","pint"), // file/dir conflict: "bar"
-            new params(5, "bar/foo/pint", "beer")  // file/dir conflict: "bar/foo/pint"
+            new params(0, "subdir", "datafile.txt"),
+            new params(1, "subdir", "datafile.txt"),
+            new params(1, "subdir", "datafile-1.txt"),
+            new params(1, "foo","bar"),
+            new params(2, null, "foo"), // file/dir conflict: "foo"
+            new params(2, null, "bar"),
+            new params(3, "bar/foo","pint"), // dir/file conflict: "bar"
+            new params(4, "bar/foo/pint", "beer")  // subdir/file conflict: "bar/foo/pint"
         );
-        var expected = Arrays.asList(
+        // more than 10 List.of elements cause subtle type problems for the assertions
+        var expectedPreconditions = Arrays.asList(
+            List.of("subdir/datafile.txt"),
+            List.of("subdir/datafile.txt", "subdir/datafile-2.txt", "subdir/datafile-3.txt", "foo/bar"),
+            List.of("subdir/datafile.txt", "subdir/datafile-2.txt", "subdir/datafile-3.txt", "foo/bar", "null/foo-1", "null/bar"),
+            List.of("subdir/datafile.txt", "subdir/datafile-2.txt", "subdir/datafile-3.txt", "foo/bar", "null/foo-1", "null/bar", "bar/foo/pint"),
+            List.of("subdir/datafile.txt", "subdir/datafile-2.txt", "subdir/datafile-3.txt", "foo/bar", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer")
+        );
+        var expectedPostConditions = Arrays.asList(
             List.of( // 0
-                "subdir/datafile1-1.txt", "subdir/datafile2-1.txt", "null/datafile2.txt",
+                "subdir/datafile-1.txt", "subdir/datafile-2.txt", "subdir/datafile-3.txt",
                 "foo/bar", "null/foo", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
             List.of( // 1
-                "subdir/datafile1-2.txt", "subdir/datafile2-2.txt", "null/datafile2-1.txt",
-                "foo/bar", "null/foo", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
-            List.of( // 2
-                "subdir/datafile1-3.txt", "subdir/datafile2-3.txt", "null/datafile2-2.txt",
+                "subdir/datafile-1.txt", "subdir/datafile-4.txt", "subdir/datafile-5.txt",
                 "foo/bar-1", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( // 2
+                "subdir/datafile-1.txt", "subdir/datafile-4.txt", "subdir/datafile-5.txt",
+                "foo/bar-1", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
             List.of( // 3
-                "subdir/datafile1-4.txt", "subdir/datafile2-4.txt", "null/datafile2-3.txt",
-                "foo/bar-2", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
+                "subdir/datafile-1.txt", "subdir/datafile-4.txt", "subdir/datafile-5.txt",
+                "foo/bar-1", "null/foo-2", "null/bar-1", "bar/foo/pint-1", "bar/foo/pint/beer"),
+            // TODO should end with "bar-1/foo/pint", "bar-1/foo/pint/beer" ONCE IMPLEMENTED
             List.of( // 4
-                "subdir/datafile1-5.txt", "subdir/datafile2-5.txt", "null/datafile2-4.txt",
-                "foo/bar-3", "null/foo-3", "null/bar-2", "bar/foo/pint-1", "bar/foo/pint/beer"),
-            // TODO should end with "bar-2/foo/pint", "bar/foo/pint/beer" ONCE IMPLEMENTED
-            List.of( // 5
-                "subdir/datafile1-6.txt", "subdir/datafile2-6.txt", "null/datafile2-5.txt",
-                "foo/bar-4", "null/foo-4", "null/bar-3", "bar/foo/pint-2", "bar/foo/pint/beer-1")
-            // TODO should end with "bar-2/foo/pint", "bar-2/foo/pint-1/beer" ONCE IMPLEMENTED
+                "subdir/datafile-1.txt", "subdir/datafile-4.txt", "subdir/datafile-5.txt",
+                "foo/bar-1", "null/foo-2", "null/bar-1", "bar/foo/pint-1", "bar/foo/pint/beer-1")
+            // TODO should end with "bar-1/foo/pint", "bar-1/foo/pint-1/beer" ONCE IMPLEMENTED
         );
-        List<DataFile> dataFileList =  new ArrayList<>();
-        List<FileMetadata> fileMetadataList = new ArrayList<>();
-        for (int i=0; i<paramsList.size(); i++) {
-            var params = paramsList.get(i);
 
-            DataFile datafile = new DataFile("application/octet-stream");
-            datafile.setStorageIdentifier(params.storageIdentifier);
-            datafile.setFilesize(200);
-            datafile.setModificationTime(new Timestamp(new Date().getTime()));
-            datafile.setCreateDate(new Timestamp(new Date().getTime()));
-            datafile.setPermissionModificationTime(new Timestamp(new Date().getTime()));
-            datafile.setOwner(dataset);
-            datafile.setIngestDone();
-            datafile.setChecksumType(DataFile.ChecksumType.SHA1);
-            datafile.setChecksumValue("Unknown");
-            dataFileList.add(datafile);
-
-            FileMetadata fmd = new FileMetadata();
-            fmd.setId((long) (i + 1));
-            fmd.setLabel(params.fileLabel);
-            fmd.setDirectoryLabel(params.dir);
-            fmd.setDataFile(datafile);
-            datafile.getFileMetadatas().add(fmd);
-            fileMetadataList.add(fmd);
-        }
-
-        for (int i=0; i<expected.size(); i++) {
-            for (int j = 0; j < paramsList.size(); j++) {
-                // add files to dataset of current and previous iterations
-                var params = paramsList.get(j);
-                if (params.iteration <= i) {
-                    var fmd = deepClone(fileMetadataList.get(j));
+        var dataFiles = paramsList.stream().map(p -> p.fmd.getDataFile()).toList();
+        for (int i=0; i<expectedPreconditions.size(); i++) {
+            // add subset of created files to dataset
+            for (params params : paramsList) {
+                if (params.iteration == i) {
+                    var fmd = deepClone(params.fmd);
                     datasetVersion.getFileMetadatas().add(fmd);
                     fmd.setDatasetVersion(datasetVersion);
                 }
             }
-            //            var actualDatasetPaths = datasetVersion.getFileMetadatas().stream()
-            //                .map(fmd -> fmd.getDirectoryLabel() + "/" + fmd.getLabel()).toList();
-            //            System.out.println(actualDatasetPaths); // assert does not work
+            // precondition 
+            var actualDatasetPaths = datasetVersion.getFileMetadatas().stream()
+                .map(fmd -> fmd.getDirectoryLabel() + "/" + fmd.getLabel()).toList();
+            assertThat(actualDatasetPaths)
+                .withFailMessage("Precondition %d \n  expected %s \n  but got  %s", i, expectedPreconditions.get(i), actualDatasetPaths)
+                .containsExactlyInAnyOrderElementsOf(expectedPreconditions.get(i));
 
             // method under test
-            IngestUtil.checkForDuplicateFileNamesFinal(datasetVersion, dataFileList, null);
+            IngestUtil.checkForDuplicateFileNamesFinal(datasetVersion, dataFiles, null);
 
-            var actualPaths = fileMetadataList.stream()
-                .map(fmd -> fmd.getDirectoryLabel() + "/" + fmd.getLabel()).toList();
+            // postcondition
+            var actualPaths = paramsList.stream()
+                .map(p -> p.fmd.getDirectoryLabel() + "/" + p.fmd.getLabel()).toList();
             assertThat(actualPaths)
-                .withFailMessage("Iteration %d \n  expected %s \n  but got  %s", i, expected.get(i), actualPaths)
-                .containsExactlyInAnyOrderElementsOf(expected.get(i));
+                .withFailMessage("Postcondition %d \n  expected %s \n  but got  %s", i, expectedPostConditions.get(i), actualPaths)
+                .containsExactlyInAnyOrderElementsOf(expectedPostConditions.get(i));
 
         }
     }
 
-    private FileMetadata deepClone(FileMetadata original) {
+    private static FileMetadata deepClone(FileMetadata original) {
         FileMetadata clone = new FileMetadata();
-        clone.setId(original.getId());
+        clone.setId(ThreadLocalRandom.current().nextLong());
         clone.setLabel(original.getLabel());
         clone.setDirectoryLabel(original.getDirectoryLabel());
         clone.setDatasetVersion(original.getDatasetVersion());
