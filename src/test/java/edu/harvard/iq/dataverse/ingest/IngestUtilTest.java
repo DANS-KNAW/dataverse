@@ -25,7 +25,6 @@ import org.dataverse.unf.UnfException;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class IngestUtilTest {
@@ -475,7 +474,7 @@ public class IngestUtilTest {
 
     @Test
     /**
-     * Test adding a file to a dataset having a file with a full path duplicating a directory.
+     * Test adding files to a dataset having a file with a full path duplicating a directory.
      */
     public void testExistingFilesDuplicatingDirectories() throws Exception {
 
@@ -484,14 +483,14 @@ public class IngestUtilTest {
         var datasetVersion = dataset.getLatestVersion();
         datasetVersion.setFileMetadatas(new ArrayList<>());
 
-        var fileMetadatas = Stream.of(
-            Arrays.asList("just/something/not/duplicating/anything","else"),
+        // add files to dataset
+        Stream.of(
             Arrays.asList("foo","bar"),
             Arrays.asList(null, "foo"), // file/dir conflict: "foo"
             Arrays.asList(null, "bar"),
             Arrays.asList("bar/foo","pint"), // dir/file conflict: "bar"
             Arrays.asList("bar/foo/pint", "beer")  // subdir/file conflict: "bar/foo/pint"
-        ).map(l -> {
+        ).forEach(l -> {
             var dir = l.get(0);
             var fileLabel = l.get(1);
             var datafile = new DataFile("application/octet-stream");
@@ -501,19 +500,14 @@ public class IngestUtilTest {
             fmd.setDirectoryLabel(dir);
             fmd.setDataFile(datafile);
             datafile.getFileMetadatas().add(fmd);
-            return fmd;
-        }).toList();
 
-        // add created files to dataset except for the first
-        for (int i=1; i<fileMetadatas.size(); i++) {
-            var fmd = fileMetadatas.get(i);
+            // add file to dataset
             datasetVersion.getFileMetadatas().add(fmd);
             fmd.setDatasetVersion(datasetVersion);
-        }
-        var newFiles = List.of(fileMetadatas.get(0).getDataFile());
+        });
 
-        // EditDataFilesPage.save() would create an error message if not empty
-        var duplicates = IngestUtil.findDuplicateFilenames(datasetVersion, newFiles);
+        // EditDataFilesPage.save() would create an error message if result is not empty
+        var duplicates = IngestUtil.findDuplicateFilenames(datasetVersion, List.of());
 
         assertThat(duplicates).containsExactlyInAnyOrderElementsOf(List.of("bar", "foo", "bar/foo/pint"));
     }
