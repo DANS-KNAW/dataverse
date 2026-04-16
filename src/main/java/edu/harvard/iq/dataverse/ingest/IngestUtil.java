@@ -175,7 +175,8 @@ public class IngestUtil {
                 path = directoryLabel + "/";
             }
             String pathAndfileName = path + fileMetadata.getLabel();
-            allFileNamesWithPaths.addAll(getPathAndParents(pathAndfileName));
+            allFileNamesWithPaths.add((pathAndfileName));
+            allPaths.addAll(getPathAndParents(directoryLabel));
         }
         allFileNamesWithPaths.addAll(allPaths);
         return allFileNamesWithPaths;
