@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import jakarta.validation.ConstraintViolation;
 import org.dataverse.unf.UNFUtil;
@@ -24,6 +25,7 @@ import org.dataverse.unf.UnfException;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class IngestUtilTest {
@@ -380,47 +382,25 @@ public class IngestUtilTest {
     @Test
     /**
      * Test adding a file with a full path duplicating an existing directory
-     * or with an ancestor that duplicates the full path of a file.
+     * or with an ancestor that duplicates the full path of an existing file.
      */
     public void testCheckFilesDuplicatingDirectories() throws Exception {
 
-        SimpleDateFormat dateFmt = new SimpleDateFormat("yyyyMMdd");
-
-        // create dataset
-        Dataset dataset = makeDataset();
-
         // create dataset version
-        DatasetVersion datasetVersion = dataset.getLatestVersion();
-        datasetVersion.setCreateTime(dateFmt.parse("20001012"));
-        datasetVersion.setLastUpdateTime(datasetVersion.getLastUpdateTime());
-        datasetVersion.setId(MocksFactory.nextId());
-        datasetVersion.setReleaseTime(dateFmt.parse("20010101"));
-        datasetVersion.setVersionState(DatasetVersion.VersionState.RELEASED);
-        datasetVersion.setMinorVersionNumber(0L);
-        datasetVersion.setVersionNumber(1L);
+        var dataset = makeDataset();
+        var datasetVersion = dataset.getLatestVersion();
         datasetVersion.setFileMetadatas(new ArrayList<>());
 
-        class params {
+        class Params {
             final int iteration;
             final FileMetadata fmd;
 
-            public params(int iteration, String dir, String fileLabel) {
+            public Params(int iteration, String dir, String fileLabel) {
                 this.iteration = iteration;
-                var storageIdentifier = dir + "/" + fileLabel;
 
-                DataFile datafile = new DataFile("application/octet-stream");
-                datafile.setStorageIdentifier(storageIdentifier);
-                datafile.setFilesize(200);
-                datafile.setModificationTime(new Timestamp(new Date().getTime()));
-                datafile.setCreateDate(new Timestamp(new Date().getTime()));
-                datafile.setPermissionModificationTime(new Timestamp(new Date().getTime()));
-                datafile.setOwner(dataset);
-                datafile.setIngestDone();
-                datafile.setChecksumType(DataFile.ChecksumType.SHA1);
-                datafile.setChecksumValue("Unknown");
+                var datafile = new DataFile("application/octet-stream");
 
                 fmd = new FileMetadata();
-                fmd.setId(MocksFactory.nextId());
                 fmd.setLabel(fileLabel);
                 fmd.setDirectoryLabel(dir);
                 fmd.setDataFile(datafile);
@@ -431,11 +411,11 @@ public class IngestUtilTest {
         // verifies what names would be added if all would be added (again)
         // the adjusted names are used to add files in the next iteration
         var paramsList = Arrays.asList(
-            new params(0, "foo","bar"),
-            new params(1, null, "foo"), // file/dir conflict: "foo"
-            new params(1, null, "bar"),
-            new params(2, "bar/foo","pint"), // dir/file conflict: "bar"
-            new params(3, "bar/foo/pint", "beer")  // subdir/file conflict: "bar/foo/pint"
+            new Params(0, "foo","bar"),
+            new Params(1, null, "foo"), // file/dir conflict: "foo"
+            new Params(1, null, "bar"),
+            new Params(2, "bar/foo","pint"), // dir/file conflict: "bar"
+            new Params(3, "bar/foo/pint", "beer")  // subdir/file conflict: "bar/foo/pint"
         );
         // more than 10 List.of elements cause subtle type problems for the assertions
         var expectedPreconditions = Arrays.asList(
@@ -456,11 +436,21 @@ public class IngestUtilTest {
         var dataFiles = paramsList.stream().map(p -> p.fmd.getDataFile()).toList();
         for (int i=0; i<expectedPreconditions.size(); i++) {
             // add subset of created files to dataset
-            for (params params : paramsList) {
+            for (Params params : paramsList) {
                 if (params.iteration == i) {
-                    var fmd = deepClone(params.fmd);
-                    datasetVersion.getFileMetadatas().add(fmd);
-                    fmd.setDatasetVersion(datasetVersion);
+                    var fmdClone = new FileMetadata();
+                    fmdClone.setId(MocksFactory.nextId());
+                    fmdClone.setLabel(params.fmd.getLabel());
+                    fmdClone.setDirectoryLabel(params.fmd.getDirectoryLabel());
+                    fmdClone.setDatasetVersion(params.fmd.getDatasetVersion());
+                    if (params.fmd.getDataFile() != null) {
+                        var df = params.fmd.getDataFile();
+                        var dfClone = new DataFile(df.getContentType());
+                        fmdClone.setDataFile(dfClone);
+                        dfClone.getFileMetadatas().add(fmdClone);
+                    }
+                    datasetVersion.getFileMetadatas().add(fmdClone);
+                    fmdClone.setDatasetVersion(datasetVersion);
                 }
             }
             // precondition
@@ -483,29 +473,49 @@ public class IngestUtilTest {
         }
     }
 
-    private static FileMetadata deepClone(FileMetadata original) {
-        FileMetadata fmdClone = new FileMetadata();
-        fmdClone.setId(MocksFactory.nextId());
-        fmdClone.setLabel(original.getLabel());
-        fmdClone.setDirectoryLabel(original.getDirectoryLabel());
-        fmdClone.setDatasetVersion(original.getDatasetVersion());
-        if (original.getDataFile() != null) {
-            DataFile df = original.getDataFile();
-            DataFile dfClone = new DataFile(df.getContentType());
-            dfClone.setId(MocksFactory.nextId());
-            dfClone.setStorageIdentifier(df.getStorageIdentifier());
-            dfClone.setFilesize(df.getFilesize());
-            dfClone.setModificationTime(df.getModificationTime());
-            dfClone.setCreateDate(df.getCreateDate());
-            dfClone.setPermissionModificationTime(df.getPermissionModificationTime());
-            dfClone.setOwner(df.getOwner());
-            dfClone.setIngestDone();
-            dfClone.setChecksumType(df.getChecksumType());
-            dfClone.setChecksumValue(df.getChecksumValue());
-            fmdClone.setDataFile(dfClone);
-            dfClone.getFileMetadatas().add(fmdClone);
+    @Test
+    /**
+     * Test adding a file to a dataset having a file with a full path duplicating a directory.
+     */
+    public void testExistingFilesDuplicatingDirectories() throws Exception {
+
+        // create dataset version
+        var dataset = makeDataset();
+        var datasetVersion = dataset.getLatestVersion();
+        datasetVersion.setFileMetadatas(new ArrayList<>());
+
+        var fileMetadatas = Stream.of(
+            Arrays.asList("just/something/not/duplicating/anything","else"),
+            Arrays.asList("foo","bar"),
+            Arrays.asList(null, "foo"), // file/dir conflict: "foo"
+            Arrays.asList(null, "bar"),
+            Arrays.asList("bar/foo","pint"), // dir/file conflict: "bar"
+            Arrays.asList("bar/foo/pint", "beer")  // subdir/file conflict: "bar/foo/pint"
+        ).map(l -> {
+            var dir = l.get(0);
+            var fileLabel = l.get(1);
+            var datafile = new DataFile("application/octet-stream");
+            var fmd = new FileMetadata();
+            fmd.setId(MocksFactory.nextId());
+            fmd.setLabel(fileLabel);
+            fmd.setDirectoryLabel(dir);
+            fmd.setDataFile(datafile);
+            datafile.getFileMetadatas().add(fmd);
+            return fmd;
+        }).toList();
+
+        // add created files to dataset except for the first
+        for (int i=1; i<fileMetadatas.size(); i++) {
+            var fmd = fileMetadatas.get(i);
+            datasetVersion.getFileMetadatas().add(fmd);
+            fmd.setDatasetVersion(datasetVersion);
         }
-        return fmdClone;
+        var newFiles = List.of(fileMetadatas.get(0).getDataFile());
+
+        // EditDataFilesPage.save() would create an error message if not empty
+        var duplicates = IngestUtil.findDuplicateFilenames(datasetVersion, newFiles);
+
+        assertThat(duplicates).containsExactlyInAnyOrderElementsOf(List.of("bar", "foo", "bar/foo/pint"));
     }
 
     @Test
