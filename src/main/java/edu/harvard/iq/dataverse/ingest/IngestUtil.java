@@ -181,6 +181,23 @@ public class IngestUtil {
         return allFileNamesWithPaths;
     }
 
+    public static List<String> getPathAndParents(String directory) {
+        List<String> paths = new ArrayList<>();
+        if (directory == null || directory.isEmpty()) {
+            return paths;
+        }
+        String current = directory;
+        while (current != null && !current.isEmpty()) {
+            paths.add(current);
+            int lastSlash = current.lastIndexOf('/');
+            if (lastSlash == -1) {
+                break;
+            }
+            current = current.substring(0, lastSlash);
+        }
+        return paths;
+    }
+
     // This method is called on a single file, when we need to modify the name 
     // of an already ingested/persisted datafile. For ex., when we have converted
     // a file to tabular data, and want to update the extension accordingly. 
@@ -284,23 +301,6 @@ public class IngestUtil {
         }
 
         return pathNamesExisting;
-    }
-
-    public static List<String> getPathAndParents(String directory) {
-        List<String> paths = new ArrayList<>();
-        if (directory == null || directory.isEmpty()) {
-            return paths;
-        }
-        String current = directory;
-        while (current != null && !current.isEmpty()) {
-            paths.add(current);
-            int lastSlash = current.lastIndexOf('/');
-            if (lastSlash == -1) {
-                break;
-            }
-            current = current.substring(0, lastSlash);
-        }
-        return paths;
     }
 
     /**
