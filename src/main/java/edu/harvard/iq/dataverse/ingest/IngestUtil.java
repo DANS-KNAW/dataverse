@@ -164,8 +164,9 @@ public class IngestUtil {
 
     /**
      * @return A List of Strings in the form of path/to/file.txt
+     * path and path/to are also added to the list, but only once when they are parents for multiple files.
      */
-    public static List<String> getPathsAndFileNames(List<FileMetadata> fileMetadatas) {
+    private static List<String> getPathsAndFileNames(List<FileMetadata> fileMetadatas) {
         List<String> allFileNamesWithPaths = new ArrayList<>();
         Set<String> allPaths = new HashSet<>();
         for (FileMetadata fileMetadata : fileMetadatas) {
@@ -182,7 +183,7 @@ public class IngestUtil {
         return allFileNamesWithPaths;
     }
 
-    public static List<String> getPathAndParents(String directory) {
+    private static List<String> getPathAndParents(String directory) {
         List<String> paths = new ArrayList<>();
         if (directory == null || directory.isEmpty()) {
             return paths;
@@ -212,7 +213,7 @@ public class IngestUtil {
     }
 
     // unique path name: directoryLabel + file separator + fileLabel
-    public static String makePathName(String directoryName, String fileName) {
+    private static String makePathName(String directoryName, String fileName) {
         String pathName;
         if (directoryName != null && !directoryName.isEmpty()) {
             pathName = directoryName + File.separator + fileName;

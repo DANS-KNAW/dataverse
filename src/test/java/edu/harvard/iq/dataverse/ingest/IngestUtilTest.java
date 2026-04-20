@@ -385,11 +385,6 @@ public class IngestUtilTest {
      */
     public void testCheckFilesDuplicatingDirectories() throws Exception {
 
-        // create dataset version
-        var dataset = makeDataset();
-        var datasetVersion = dataset.getLatestVersion();
-        datasetVersion.setFileMetadatas(new ArrayList<>());
-
         class Params {
             final int iteration;
             final FileMetadata fmd;
@@ -414,7 +409,7 @@ public class IngestUtilTest {
             new Params(1, null, "foo"), // file/dir conflict: "foo"
             new Params(1, null, "bar"),
             new Params(2, "bar/foo","pint"), // dir/file conflict: "bar"
-            new Params(3, "bar/foo/pint", "beer")  // subdir/file conflict: "bar/foo/pint"
+            new Params(3, "bar/foo/pint", "beer")  // dir-ancestor/file conflict: "bar/foo/pint"
         );
         // more than 10 List.of elements cause subtle type problems for the assertions
         var expectedPreconditions = Arrays.asList(
@@ -432,25 +427,33 @@ public class IngestUtilTest {
             // TODO should end with "bar-1/foo/pint", "bar-1/foo/pint-1/beer" ONCE IMPLEMENTED
         );
 
+        // create dataset version
+        var dataset = makeDataset();
+        var datasetVersion = dataset.getLatestVersion();
+        datasetVersion.setFileMetadatas(new ArrayList<>());
+
         var dataFiles = paramsList.stream().map(p -> p.fmd.getDataFile()).toList();
         for (int i=0; i<expectedPreconditions.size(); i++) {
-            // add subset of created files to dataset
-            for (Params params : paramsList) {
-                if (params.iteration == i) {
+            // select files to add to the dataset for the current iteration
+            var ii = i;
+            var filesToAdd = paramsList.stream()
+                .filter(p -> p.iteration == ii)
+                .map(p -> p.fmd).toList();
+            // add files to dataset
+            for (var fmd: filesToAdd) {
                     var fmdClone = new FileMetadata();
                     fmdClone.setId(MocksFactory.nextId());
-                    fmdClone.setLabel(params.fmd.getLabel());
-                    fmdClone.setDirectoryLabel(params.fmd.getDirectoryLabel());
-                    fmdClone.setDatasetVersion(params.fmd.getDatasetVersion());
-                    if (params.fmd.getDataFile() != null) {
-                        var df = params.fmd.getDataFile();
+                    fmdClone.setLabel(fmd.getLabel());
+                    fmdClone.setDirectoryLabel(fmd.getDirectoryLabel());
+                    fmdClone.setDatasetVersion(fmd.getDatasetVersion());
+                    if (fmd.getDataFile() != null) {
+                        var df = fmd.getDataFile();
                         var dfClone = new DataFile(df.getContentType());
                         fmdClone.setDataFile(dfClone);
                         dfClone.getFileMetadatas().add(fmdClone);
                     }
                     datasetVersion.getFileMetadatas().add(fmdClone);
                     fmdClone.setDatasetVersion(datasetVersion);
-                }
             }
             // precondition
             var actualDatasetPaths = datasetVersion.getFileMetadatas().stream()
