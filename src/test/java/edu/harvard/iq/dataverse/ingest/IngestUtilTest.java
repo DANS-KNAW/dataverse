@@ -866,7 +866,36 @@ public class IngestUtilTest {
         FileMetadata file2 = new FileMetadata();
         file2.setLabel("README2.md");
         List<FileMetadata> fileMetadatas = Arrays.asList(file1, file2);
-        assertTrue(IngestUtil.conflictsWithExistingFilenames(pathPlusFilename, fileMetadatas));
+        assertThat(IngestUtil.findConflictingPathPart(pathPlusFilename, fileMetadatas))
+            .hasValue("README.md");
+    }
+
+    @Test
+    public void addDirConflictingWithFile() {
+        FileMetadata fmd = new FileMetadata();
+        fmd.setDirectoryLabel("foo");
+        fmd.setLabel("bar");
+        var fileMetadatas = Arrays.asList(fmd);
+        assertThat(IngestUtil.findConflictingPathPart("foo/bar/pint", fileMetadatas))
+            .hasValue("foo/bar");
+    }
+
+    @Test
+    public void addParentDirConflictingWithFile() {
+        FileMetadata fmd = new FileMetadata();
+        fmd.setLabel("foo");
+        var fileMetadatas = Arrays.asList(fmd);
+        assertThat(IngestUtil.findConflictingPathPart("foo/bar/pint", fileMetadatas))
+            .hasValue("foo");
+    }
+
+    @Test
+    public void noConflict() {
+        FileMetadata fmd = new FileMetadata();
+        fmd.setLabel("foo");
+        var fileMetadatas = Arrays.asList(fmd);
+        assertThat(IngestUtil.findConflictingPathPart("bar", fileMetadatas))
+            .isEmpty();
     }
 
 }

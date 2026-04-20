@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
 import jakarta.json.Json;
@@ -120,14 +121,18 @@ public class IngestUtil {
     }
 
     /**
-     * Given a new proposed label or directoryLabel for a file, check against
+     * Given a new proposed label and/or directoryLabel for a file, check against
      * existing files if a duplicate directoryLabel/label combination would be
-     * created.
+     * created. Either for the full newPathPlusFilename, or for any of its parent paths.
+     * If so, return the conflicting path part.
      */
-    public static boolean conflictsWithExistingFilenames(String pathPlusFilename, List<FileMetadata> fileMetadatas) {
-        List<String> filePathsAndNames = getPathsAndFileNames(fileMetadatas);
-        return filePathsAndNames.contains(pathPlusFilename);
+    public static Optional<String> findConflictingPathPart(String newPathPlusFilename, List<FileMetadata> fileMetadatas) {
+        List<String> existingPathPlusFileNames = getPathsAndFileNames(fileMetadatas);
+        return getPathAndParents(newPathPlusFilename).stream()
+            .filter(existingPathPlusFileNames::contains)
+            .findFirst();
     }
+
 
     /**
      * Given a DatasetVersion, and the newFiles about to be added to the 
