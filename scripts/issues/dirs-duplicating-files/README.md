@@ -1,1 +1,0 @@
-values are specific for dev_archaeology_v6.9-PATCH-5_2026-01-15.box 

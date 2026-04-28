@@ -422,9 +422,9 @@ public class IngestUtilTest {
             List.of( "foo/bar-1", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
             List.of( "foo/bar-1", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
             List.of( "foo/bar-1", "null/foo-2", "null/bar-1", "bar/foo/pint-1", "bar/foo/pint/beer"),
-            // TODO should end with "bar-1/foo/pint", "bar-1/foo/pint/beer" ONCE IMPLEMENTED
+            // TODO should throw ONCE IMPLEMENTED
             List.of(  "foo/bar-1", "null/foo-2", "null/bar-1", "bar/foo/pint-1", "bar/foo/pint/beer-1")
-            // TODO should end with "bar-1/foo/pint", "bar-1/foo/pint-1/beer" ONCE IMPLEMENTED
+            // TODO should throw ONCE IMPLEMENTED
         );
 
         // create dataset version

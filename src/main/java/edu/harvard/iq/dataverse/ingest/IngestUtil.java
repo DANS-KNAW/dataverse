@@ -34,9 +34,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
-import jakarta.json.Json;
-import jakarta.json.JsonArrayBuilder;
-import jakarta.json.JsonObjectBuilder;
+
 import org.dataverse.unf.UNFUtil;
 import org.dataverse.unf.UnfException;
 
@@ -66,7 +64,11 @@ public class IngestUtil {
         for (Iterator<DataFile> dfIt = newFiles.iterator(); dfIt.hasNext();) {
 
             FileMetadata fm = dfIt.next().getFileMetadata();
-
+            for (var dir : getPathAndParents(fm.getDirectoryLabel())) {
+                if (pathNamesExisting.contains(dir)) {
+                    // TODO remove from newFiles
+                }
+            }
             fm.setLabel(duplicateFilenameCheck(fm, pathNamesExisting));
         }
     }
@@ -127,10 +129,14 @@ public class IngestUtil {
      * If so, return the conflicting path part.
      */
     public static Optional<String> findConflictingPathPart(String newPathPlusFilename, List<FileMetadata> fileMetadatas) {
-        List<String> existingPathPlusFileNames = getPathsAndFileNames(fileMetadatas);
-        return getPathAndParents(newPathPlusFilename).stream()
-            .filter(existingPathPlusFileNames::contains)
-            .findFirst();
+        var newPathAndParents = getPathAndParents(newPathPlusFilename);
+        var existingPathsAndParents = getPathsAndFileNames(fileMetadatas);
+        for (var pathOrDir : existingPathsAndParents) {
+            if (newPathAndParents.contains(pathOrDir)) {
+                return Optional.of(pathOrDir);
+            }
+        }
+        return Optional.empty();
     }
 
 
