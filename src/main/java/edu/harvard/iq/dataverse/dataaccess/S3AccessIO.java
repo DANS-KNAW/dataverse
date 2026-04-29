@@ -1214,6 +1214,7 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
 
             // Apply the custom HTTP client to the S3AsyncClientBuilder
             s3CB.httpClientBuilder(httpClientBuilder);
+            s3CB.multipartEnabled(true);
 
             // Configure endpoint and region
             String s3CEUrl = getConfigParamForDriver(driverId, CUSTOM_ENDPOINT_URL, "");
