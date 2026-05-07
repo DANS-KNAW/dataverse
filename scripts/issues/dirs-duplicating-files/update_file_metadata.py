@@ -85,10 +85,7 @@ print (r.json())
 print (r.status_code)
 
 ####################
-print ('-' * 40 + ' dir conflicting with existing file: should fail')
-# TODO should fail but does not, see new unit test
-#   how to make saveAndAddFilesToDataset return an empty (or shorter list)
-#   when checkForDuplicateFileNamesFinal detects a directory that duplicates an existing file
+print ('-' * 40 + ' dir conflicting with existing file: fails')
 
 url = '%s/api/datasets/:persistentId/add?persistentId=%s' % (dataverse_server, persistentId)
 unique_content = 'content2: %s' % datetime.now()

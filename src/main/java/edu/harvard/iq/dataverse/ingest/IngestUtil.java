@@ -62,12 +62,18 @@ public class IngestUtil {
         Set<String> pathNamesExisting = existingPathNamesAsSet(version, ((fileToReplace == null) ? null : fileToReplace.getFileMetadata()));
         // Step 2: check each new DataFile against the list of path names, if a duplicate create a new unique file name
         for (Iterator<DataFile> dfIt = newFiles.iterator(); dfIt.hasNext();) {
-
-            FileMetadata fm = dfIt.next().getFileMetadata();
+            DataFile dataFile = dfIt.next();
+            FileMetadata fm = dataFile.getFileMetadata();
+            boolean conflict = false;
             for (var dir : getPathAndParents(fm.getDirectoryLabel())) {
                 if (pathNamesExisting.contains(dir)) {
-                    // TODO remove from newFiles
+                    conflict = true;
+                    break;
                 }
+            }
+            if (conflict) {
+                dfIt.remove(); // Remove the DataFile from newFiles
+                continue;      // Skip further processing for this file
             }
             fm.setLabel(duplicateFilenameCheck(fm, pathNamesExisting));
         }
