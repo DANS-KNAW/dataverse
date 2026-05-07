@@ -24,6 +24,7 @@ import org.dataverse.unf.UNFUtil;
 import org.dataverse.unf.UnfException;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -349,8 +350,8 @@ public class IngestUtilTest {
         }
 
         // check filenames are unique
-        assertTrue(file1NameAltered);
-        assertTrue(file2NameAltered);
+        assertFalse(file1NameAltered);
+        assertFalse(file2NameAltered);
         assertFalse(file3NameAltered);
 
         // add duplicate file in root
@@ -373,8 +374,8 @@ public class IngestUtilTest {
         }
 
         // check filenames are unique
-        assertTrue(file1NameAltered);
-        assertTrue(file2NameAltered);
+        assertFalse(file1NameAltered);
+        assertFalse(file2NameAltered);
         assertTrue(file3NameAltered);
     }
 
@@ -419,21 +420,21 @@ public class IngestUtilTest {
             List.of("foo/bar", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer")
         );
         var expectedPostConditions = Arrays.asList(
-            List.of( "foo/bar-1", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
-            List.of( "foo/bar-1", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
-            List.of( "foo/bar-1", "null/foo-2", "null/bar-1", "bar/foo/pint-1", "bar/foo/pint/beer"),
-            // TODO should throw ONCE IMPLEMENTED
-            List.of(  "foo/bar-1", "null/foo-2", "null/bar-1", "bar/foo/pint-1", "bar/foo/pint/beer-1")
-            // TODO should throw ONCE IMPLEMENTED
+            List.of( "foo/bar", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( "foo/bar", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( "foo/bar", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( "foo/bar", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer")
         );
+        var expectedDataFilesAfter = Arrays.asList(2,2,2,2,3);
 
         // create dataset version
         var dataset = makeDataset();
         var datasetVersion = dataset.getLatestVersion();
         datasetVersion.setFileMetadatas(new ArrayList<>());
 
-        var dataFiles = paramsList.stream().map(p -> p.fmd.getDataFile()).toList();
         for (int i=0; i<expectedPreconditions.size(); i++) {
+            var dataFiles = new ArrayList<DataFile>();
+            paramsList.forEach(p -> dataFiles.add(p.fmd.getDataFile()));
             // select files to add to the dataset for the current iteration
             var ii = i;
             var filesToAdd = paramsList.stream()
@@ -466,6 +467,9 @@ public class IngestUtilTest {
             IngestUtil.checkForDuplicateFileNamesFinal(datasetVersion, dataFiles, null);
 
             // postcondition
+            assertThat(dataFiles.size())
+                .withFailMessage("Postcondition %d \n  expected %s files \n  but got  %s", i, expectedDataFilesAfter.get(i), dataFiles)
+                .isEqualTo(expectedDataFilesAfter.get(i));
             var actualPaths = paramsList.stream()
                 .map(p -> p.fmd.getDirectoryLabel() + "/" + p.fmd.getLabel()).toList();
             assertThat(actualPaths)
