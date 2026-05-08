@@ -49,7 +49,7 @@ print (r.json())
 print (r.status_code)
 
 ####################
-print ('-' * 40 + ' files API:  dir foo/bar conflicts with previously created file foo/bar')
+print ('-' * 40 + ' files API:  dir foo/bar conflicts with previously created file foo/bar: returns bad-request')
 
 ### files API https://guides.dataverse.org/en/latest/api/native-api.html#updating-file-metadata
 url = f'{dataverse_server}/api/files/{file_id}/metadata'
@@ -60,7 +60,7 @@ print(r.status_code)
 print(r.text)
 
 ####################
-print ('-' * 40 + ' datasets API: conflicting file name')
+print ('-' * 40 + 'datasets API update existing file into name conflicting with existing dir: returns bad-request')
 
 ### datasets API https://guides.dataverse.org/en/latest/api/native-api.html#update-file-metadata
 url = f'{dataverse_server}/api/datasets/:persistentId/files/metadata?key={api_key}&persistentId={persistentId}'
@@ -72,7 +72,7 @@ print(r.status_code)
 print(r.text)
 
 ####################
-print ('-' * 40 + ' file conflicting with existing file: gets seq nr')
+print ('-' * 40 + 'datasets API add file conflicting with existing file: gets seq nr')
 
 url = '%s/api/datasets/:persistentId/add?persistentId=%s' % (dataverse_server, persistentId)
 unique_content = 'content2: %s' % datetime.now()
@@ -85,7 +85,7 @@ print (r.json())
 print (r.status_code)
 
 ####################
-print ('-' * 40 + ' dir conflicting with existing file: fails')
+print ('-' * 40 + 'dataset API add dir conflicting with existing file: returns bad-request')
 
 url = '%s/api/datasets/:persistentId/add?persistentId=%s' % (dataverse_server, persistentId)
 unique_content = 'content2: %s' % datetime.now()

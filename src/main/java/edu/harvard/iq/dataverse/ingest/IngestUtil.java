@@ -67,6 +67,7 @@ public class IngestUtil {
             boolean conflict = false;
             for (var dir : getPathAndParents(fm.getDirectoryLabel())) {
                 if (pathNamesExisting.contains(dir)) {
+                    logger.warning("Incoming file " +fm.getDirectoryLabel() +"/" + fm.getLabel() + " conflicts with an existing path: " + dir);
                     conflict = true;
                     break;
                 }
