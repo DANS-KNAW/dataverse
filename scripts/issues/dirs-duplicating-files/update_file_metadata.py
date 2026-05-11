@@ -105,3 +105,17 @@ r = requests.post(url, headers={'X-Dataverse-key': api_key}, files=files, verify
 
 print(r.status_code)
 print(r.text)
+
+####################
+# not configured on VM? might also have no added value over previous test
+#
+# print ('-' * 40 + ' datasets API remote file: file foo conflicts with previously created dir: returns bad-request ????')
+#
+# url = '%s/api/datasets/:persistentId/add?persistentId=%s' % (dataverse_server, persistentId)
+# files = {
+#     'jsonData': (None, '{"directoryLabel": "foo/bar", "label": "x", "forceReplace":true, "description":"A remote image.","storageIdentifier":"file://themes/custom/qdr/images/01234567890-012345678901","checksumType":"MD5","md5Hash":"509ef88afa907eaf2c17c1c8d8fde77e","fileName":"testlogo.png","mimeType":"image/png"}'),
+# }
+# r = requests.post(url, headers={'X-Dataverse-key': api_key}, files=files, verify=False)
+#
+# print(r.status_code)
+# print(r.text)
