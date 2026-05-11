@@ -13,10 +13,9 @@ persistentId = 'doi:10.5072/DAR/HBGPN5'
 print ('-' * 40 + ' preparation: add file foo/bar')
 
 url = '%s/api/datasets/:persistentId/add?persistentId=%s' % (dataverse_server, persistentId)
-unique_content = 'content2: %s' % datetime.now()
-files = {'file': ('bar', unique_content)}
-payload = {"jsonData": json.dumps({"directoryLabel": "foo"})}# conflicting dir
-r = requests.post(url, headers={'X-Dataverse-key': api_key}, data=payload, files=files, verify=False)
+files = {'file': ('bar', ('content2: %s' % datetime.now()))}
+jason_data = {"jsonData": json.dumps({"directoryLabel": "foo"})}# conflicting dir
+r = requests.post(url, headers={'X-Dataverse-key': api_key}, data=jason_data, files=files, verify=False)
 print (r.status_code)
 print (r.json())
 
@@ -27,8 +26,8 @@ print ('-' * 40 + ' preparation: add file x to have a file to change')
 url = '%s/api/datasets/:persistentId/add?&persistentId=%s' % (dataverse_server, persistentId)
 unique_content = 'content2: %s' % datetime.now()
 files = {'file': ('x', unique_content)}
-payload = {"jsonData": json.dumps({"label": "x"})}
-r = requests.post(url, headers={'X-Dataverse-key': api_key}, data=payload, files=files, verify=False)
+jason_data = {"jsonData": json.dumps({"label": "x"})}
+r = requests.post(url, headers={'X-Dataverse-key': api_key}, data=jason_data, files=files, verify=False)
 print (r.status_code)
 print (r.json())
 
@@ -39,17 +38,16 @@ print ('-' * 40 + ' file conflicting with existing dir gets sequence number')
 
 ###
 url = '%s/api/datasets/:persistentId/add?persistentId=%s' % (dataverse_server, persistentId)
-unique_content = 'content2: %s' % datetime.now()
-files = {'file': ('foo', unique_content)}
-payload = payload = {"jsonData": json.dumps({"label": "foo"})}
-r = requests.post(url, headers={'X-Dataverse-key': api_key}, data=payload, files=files, verify=False)
+files = {'file': ('foo', ('content2: %s' % datetime.now()))}
+jason_data = {"jsonData": json.dumps({"label": "foo"})}
+r = requests.post(url, headers={'X-Dataverse-key': api_key}, data=jason_data, files=files, verify=False)
 
 print(r.status_code)
 print (r.json())
 print (r.status_code)
 
 ####################
-print ('-' * 40 + ' files API:  dir foo/bar conflicts with previously created file foo/bar: returns bad-request')
+print ('-' * 40 + ' files API metadata:  dir foo/bar conflicts with previously created file foo/bar: returns bad-request')
 
 ### files API https://guides.dataverse.org/en/latest/api/native-api.html#updating-file-metadata
 url = f'{dataverse_server}/api/files/{file_id}/metadata'
@@ -75,10 +73,9 @@ print(r.text)
 print ('-' * 40 + 'datasets API add file conflicting with existing file: gets seq nr')
 
 url = '%s/api/datasets/:persistentId/add?persistentId=%s' % (dataverse_server, persistentId)
-unique_content = 'content2: %s' % datetime.now()
-files = {'file': ('fox', unique_content)}
-payload = payload = {"jsonData": json.dumps({"label": "x"})}
-r = requests.post(url, headers={'X-Dataverse-key': api_key}, data=payload, files=files, verify=False)
+files = {'file': ('fox', ('content2: %s' % datetime.now()))}
+jason_data = {"jsonData": json.dumps({"label": "x"})}
+r = requests.post(url, headers={'X-Dataverse-key': api_key}, data=jason_data, files=files, verify=False)
 
 print(r.status_code)
 print (r.json())
@@ -88,11 +85,23 @@ print (r.status_code)
 print ('-' * 40 + 'dataset API add dir conflicting with existing file: returns bad-request')
 
 url = '%s/api/datasets/:persistentId/add?persistentId=%s' % (dataverse_server, persistentId)
-unique_content = 'content2: %s' % datetime.now()
-files = {'file': ('foo', unique_content)}
-payload = payload = {"jsonData": json.dumps({"label": "dir-conflicts-with-file.txt", "directoryLabel": "foo/bar"})}
-r = requests.post(url, headers={'X-Dataverse-key': api_key}, data=payload, files=files, verify=False)
+files = {'file': ('foo', ('content2: %s' % datetime.now()))}
+jason_data = {"jsonData": json.dumps({"label": "dir-conflicts-with-file.txt", "directoryLabel": "foo/bar"})}
+r = requests.post(url, headers={'X-Dataverse-key': api_key}, data=jason_data, files=files, verify=False)
 
 print(r.status_code)
 print (r.json())
 print (r.status_code)
+
+####################
+print ('-' * 40 + ' files API replace: file foo conflicts with previously created dir: returns bad-request')
+
+url = f'{dataverse_server}/api/files/{file_id}/replace'
+files = {
+    'jsonData': (None, '{"directoryLabel": "foo/bar", "label": "x", "forceReplace":true}'),
+    'file': ('foo', ('content2: %s' % datetime.now()))
+}
+r = requests.post(url, headers={'X-Dataverse-key': api_key}, files=files, verify=False)
+
+print(r.status_code)
+print(r.text)
