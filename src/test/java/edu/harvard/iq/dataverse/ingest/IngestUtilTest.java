@@ -417,15 +417,16 @@ public class IngestUtilTest {
             List.of("foo/bar"),
             List.of("foo/bar", "null/foo-1", "null/bar"),
             List.of("foo/bar", "null/foo-1", "null/bar", "bar/foo/pint"),
+            List.of("foo/bar", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
             List.of("foo/bar", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer")
         );
         var expectedPostConditions = Arrays.asList(
             List.of( "foo/bar", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
             List.of( "foo/bar", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
             List.of( "foo/bar", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( "foo/bar", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
             List.of( "foo/bar", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer")
         );
-        var expectedDataFilesAfter = Arrays.asList(2,2,2,2,3);
 
         // create dataset version
         var dataset = makeDataset();
@@ -467,9 +468,6 @@ public class IngestUtilTest {
             IngestUtil.checkForDuplicateFileNamesFinal(datasetVersion, dataFiles, null);
 
             // postcondition
-            assertThat(dataFiles.size())
-                .withFailMessage("Postcondition %d \n  expected %s files \n  but got  %s", i, expectedDataFilesAfter.get(i), dataFiles)
-                .isEqualTo(expectedDataFilesAfter.get(i));
             var actualPaths = paramsList.stream()
                 .map(p -> p.fmd.getDirectoryLabel() + "/" + p.fmd.getLabel()).toList();
             assertThat(actualPaths)

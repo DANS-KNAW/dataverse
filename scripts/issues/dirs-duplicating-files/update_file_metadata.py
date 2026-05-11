@@ -107,7 +107,7 @@ print(r.status_code)
 print(r.text)
 
 ####################
-# not configured on VM? might also have no added value over previous test
+# not configured on DANS VM? Might also have no added value over previous test.
 #
 # print ('-' * 40 + ' datasets API remote file: file foo conflicts with previously created dir: returns bad-request ????')
 #
