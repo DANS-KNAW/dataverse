@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3AsyncClientBuilder;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.multipart.MultipartConfiguration;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
@@ -1214,7 +1215,13 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
 
             // Apply the custom HTTP client to the S3AsyncClientBuilder
             s3CB.httpClientBuilder(httpClientBuilder);
+
+            // Enable multipart and configure it to be used if the file is larger than minPartSize.
             s3CB.multipartEnabled(true);
+            long minPartSize = getMinPartSize(driverId);
+            s3CB.multipartConfiguration(MultipartConfiguration.builder()
+                .thresholdInBytes(minPartSize)
+                .minimumPartSizeInBytes(minPartSize).build());
 
             // Configure endpoint and region
             String s3CEUrl = getConfigParamForDriver(driverId, CUSTOM_ENDPOINT_URL, "");
