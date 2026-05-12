@@ -275,19 +275,23 @@ public class IngestUtilTest {
             new Params(3, "bar/foo/pint", "beer")  // dir-ancestor/file conflict: "bar/foo/pint"
         );
         // more than 10 List.of elements cause subtle type problems for the assertions
-        var expectedPreconditions = Arrays.asList(
+        var expectedFilesInDataset = Arrays.asList(
             List.of("foo/bar"),
             List.of("foo/bar", "null/foo-1", "null/bar"),
             List.of("foo/bar", "null/foo-1", "null/bar", "bar/foo/pint"),
-            List.of("foo/bar", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
             List.of("foo/bar", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer")
         );
-        var expectedPostConditions = Arrays.asList(
-            List.of( "foo/bar", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
-            List.of( "foo/bar", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
-            List.of( "foo/bar", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
-            List.of( "foo/bar", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
-            List.of( "foo/bar", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer")
+        var expectedLabelsAfterTest = Arrays.asList(
+            List.of( "foo/bar-1", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( "foo/bar-1", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( "foo/bar-1", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( "foo/bar-1", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer")
+        );
+        List<List<String>> expectedNewDataFilesAfterTest = Arrays.asList(
+            List.of( "foo/bar-1", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( "foo/bar-1", "null/foo-2", "null/bar-1"),
+            List.of( "foo/bar-1", "null/foo-2", "null/bar-1"),
+            List.of( "foo/bar-1", "null/foo-2", "null/bar-1")
         );
 
         // create dataset version
@@ -295,9 +299,9 @@ public class IngestUtilTest {
         var datasetVersion = dataset.getLatestVersion();
         datasetVersion.setFileMetadatas(new ArrayList<>());
 
-        for (int i=0; i<expectedPreconditions.size(); i++) {
-            var dataFiles = new ArrayList<DataFile>();
-            paramsList.forEach(p -> dataFiles.add(p.fmd.getDataFile()));
+        for (int i=0; i<expectedFilesInDataset.size(); i++) {
+            var newDataFiles = new ArrayList<DataFile>();
+            paramsList.forEach(p -> newDataFiles.add(p.fmd.getDataFile()));
             // select files to add to the dataset for the current iteration
             var ii = i;
             var filesToAdd = paramsList.stream()
@@ -319,22 +323,28 @@ public class IngestUtilTest {
                     datasetVersion.getFileMetadatas().add(fmdClone);
                     fmdClone.setDatasetVersion(datasetVersion);
             }
+
             // precondition
-            var actualDatasetPaths = datasetVersion.getFileMetadatas().stream()
+            var actualFilesInDataset = datasetVersion.getFileMetadatas().stream()
                 .map(fmd -> fmd.getDirectoryLabel() + "/" + fmd.getLabel()).toList();
-            assertThat(actualDatasetPaths)
-                .withFailMessage("Precondition %d \n  expected %s \n  but got  %s", i, expectedPreconditions.get(i), actualDatasetPaths)
-                .containsExactlyInAnyOrderElementsOf(expectedPreconditions.get(i));
+            assertThat(actualFilesInDataset)
+                .withFailMessage("expectedFilesInDataset %d \n  expected %s \n  but got  %s", i, expectedFilesInDataset.get(i), actualFilesInDataset)
+                .containsExactlyInAnyOrderElementsOf(expectedFilesInDataset.get(i));
 
             // method under test
-            IngestUtil.checkForDuplicateFileNamesFinal(datasetVersion, dataFiles, null);
+            IngestUtil.checkForDuplicateFileNamesFinal(datasetVersion, newDataFiles, null);
 
-            // postcondition
+            // postconditions
             var actualPaths = paramsList.stream()
                 .map(p -> p.fmd.getDirectoryLabel() + "/" + p.fmd.getLabel()).toList();
             assertThat(actualPaths)
-                .withFailMessage("Postcondition %d \n  expected %s \n  but got  %s", i, expectedPostConditions.get(i), actualPaths)
-                .containsExactlyInAnyOrderElementsOf(expectedPostConditions.get(i));
+                .withFailMessage("expectedLabelsAfterTest %d \n  expected %s \n  but got  %s", i, expectedLabelsAfterTest.get(i), actualPaths)
+                .containsExactlyInAnyOrderElementsOf(expectedLabelsAfterTest.get(i));
+            var actualNewDataFiles = newDataFiles.stream()
+                .map(p -> p.getFileMetadata().getDirectoryLabel() + "/" + p.getFileMetadata().getLabel()).toList();
+            assertThat(actualNewDataFiles)
+                .withFailMessage("expectedNewDataFilesAfterTest %d \n  expected %s \n  but got  %s", i, expectedNewDataFilesAfterTest.get(i), actualNewDataFiles)
+                .containsExactlyInAnyOrderElementsOf(expectedNewDataFilesAfterTest.get(i));
 
         }
     }
