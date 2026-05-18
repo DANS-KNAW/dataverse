@@ -1,11 +1,13 @@
 import psycopg2
+import psycopg2.extras
 import argparse
+from collections import deque
 
 parser = argparse.ArgumentParser(description="Detect directories duplicating files in Dataverse.")
-parser.add_argument('--name', required=True, default='dvndb', help='Database name (default: dvndb)')
-parser.add_argument('--user', required=True, defualt='postgres', help='Database user (default: postgres)')
+parser.add_argument('--name', default='dvndb', help='Database name (default: dvndb)')
+parser.add_argument('--user', default='postgres', help='Database user (default: postgres)')
 parser.add_argument('--password', required=True, help='Database password')
-parser.add_argument('--host', required=True, default='dev.archaeology.datastations.nl', help='Database host (default: dev..archaeology.datastations.nl)')
+parser.add_argument('--host', default='dev.archaeology.datastations.nl', help='Database host (default: dev..archaeology.datastations.nl)')
 parser.add_argument('--port', type=int, default=5432, help='Database port (default: 5432)')
 args = parser.parse_args()
 
@@ -18,29 +20,59 @@ DB = {
 }
 
 dir_query = """
-    SELECT DISTINCT directorylabel
+    SELECT DISTINCT datasetversion_id, directorylabel
     FROM filemetadata
     WHERE directorylabel IS NOT NULL
-    ORDER BY directorylabel
+    ORDER BY datasetversion_id, directorylabel
     """
 
 file_query = """
-    SELECT id, directorylabel, label
+    SELECT DISTINCT datasetversion_id, directorylabel, label
     FROM filemetadata
-    ORDER BY directorylabel, label
+    ORDER BY datasetversion_id, directorylabel, label
     """
 
 dataset_query = """
     SELECT dso.protocol, dso.authority, dso.identifier, dv.versionnumber, dv.minorversionnumber
-    FROM datasetversion dv   ON dv.id = %s
+    FROM datasetversion dv
     JOIN dvobject       dso  ON dso.id = dv.dataset_id
+    WHERE dv.id = %s
     """
+
 
 def get_full_path(directorylabel, label):
     if directorylabel and directorylabel.strip():
         return f"{directorylabel}/{label}"
     else:
         return label
+
+
+def build_ancestors(path):
+    if not path or not path.strip():
+        return []
+
+    parts = [p for p in path.split('/') if p]
+    return ['/'.join(parts[:i]) for i in range(1, len(parts) + 1)]
+
+def fetch_dict(cur):
+    row = cur.fetchone()
+    return dict(row) if row is not None else None
+
+
+def next_ancestor(dir_cur, dir_row, ancestors):
+    while True:
+        if ancestors:
+            return ancestors.popleft(), dir_row
+
+        if dir_row is None:
+            return None, None
+
+        ancestors.extend(build_ancestors(dir_row['directorylabel']))
+        if ancestors:
+            return ancestors.popleft(), dir_row
+
+        dir_row = fetch_dict(dir_cur)
+
 
 with psycopg2.connect(
         dbname=DB['name'],
@@ -55,21 +87,26 @@ with psycopg2.connect(
         dir_cur.execute(dir_query)
         file_cur.execute(file_query)
 
-        dir_row = dict(dir_cur.fetchone())
-        file_row = dict(file_cur.fetchone())
+        # Initialize the first rows
+        file_row = fetch_dict(file_cur)
+        dir_row = fetch_dict(dir_cur)
+        ancestors = deque()
+        ancestor, dir_row = next_ancestor(dir_cur, dir_row, ancestors)
 
-        while dir_row is not None and file_row is not None:
+        while dir_row is not None and file_row is not None and ancestor is not None:
             full_path = get_full_path(file_row['directorylabel'], file_row['label'])
-            dir_label = dir_row['directorylabel']
-            if (dir_label == full_path):
-                ds_cur.execute(dataset_query, (dir_row(['datasetversion_id'],)))
-                ds_info = dict(ds_cur.fetchone())
-                ds_info['directorylabel'] = dir_row['directorylabel']
-                print (ds_info)
-                # Advance both
-                dir_row = dict(dir_cur.fetchone())
-                file_row = dict(file_cur.fetchone())
-            elif dir_label < full_path:
-                dir_row = dict(dir_cur.fetchone())
+            dir_key = (dir_row['datasetversion_id'], ancestor)
+            file_key = (file_row['datasetversion_id'], full_path)
+            if dir_key < file_key:
+                ancestor, dir_row = next_ancestor(dir_cur, dir_row, ancestors)
+            elif dir_key > file_key:
+                file_row = fetch_dict(file_cur)
             else:
-                file_row = dict(file_cur.fetchone())
+                # match
+                ds_cur.execute(dataset_query, (dir_row['datasetversion_id'],))
+                ds_info = dict(ds_cur.fetchone())
+                ds_info['directory'] = ancestor
+                print(ds_info)
+                # advance both
+                file_row = fetch_dict(file_cur)
+                ancestor, dir_row = next_ancestor(dir_cur, dir_row, ancestors)
