@@ -1,112 +1,77 @@
-import psycopg2
-import psycopg2.extras
+#!/usr/bin/env python3
 import argparse
-from collections import deque
-
-parser = argparse.ArgumentParser(description="Detect directories duplicating files in Dataverse.")
-parser.add_argument('--name', default='dvndb', help='Database name (default: dvndb)')
-parser.add_argument('--user', default='postgres', help='Database user (default: postgres)')
-parser.add_argument('--password', required=True, help='Database password')
-parser.add_argument('--host', default='dev.archaeology.datastations.nl', help='Database host (default: dev..archaeology.datastations.nl)')
-parser.add_argument('--port', type=int, default=5432, help='Database port (default: 5432)')
-args = parser.parse_args()
-
-DB = {
-    'name': args.name,
-    'user': args.user,
-    'password': args.password,
-    'host': args.host,
-    'port': args.port
-}
-
-dir_query = """
-    SELECT DISTINCT datasetversion_id, directorylabel
-    FROM filemetadata
-    WHERE directorylabel IS NOT NULL
-    ORDER BY datasetversion_id, directorylabel
-    """
-
-file_query = """
-    SELECT DISTINCT datasetversion_id, directorylabel, label
-    FROM filemetadata
-    ORDER BY datasetversion_id, directorylabel, label
-    """
-
-dataset_query = """
-    SELECT dso.protocol, dso.authority, dso.identifier, dv.versionnumber, dv.minorversionnumber
-    FROM datasetversion dv
-    JOIN dvobject       dso  ON dso.id = dv.dataset_id
-    WHERE dv.id = %s
-    """
+import psycopg2
+from pathlib import Path
 
 
-def get_full_path(directorylabel, label):
-    if directorylabel and directorylabel.strip():
-        return f"{directorylabel}/{label}"
-    else:
-        return label
+def read_sql(path: Path) -> str:
+    text = path.read_text(encoding="utf-8")
+    return "\n".join(
+        line for line in text.splitlines() if not line.lstrip().startswith("\\")
+    )
 
 
-def build_ancestors(path):
-    if not path or not path.strip():
-        return []
+def fetch_dv_ids(conn, find_dv_ids_sql: str) -> list[int]:
+    with conn.cursor() as cur:
+        cur.execute(find_dv_ids_sql)
+        rows = cur.fetchall()
 
-    parts = [p for p in path.split('/') if p]
-    return ['/'.join(parts[:i]) for i in range(1, len(parts) + 1)]
-
-def fetch_dict(cur):
-    row = cur.fetchone()
-    return dict(row) if row is not None else None
+    # Query returns dv_id as first selected column in your file.
+    return [int(row[0]) for row in rows]
 
 
-def next_ancestor(dir_cur, dir_row, ancestors):
-    while True:
-        if ancestors:
-            return ancestors.popleft(), dir_row
+def run_find_duplicates(conn, find_duplicates_sql: str):
+    with conn.cursor() as cur:
+        cur.execute(find_duplicates_sql)
+        cols = [d[0] for d in cur.description]
+        rows = cur.fetchall()
 
-        if dir_row is None:
-            return None, None
-
-        ancestors.extend(build_ancestors(dir_row['directorylabel']))
-        if ancestors:
-            return ancestors.popleft(), dir_row
-
-        dir_row = fetch_dict(dir_cur)
+    print("\t".join(cols))
+    for row in rows:
+        print("\t".join("" if v is None else str(v) for v in row))
 
 
-with psycopg2.connect(
-        dbname=DB['name'],
-        user=DB['user'],
-        password=DB['password'],
-        host=DB['host'],
-        port=DB['port']
-) as conn:
-    with conn.cursor(name='dir_cur', cursor_factory=psycopg2.extras.DictCursor) as dir_cur, \
-            conn.cursor(name='file_cur', cursor_factory=psycopg2.extras.DictCursor) as file_cur, \
-            conn.cursor(name='ds_cur', cursor_factory=psycopg2.extras.DictCursor) as ds_cur:
-        dir_cur.execute(dir_query)
-        file_cur.execute(file_query)
+def main():
+    parser = argparse.ArgumentParser(
+        description="Execute find_duplicates.sql for dv_ids returned by find_dv_ids.sql"
+    )
+    parser.add_argument("--host", default="localhost")
+    parser.add_argument("--port", type=int, default=5432)
+    parser.add_argument("--name", default="dvndb")
+    parser.add_argument("--user", default="postgres")
+    parser.add_argument("--password", required=True)
 
-        # Initialize the first rows
-        file_row = fetch_dict(file_cur)
-        dir_row = fetch_dict(dir_cur)
-        ancestors = deque()
-        ancestor, dir_row = next_ancestor(dir_cur, dir_row, ancestors)
+    parser.add_argument("--min-id", type=int, required=True, help="numbers beyond this values are used")
+    parser.add_argument("--nr-of-ids", type=int, default=50)
 
-        while dir_row is not None and file_row is not None and ancestor is not None:
-            full_path = get_full_path(file_row['directorylabel'], file_row['label'])
-            dir_key = (dir_row['datasetversion_id'], ancestor)
-            file_key = (file_row['datasetversion_id'], full_path)
-            if dir_key < file_key:
-                ancestor, dir_row = next_ancestor(dir_cur, dir_row, ancestors)
-            elif dir_key > file_key:
-                file_row = fetch_dict(file_cur)
-            else:
-                # match
-                ds_cur.execute(dataset_query, (dir_row['datasetversion_id'],))
-                ds_info = dict(ds_cur.fetchone())
-                ds_info['directory'] = ancestor
-                print(ds_info)
-                # advance both
-                file_row = fetch_dict(file_cur)
-                ancestor, dir_row = next_ancestor(dir_cur, dir_row, ancestors)
+    args = parser.parse_args()
+
+    SCRIPT_DIR = Path(__file__).resolve().parent
+
+    dup_sql_raw = read_sql(SCRIPT_DIR / "find_duplicates.sql")
+
+    dv_sql = read_sql(SCRIPT_DIR / "find_dv_ids.sql")
+    dv_sql = dv_sql.replace(":min_id", str(min_id))
+    dv_sql = dv_sql.replace(":nr_of_ids", str(nr_of_ids))
+
+    with psycopg2.connect(
+            dbname=args.name,
+            user=args.user,
+            password=args.password,
+            host=args.host,
+            port=args.port,
+    ) as conn:
+        dv_ids = fetch_dv_ids(conn, dv_sql)
+
+        if not dv_ids:
+            print("No dv_id values returned by find_dv_ids.sql")
+            return
+
+        ids_csv = ",".join(str(i) for i in dv_ids)
+        print(f"dv_ids count: {len(dv_ids)}")
+        print(f"dv_ids: {ids_csv}")
+        run_find_duplicates(conn, dup_sql_raw.replace(":ids", ids_csv))
+
+
+if __name__ == "__main__":
+    main()
