@@ -40,28 +40,16 @@ def main():
 
     parser = argparse.ArgumentParser(
         description=dedent("""
-            Execute `find_duplicates.sql` for dv_ids returned by `find_dv_ids.sql`.
+            Execute as owner of dvndb.
+            `find_duplicates.sql` is executed for dv_ids returned by `find_dv_ids.sql`.
             `find_dv_ids.sql` returns the latest version per dataset.
         """),
         formatter_class=RawDefaultsFormatter,
     )
     parser.add_argument("--min-id", type=int, default=0, help="`find_dv_ids.sql` looks for larger ID's")
     parser.add_argument("--nr-of-ids", type=int, default=50, help="number of ID's returned by `find_dv_ids.sql`")
-    parser.add_argument("--db-name", default="dvndb", help="name of the dataverse database")
-    sub = parser.add_subparsers(dest="dbmode", required=False)
-    tcp = sub.add_parser("tcp", formatter_class=RawDefaultsFormatter, help="Transmission Control Protocol, required when not running as DB user.")
-    tcp.add_argument("--host", default="localhost", help="host where the database is located")
-    tcp.add_argument("--port", type=int, default=5432, help="port number to connect to the database")
-    tcp.add_argument("--user", default="postgres", help="database user name")
-    tcp.add_argument("--password", required=True, help="password for the database user")
     args = parser.parse_args()
-    conn_kwargs = {"dbname": args.db_name} if args.dbmode != "tcp" else {
-        "host": args.host,
-        "port": args.port,
-        "dbname": args.name,
-        "user": args.user,
-        "password": args.password,
-    }
+    conn_kwargs = {"dbname": 'dvndb'}
 
     script_dir = Path(__file__).resolve().parent
 
