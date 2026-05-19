@@ -20,15 +20,39 @@ def fetch_dv_ids(conn, find_dv_ids_sql: str) -> list[int]:
     return [int(row[0]) for row in rows]
 
 
+def fetch_dataset_info(conn, datasetversion_id: int):
+    dataset_query = """
+                    SELECT dso.protocol, dso.authority, dso.identifier, dv.versionnumber, dv.minorversionnumber
+                    FROM datasetversion dv
+                             JOIN dvobject dso ON dso.id = dv.dataset_id
+                    WHERE dv.id = %s \
+                    """
+    with conn.cursor() as cur:
+        cur.execute(dataset_query, (datasetversion_id,))
+        return cur.fetchone()
+    return None
+
+
 def run_find_duplicates(conn, find_duplicates_sql: str):
+    last_dv_id = None
+    last_info = ("", "", "", "", "")
+
     with conn.cursor() as cur:
         cur.execute(find_duplicates_sql)
         cols = [d[0] for d in cur.description]
-        rows = cur.fetchall()
 
-    print("\t".join(cols))
-    for row in rows:
-        print("\t".join("" if v is None else str(v) for v in row))
+        extra_cols = ["protocol", "authority", "dataset_id", "versionnumber", "minorversionnumber"]
+        print("\t".join(cols + extra_cols))
+
+        for row in cur:
+            dv_id = int(row[0])  # datasetversion_id
+
+            if dv_id != last_dv_id:
+                fetched = fetch_dataset_info(conn, dv_id)
+                last_info = fetched if fetched is not None else ("", "", "", "", "")
+                last_dv_id = dv_id
+
+            print("\t".join("" if v is None else str(v) for v in (tuple(row) + tuple(last_info))))
 
 
 def main():
@@ -41,12 +65,13 @@ def main():
     parser = argparse.ArgumentParser(
         description=dedent("""
             Execute as owner of dvndb.
+            
             `find_duplicates.sql` is executed for dv_ids returned by `find_dv_ids.sql`.
             `find_dv_ids.sql` returns the latest version per dataset.
         """),
         formatter_class=RawDefaultsFormatter,
     )
-    parser.add_argument("--min-id", type=int, default=0, help="`find_dv_ids.sql` looks for larger ID's")
+    parser.add_argument("--min-id", type=int, default=0, help="first dataset-version-id examined by `find_dv_ids.sql`")
     parser.add_argument("--nr-of-ids", type=int, default=50, help="number of ID's returned by `find_dv_ids.sql`")
     args = parser.parse_args()
     conn_kwargs = {"dbname": 'dvndb'}

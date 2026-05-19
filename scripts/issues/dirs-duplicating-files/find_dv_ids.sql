@@ -30,6 +30,6 @@ SELECT
     minorversionnumber
 FROM ranked
 WHERE rn = 1
-  AND dv_id > :min_id
+  AND dv_id >= :min_id
 ORDER BY dv_id
     LIMIT :nr_of_ids;
