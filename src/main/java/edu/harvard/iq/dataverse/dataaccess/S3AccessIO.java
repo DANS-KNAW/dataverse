@@ -347,8 +347,12 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
                 // result
                 setInputStream(responseInputStream);
             }
-            catch (InterruptedException | ExecutionException e) {
-                logger.warning("Caught an exception in S3AccessIO.getInputStream(): " + e.getMessage());
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IOException("Interrupted while getting InputStream for S3 Object " + key, e);
+            }
+            catch (ExecutionException e) {
+                throw new IOException("Failed to get InputStream for S3 Object " + key, e);
             }
         }
         if (super.getInputStream() == null) {
