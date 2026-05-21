@@ -59,30 +59,30 @@ public class IngestUtil {
 
         // Step 1: create list of existing path names from all FileMetadata in the DatasetVersion
         // unique path name: directoryLabel + file separator + fileLabel
-        Set<String> pathNamesExisting = existingPathNamesAsSet(version, ((fileToReplace == null) ? null : fileToReplace.getFileMetadata()));
+        var pathNamesExisting = existingPathNamesAsSet(version, ((fileToReplace == null) ? null : fileToReplace.getFileMetadata()));
+        var existingWithoutNew = new HashSet<>(pathNamesExisting); // avoid side effect of duplicateFilenameCheck
         // Step 2: check each new DataFile against the list of path names, if a duplicate create a new unique file name
         for (Iterator<DataFile> dfIt = newFiles.iterator(); dfIt.hasNext();) {
-            DataFile dataFile = dfIt.next();
-            FileMetadata fm = dataFile.getFileMetadata();
-            boolean conflict = false;
-            for (var dir : getPathAndParents(fm.getDirectoryLabel())) {
-                if (pathNamesExisting.contains(dir)) {
-                    logger.warning("Incoming file " +fm.getDirectoryLabel() +"/" + fm.getLabel() + " conflicts with an existing path: " + dir);
-                    conflict = true;
-                    break;
-                }
-            }
-            if (conflict) {
-                dfIt.remove(); // Remove the DataFile from newFiles
-                continue;      // Skip further processing for this file
-            }
+            FileMetadata fm = dfIt.next().getFileMetadata();
             fm.setLabel(duplicateFilenameCheck(fm, pathNamesExisting));
+        }
+        // Step 3: get all potential new directories
+        var newDirs = new HashSet<String>();
+        for (Iterator<DataFile> dfIt = newFiles.iterator(); dfIt.hasNext();) {
+            FileMetadata fm = dfIt.next().getFileMetadata();
+            newDirs.addAll(getPathAndParents(fm.getDirectoryLabel()));
+        }
+        // Step 4: check if new directories do not yet exist as filename
+        newDirs.retainAll(existingWithoutNew);
+        if (!newDirs.isEmpty()) {
+            logger.warning("Incoming file(s) have one or more directories conflicting with an existing path: " + newDirs);
+            newFiles.clear();
         }
     }
 
     /**
      * Checks if the unique file path of the supplied fileMetadata is already on
-     * the list of the existing files; and if so, keeps generating a new name
+     * the list of the existing files and directories; and if so, keeps generating a new name
      * until it is unique. Returns the final file name. (i.e., it only modifies
      * the filename, and not the folder name, in order to achieve uniqueness)
      *
@@ -94,12 +94,14 @@ public class IngestUtil {
         if (existingFileNames == null) {
             existingFileNames = existingPathNamesAsSet(fileMetadata.getDatasetVersion());
         }
+        var dirsAndFiles = dirsOfFullPaths(existingFileNames);
+        dirsAndFiles.addAll(existingFileNames);
 
         String fileName = fileMetadata.getLabel();
         String directoryName = fileMetadata.getDirectoryLabel();
         String pathName = makePathName(directoryName, fileName);
 
-        while (existingFileNames.contains(pathName)) {
+        while (dirsAndFiles.contains(pathName)) {
             fileName = IngestUtil.generateNewFileName(fileName);
             pathName = IngestUtil.makePathName(directoryName, fileName);
         }
@@ -226,6 +228,7 @@ public class IngestUtil {
         // unique path name: directoryLabel + file separator + fileLabel
         fileMetadata.setLabel(newFilename);
         Set<String> pathNamesExisting = existingPathNamesAsSet(version, fileMetadata);
+        pathNamesExisting.addAll(dirsOfFullPaths(pathNamesExisting));
         fileMetadata.setLabel(duplicateFilenameCheck(fileMetadata, pathNamesExisting));
 
     }
@@ -279,6 +282,17 @@ public class IngestUtil {
         return newName;
     }
 
+    public static Set<String> dirsOfFullPaths(Collection<String> fullPaths) {
+        Set<String> dirs = new HashSet<>();
+        fullPaths.forEach(fullPath -> {
+            int lastSlash = fullPath.lastIndexOf('/');
+            if (lastSlash != -1) {
+                dirs.addAll(getPathAndParents(fullPath.substring(0, lastSlash)));
+            }
+        });
+        return dirs;
+    }
+
     // list of existing unique path name: directoryLabel + file separator + fileLabel
     public static Set<String> existingPathNamesAsSet(DatasetVersion version) {
         return existingPathNamesAsSet(version, null);
@@ -300,7 +314,7 @@ public class IngestUtil {
                 String existingPath = makePathName(existingDir, existingName);
 
                 if (!existingPath.isEmpty()) {
-                    pathNamesExisting.addAll(getPathAndParents(existingPath));
+                    pathNamesExisting.add(existingPath);
 
                     // if it's a tabular file, we need to also restore the original file name; otherwise, we may miss a 
                     // match. e.g. stata file foobar.dta becomes foobar.tab once ingested!

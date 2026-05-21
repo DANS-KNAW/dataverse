@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -409,27 +410,31 @@ public class IngestUtilTest {
             new Params(0, "foo","bar"),
             new Params(1, null, "foo"), // file/dir conflict: "foo"
             new Params(1, null, "bar"),
-            new Params(2, "bar/foo","pint"), // dir/file conflict: "bar"
-            new Params(3, "bar/foo/pint", "beer")  // dir-ancestor/file conflict: "bar/foo/pint"
+            new Params(2, null, "bar"),
+            new Params(3, "bar/foo","pint"), // dir/file conflict: "bar"
+            new Params(4, "bar/foo/pint", "beer")  // dir-ancestor/file conflict: "bar/foo/pint"
         );
         // more than 10 List.of elements cause subtle type problems for the assertions
         var expectedFilesInDataset = Arrays.asList(
             List.of("foo/bar"),
             List.of("foo/bar", "null/foo-1", "null/bar"),
-            List.of("foo/bar", "null/foo-1", "null/bar", "bar/foo/pint"),
-            List.of("foo/bar", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer")
+            List.of("foo/bar", "null/foo-1", "null/bar", "null/bar-2"),
+            List.of("foo/bar", "null/foo-1", "null/bar", "null/bar-2", "bar/foo/pint"),
+            List.of("foo/bar", "null/foo-1", "null/bar", "null/bar-2", "bar/foo/pint", "bar/foo/pint/beer")
         );
         var expectedLabelsAfterTest = Arrays.asList(
-            List.of( "foo/bar-1", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
-            List.of( "foo/bar-1", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
-            List.of( "foo/bar-1", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
-            List.of( "foo/bar-1", "null/foo-2", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer")
+            List.of( "foo/bar-1", "null/foo-1", "null/bar", "null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( "foo/bar-1", "null/foo-2", "null/bar-1", "null/bar-2", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( "foo/bar-1", "null/foo-2", "null/bar-1", "null/bar-3", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of( "foo/bar-1", "null/foo-2", "null/bar-1", "null/bar-3", "bar/foo/pint-1", "bar/foo/pint/beer"),
+            List.of( "foo/bar-1", "null/foo-2", "null/bar-1", "null/bar-3", "bar/foo/pint-1", "bar/foo/pint/beer-1")
         );
         List<List<String>> expectedNewDataFilesAfterTest = Arrays.asList(
-            List.of( "foo/bar-1", "null/foo-1", "null/bar", "bar/foo/pint", "bar/foo/pint/beer"),
-            List.of( "foo/bar-1", "null/foo-2", "null/bar-1"),
-            List.of( "foo/bar-1", "null/foo-2", "null/bar-1"),
-            List.of( "foo/bar-1", "null/foo-2", "null/bar-1")
+            List.of( "foo/bar-1", "null/foo-1", "null/bar","null/bar-1", "bar/foo/pint", "bar/foo/pint/beer"),
+            List.of(),
+            List.of(), // ???
+            List.of(),
+            List.of()
         );
 
         // create dataset version
