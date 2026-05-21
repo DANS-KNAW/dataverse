@@ -59,11 +59,13 @@ public class IngestUtil {
 
         // Step 1: create list of existing path names from all FileMetadata in the DatasetVersion
         // unique path name: directoryLabel + file separator + fileLabel
-        var pathNamesExisting = existingPathNamesAsSet(version, ((fileToReplace == null) ? null : fileToReplace.getFileMetadata()));
+        Set<String>  pathNamesExisting = existingPathNamesAsSet(version, ((fileToReplace == null) ? null : fileToReplace.getFileMetadata()));
         var existingWithoutNew = new HashSet<>(pathNamesExisting); // avoid side effect of duplicateFilenameCheck
         // Step 2: check each new DataFile against the list of path names, if a duplicate create a new unique file name
         for (Iterator<DataFile> dfIt = newFiles.iterator(); dfIt.hasNext();) {
+
             FileMetadata fm = dfIt.next().getFileMetadata();
+
             fm.setLabel(duplicateFilenameCheck(fm, pathNamesExisting));
         }
         // Step 3: get all potential new directories
@@ -186,7 +188,7 @@ public class IngestUtil {
      * @return A List of Strings in the form of path/to/file.txt
      * path and path/to are also added to the list, but only once when they are parents for multiple files.
      */
-    private static List<String> getPathsAndFileNames(List<FileMetadata> fileMetadatas) {
+    public static List<String> getPathsAndFileNames(List<FileMetadata> fileMetadatas) {
         List<String> allFileNamesWithPaths = new ArrayList<>();
         Set<String> allPaths = new HashSet<>();
         for (FileMetadata fileMetadata : fileMetadatas) {
@@ -234,7 +236,7 @@ public class IngestUtil {
     }
 
     // unique path name: directoryLabel + file separator + fileLabel
-    private static String makePathName(String directoryName, String fileName) {
+    public static String makePathName(String directoryName, String fileName) {
         String pathName;
         if (directoryName != null && !directoryName.isEmpty()) {
             pathName = directoryName + File.separator + fileName;
