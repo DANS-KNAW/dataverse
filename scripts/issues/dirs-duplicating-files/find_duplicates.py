@@ -84,17 +84,24 @@ def main():
     dv_sql = dv_sql.replace(":min_id", str(args.min_id))
     dv_sql = dv_sql.replace(":nr_of_ids", str(args.nr_of_ids))
 
-    with psycopg2.connect(**conn_kwargs) as conn:
-        dv_ids = fetch_dv_ids(conn, dv_sql)
+    try:
+        with psycopg2.connect(**conn_kwargs) as conn:
+            dv_ids = fetch_dv_ids(conn, dv_sql)
 
-        if not dv_ids:
-            print("No dv_id values returned by find_dv_ids.sql")
-            return
+            if not dv_ids:
+                print("No dv_id values returned by find_dv_ids.sql")
+                return
 
-        ids_csv = ",".join(str(i) for i in dv_ids)
-        print(f"dataset version ids: {ids_csv}")
-        run_find_duplicates(conn, dup_sql_raw.replace(":ids", ids_csv))
-
+            ids_csv = ",".join(str(i) for i in dv_ids)
+            print(f"dataset version ids: {ids_csv}")
+            run_find_duplicates(conn, dup_sql_raw.replace(":ids", ids_csv))
+    except psycopg2.OperationalError as e:
+        msg = str(e)
+        if "no password supplied" in msg.lower():
+            parser.print_help()
+            raise SystemExit(2)
+        print(f"Database connection failed: {e}")
+        raise SystemExit(1)
 
 if __name__ == "__main__":
     main()
