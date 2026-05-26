@@ -20,6 +20,16 @@ print (r.status_code)
 print (r.json())
 
 ####################
+print (' preparation: add file foo.tab/bar  ' + ('-' * 40))
+
+url = '%s/api/datasets/:persistentId/add?persistentId=%s' % (dataverse_server, persistentId)
+files = {'file': ('bar', ('content2: %s' % datetime.now()))}
+jason_data = {"jsonData": json.dumps({"directoryLabel": "foo.tab"})}# conflicting dir
+r = requests.post(url, headers={'X-Dataverse-key': api_key}, data=jason_data, files=files, verify=False)
+print (r.status_code)
+print (r.json())
+
+####################
 print (' preparation: add file x to have a file to change  ' + ('-' * 40))
 
 ###
@@ -44,6 +54,16 @@ r = requests.post(url, headers={'X-Dataverse-key': api_key}, data=jason_data, fi
 
 print (r.json())
 print (r.status_code)
+
+####################
+print (' tabular file conflicting with existing dir gets seq nr once converted to .tab ' + ('-' * 40))
+
+url = '%s/api/datasets/:persistentId/add?persistentId=%s' % (dataverse_server, persistentId)
+files = {'file': ('foo.csv', ('header1,header2\nvalue1,%s' % datetime.now()))}
+jason_data = {"jsonData": json.dumps({"label": "foo.csv"})}
+r = requests.post(url, headers={'X-Dataverse-key': api_key}, data=jason_data, files=files, verify=False)
+print (r.status_code)
+print (r.json())
 
 ####################
 print (' files API metadata:  dir foo/bar conflicts with previously created file foo/bar: returns bad-request  ' + ('-' * 40))
