@@ -355,10 +355,6 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
                 throw new IOException("Failed to get InputStream for S3 Object " + key, e);
             }
         }
-        if (super.getInputStream() == null) {
-            throw new IOException("Cannot get InputStream for S3 Object" + key);
-        }
-
         setChannel(Channels.newChannel(super.getInputStream()));
 
         return super.getInputStream();
@@ -461,7 +457,11 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
                 setSize(filesize);
             }
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted while saving InputStream to S3 Object " + key, e);
+        }
+        catch (ExecutionException e) {
             String failureMsg = e.getMessage();
             if (failureMsg == null) {
                 failureMsg = "S3AccessIO: Unknown exception occurred while uploading a file into S3 Storage.";
@@ -491,7 +491,11 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
             s3WriteClient.deleteObject(deleteObjRequest).get(); // Since s3 is an S3AsyncClient, we need to call .get() to wait for
             // the result
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted while deleting S3 Object " + key, e);
+        }
+        catch (ExecutionException e) {
             logger.warning("Caught an exception in S3AccessIO.delete(): " + e.getMessage());
             throw new IOException("Failed to delete storage location " + getStorageLocation(), e);
         }
@@ -530,7 +534,11 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
             // the result
             return true;
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("S3AccessIO: Interrupted while checking if auxiliary object is cached: " + auxItemTag, e);
+        }
+        catch (ExecutionException e) {
             if (e.getCause() instanceof NoSuchKeyException) {
                 // Object doesn't exist
                 return false;
@@ -563,7 +571,11 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
             // result
             return headObjectResponse.contentLength();
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("S3AccessIO: Interrupted while getting size of auxiliary object: " + auxItemTag, e);
+        }
+        catch (ExecutionException e) {
             if (e.getCause() instanceof NoSuchKeyException) {
                 // Object doesn't exist
                 logger.warning("Auxiliary object not found: " + destinationKey);
@@ -590,7 +602,12 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
             s3WriteClient.copyObject(copyObjectRequest).get(); // Since s3 is an S3AsyncClient, we need to call .get() to wait for
             // the result
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.warning("Caught an exception in S3AccessIO.backupAsAux: " + e.getMessage());
+            throw new IOException("S3AccessIO: Unable to backup original auxiliary object", e);
+        }
+        catch (ExecutionException e) {
             logger.warning("Caught an exception in S3AccessIO.backupAsAux: " + e.getMessage());
             throw new IOException("S3AccessIO: Unable to backup original auxiliary object", e);
         }
@@ -607,7 +624,12 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
             // the result
             deleteAuxObject(auxItemTag);
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.warning("Caught an exception in S3AccessIO.revertBackupAsAux: " + e.getMessage());
+            throw new IOException("S3AccessIO: Unable to revert backup auxiliary object", e);
+        }
+        catch (ExecutionException e) {
             logger.warning("Caught an exception in S3AccessIO.revertBackupAsAux: " + e.getMessage());
             throw new IOException("S3AccessIO: Unable to revert backup auxiliary object", e);
         }
@@ -626,7 +648,12 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
             s3WriteClient.putObject(putObjectRequest, asyncRequestBody).get(); // Since s3 is an S3AsyncClient, we need to call
             // .get() to wait for the result
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.warning("Caught an exception in S3AccessIO.savePathAsAux(): " + e.getMessage());
+            throw new IOException("S3AccessIO: Failed to save path as an auxiliary object.", e);
+        }
+        catch (ExecutionException e) {
             logger.warning("Caught an exception in S3AccessIO.savePathAsAux(): " + e.getMessage());
             throw new IOException("S3AccessIO: Failed to save path as an auxiliary object.", e);
         }
@@ -652,7 +679,16 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
                 s3WriteClient.putObject(putObjectRequest, asyncRequestBody).get(); // Since s3 is an S3AsyncClient, we need to call
                 // .get() to wait for the result
             }
-            catch (InterruptedException | ExecutionException e) {
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                String failureMsg = e.getMessage();
+
+                if (failureMsg == null) {
+                    failureMsg = "S3AccessIO: Exception occurred while saving a local InputStream as S3Object";
+                }
+                throw new IOException(failureMsg, e);
+            }
+            catch (ExecutionException e) {
                 String failureMsg = e.getMessage();
 
                 if (failureMsg == null) {
@@ -700,7 +736,16 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
             // Use the async client to put the object
             s3WriteClient.putObject(putObjectRequest, requestBody).get();
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            String failureMsg = e.getMessage();
+
+            if (failureMsg == null) {
+                failureMsg = "S3AccessIO: Exception occurred while saving a local InputStream as S3Object";
+            }
+            throw new IOException(failureMsg, e);
+        }
+        catch (ExecutionException e) {
             String failureMsg = e.getMessage();
 
             if (failureMsg == null) {
@@ -762,7 +807,11 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
         try {
             listObjectsResponse = s3ReadClient.listObjectsV2(listObjectsReqManual).get();
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("S3 listAuxObjects: failed to get a listing for " + prefix, e);
+        }
+        catch (ExecutionException e) {
             throw new IOException("S3 listAuxObjects: failed to get a listing for " + prefix, e);
         }
 
@@ -789,7 +838,11 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
                 }
             }
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("S3AccessIO: Failed to get aux objects for listing.", e);
+        }
+        catch (ExecutionException e) {
             throw new IOException("S3AccessIO: Failed to get aux objects for listing.", e);
         }
 
@@ -815,7 +868,12 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
             s3WriteClient.deleteObject(deleteObjectRequest).get(); // Since s3 is an S3AsyncClient, we need to call .get() to wait
             // for the result
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.warning("S3AccessIO: Unable to delete object: " + e.getMessage());
+            throw new IOException("Failed to delete auxiliary object", e);
+        }
+        catch (ExecutionException e) {
             logger.warning("S3AccessIO: Unable to delete object: " + e.getMessage());
             throw new IOException("Failed to delete auxiliary object", e);
         }
@@ -843,7 +901,11 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
             while (listResponse.isTruncated());
 
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("S3AccessIO: Failed to get aux objects for listing to delete.", e);
+        }
+        catch (ExecutionException e) {
             throw new IOException("S3AccessIO: Failed to get aux objects for listing to delete.", e);
         }
 
@@ -863,7 +925,11 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
         try {
             s3WriteClient.deleteObjects(deleteRequest).get();
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("S3AccessIO: Failed to delete one or more auxiliary objects.", e);
+        }
+        catch (ExecutionException e) {
             throw new IOException("S3AccessIO: Failed to delete one or more auxiliary objects.", e);
         }
     }
@@ -912,7 +978,12 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
             s3ReadClient.headObject(headObjectRequest).get();
             return true;
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.warning("Caught an exception in S3AccessIO.exists(): " + e.getMessage());
+            return false;
+        }
+        catch (ExecutionException e) {
             if (e.getCause() instanceof NoSuchKeyException) {
                 // Object does not exist
                 return false;
@@ -948,7 +1019,12 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
             }
             return null;
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.warning("Caught an exception in S3AccessIO.getAuxFileAsInputStream(): " + e.getMessage());
+            throw new IOException("Failed to get auxiliary file as input stream", e);
+        }
+        catch (ExecutionException e) {
             if (e.getCause() instanceof NoSuchKeyException) {
                 logger.fine("S3AccessIO.getAuxFileAsInputStream(): Object not found (not cached?): " + e.getMessage());
                 return null;
@@ -1402,7 +1478,12 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
             // tags and get charged for the operations
             s3WriteClient.deleteObjectTagging(deleteObjectTaggingRequest).get();
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.severe("Unexpected error while removing temp tag: " + e.getMessage());
+            throw new IOException("Failed to remove temp tag", e);
+        }
+        catch (ExecutionException e) {
             if (e.getCause() instanceof S3Exception) {
                 S3Exception s3e = (S3Exception) e.getCause();
                 if (s3e.statusCode() == 501) {
@@ -1484,7 +1565,11 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
         try {
             s3Client.completeMultipartUpload(completeMultipartUploadRequest).get();
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Failed to complete multipart upload", e);
+        }
+        catch (ExecutionException e) {
             throw new IOException("Failed to complete multipart upload", e);
         }
     }
@@ -1547,7 +1632,11 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
         try {
             listObjectsResponse = s3ReadClient.listObjectsV2(listObjectsReqManual).get();
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("S3 listObjects: failed to get a listing for " + prefix, e);
+        }
+        catch (ExecutionException e) {
             throw new IOException("S3 listObjects: failed to get a listing for " + prefix, e);
         }
 
@@ -1574,7 +1663,11 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
                 }
             }
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("S3AccessIO: Failed to get objects for listing.", e);
+        }
+        catch (ExecutionException e) {
             throw new IOException("S3AccessIO: Failed to get objects for listing.", e);
         }
 
@@ -1601,7 +1694,12 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
         try {
             s3WriteClient.deleteObject(deleteObjectRequest).get();
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            logger.warning("S3AccessIO: Unexpected error while deleting object " + e.getMessage());
+            throw new IOException("Failed to delete file", e);
+        }
+        catch (ExecutionException e) {
             if (e.getCause() instanceof S3Exception) {
                 S3Exception s3e = (S3Exception) e.getCause();
                 logger.warning("S3AccessIO: Unable to delete object " + s3e.getMessage());
@@ -1648,7 +1746,11 @@ public class S3AccessIO<T extends DvObject> extends StorageIO<T> {
             HeadObjectResponse headObjectResponse = s3ReadClient.headObject(headObjectRequest).get();
             return headObjectResponse.contentLength();
         }
-        catch (InterruptedException | ExecutionException e) {
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Unexpected error while retrieving S3 object metadata", e);
+        }
+        catch (ExecutionException e) {
             if (e.getCause() instanceof S3Exception) {
                 S3Exception s3e = (S3Exception) e.getCause();
                 throw new IOException("Cannot get S3 object " + key + " (" + s3e.getMessage() + ")", s3e);
