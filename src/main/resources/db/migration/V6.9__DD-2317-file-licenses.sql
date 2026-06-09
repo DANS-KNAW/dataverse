@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS TERMSOFUSEORLICENSE (
     DEPOSITORREQUIREMENTS TEXT,
     DISCLAIMER TEXT,
     FILEACCESSREQUEST BOOLEAN,
-    LICENSE_ID BIGINT,
+    LICENSE_ID BIGINT REFERENCES LICENSE(ID),
     RESTRICTIONS TEXT,
     SPECIALPERMISSIONS TEXT,
     TERMSOFUSE TEXT,
@@ -45,10 +45,6 @@ ALTER TABLE filemetadata ADD COLUMN IF NOT EXISTS termsofuseorlicense_id BIGINT;
 
 DO $$
     BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_termsofuseorlicense_license_id') THEN
-            ALTER TABLE termsofuseorlicense ADD CONSTRAINT fk_termsofuseorlicense_license_id foreign key (license_id) REFERENCES license(id);
-        END IF;
-
         IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='datasetversion' and column_name='termsofuseandaccess_id') THEN
             UPDATE datasetversion SET termsofaccess_id = termsofuseandaccess_id, default_termsofuseorlicense_id = termsofuseandaccess_id;
             ALTER TABLE datasetversion DROP COLUMN termsofuseandaccess_id;
