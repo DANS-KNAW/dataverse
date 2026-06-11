@@ -39,7 +39,7 @@ ALTER TABLE datasetversion ADD COLUMN IF NOT EXISTS termsofaccess_id BIGINT REFE
 ALTER TABLE datasetversion ADD COLUMN IF NOT EXISTS default_termsofuseorlicense_id BIGINT REFERENCES termsofuseorlicense(id);
 
 ALTER TABLE template ADD COLUMN IF NOT EXISTS termsofaccess_id BIGINT REFERENCES termsofaccess(id);
-ALTER TABLE template ADD COLUMN IF NOT EXISTS default_termsofuseorlicense_id BIGINT REFERENCES termsofuseorlicense(id);
+ALTER TABLE template ADD COLUMN IF NOT EXISTS termsofuseorlicense_id BIGINT REFERENCES termsofuseorlicense(id);
 
 ALTER TABLE filemetadata ADD COLUMN IF NOT EXISTS termsofuseorlicense_id BIGINT REFERENCES termsofuseorlicense(id);
 
@@ -55,13 +55,13 @@ BEGIN
     ALTER TABLE datasetversion ALTER COLUMN default_termsofuseorlicense_id SET NOT NULL;
 
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='template' and column_name='termsofuseandaccess_id') THEN
-        UPDATE template SET termsofaccess_id = termsofuseandaccess_id, default_termsofuseorlicense_id = termsofuseandaccess_id;
+        UPDATE template SET termsofaccess_id = termsofuseandaccess_id, termsofuseorlicense_id = termsofuseandaccess_id;
         ALTER TABLE template DROP COLUMN termsofuseandaccess_id;
     ELSE
         RAISE NOTICE 'Column termsofuseandaccess_id already dropped';
     END IF;
     ALTER TABLE template ALTER COLUMN termsofaccess_id SET NOT NULL;
-    ALTER TABLE template ALTER COLUMN default_termsofuseorlicense_id SET NOT NULL;
+    ALTER TABLE template ALTER COLUMN termsofuseorlicense_id SET NOT NULL;
 
     -- assumption: if one row is migrated, all are migrated
     IF EXISTS (SELECT 1 FROM termsofuseandaccess) AND
