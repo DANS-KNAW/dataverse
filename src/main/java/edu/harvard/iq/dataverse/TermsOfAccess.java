@@ -11,12 +11,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Transient;
-
-import edu.harvard.iq.dataverse.license.License;
 
 /**
  *
@@ -25,7 +21,7 @@ import edu.harvard.iq.dataverse.license.License;
  */
 @Entity
 @ValidateTermsOfUseAndAccess
-public class TermsOfUseAndAccess implements Serializable {
+public class TermsOfAccess implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,7 +46,7 @@ public class TermsOfUseAndAccess implements Serializable {
         this.datasetVersion = datasetVersion;
     }
     
-    @OneToOne(mappedBy = "termsOfUseAndAccess")
+    @OneToOne(mappedBy = "termsOfAccess")
     private Template template;
 
     public Template getTemplate() {
@@ -61,38 +57,11 @@ public class TermsOfUseAndAccess implements Serializable {
         this.template = template;
     }
     
-    @ManyToOne
-    @JoinColumn(name="license_id")
-    private License license;
 
-    @Column(columnDefinition="TEXT")      
-    private String termsOfUse;
-    
     @Column(columnDefinition="TEXT") 
     private String termsOfAccess;
     
-    @Column(columnDefinition="TEXT") 
-    private String confidentialityDeclaration;
-    
-    @Column(columnDefinition="TEXT") 
-    private String specialPermissions;
-    
-    @Column(columnDefinition="TEXT") 
-    private String restrictions;
-    
-    @Column(columnDefinition="TEXT") 
-    private String citationRequirements;
-    
-    @Column(columnDefinition="TEXT") 
-    private String depositorRequirements;
-    
-    @Column(columnDefinition="TEXT") 
-    private String conditions;
-    
-    @Column(columnDefinition="TEXT") 
-    private String disclaimer;
-    
-    @Column(columnDefinition="TEXT") 
+    @Column(columnDefinition="TEXT")
     private String dataAccessPlace;
     
     @Column(columnDefinition="TEXT") 
@@ -110,97 +79,12 @@ public class TermsOfUseAndAccess implements Serializable {
     @Column(columnDefinition="TEXT") 
     private String studyCompletion;
     
-    private boolean fileAccessRequest;
-
-    public boolean isFileAccessRequest() {
-        return fileAccessRequest;
-    }
-
-    public void setFileAccessRequest(boolean fileAccessRequest) {
-        this.fileAccessRequest = fileAccessRequest;
-    }
-    
-    public License getLicense() {
-        return license;
-    }
-
-    public void setLicense(License license) {
-        this.license = license;
-        if(license!=null) {
-            clearCustomTermsVariables();
-        }
-    }
-
-    public String getTermsOfUse() {
-        return termsOfUse;
-    }
-
-    public void setTermsOfUse(String termsOfUse) {
-        this.termsOfUse = termsOfUse;
-    }
-
     public String getTermsOfAccess() {
         return termsOfAccess;
     }
 
     public void setTermsOfAccess(String termsOfAccess) {
         this.termsOfAccess = termsOfAccess;
-    }
-
-    public String getConfidentialityDeclaration() {
-        return confidentialityDeclaration;
-    }
-
-    public void setConfidentialityDeclaration(String confidentialityDeclaration) {
-        this.confidentialityDeclaration = confidentialityDeclaration;
-    }
-
-    public String getSpecialPermissions() {
-        return specialPermissions;
-    }
-
-    public void setSpecialPermissions(String specialPermissions) {
-        this.specialPermissions = specialPermissions;
-    }
-
-    public String getRestrictions() {
-        return restrictions;
-    }
-
-    public void setRestrictions(String restrictions) {
-        this.restrictions = restrictions;
-    }
-
-    public String getCitationRequirements() {
-        return citationRequirements;
-    }
-
-    public void setCitationRequirements(String citationRequirements) {
-        this.citationRequirements = citationRequirements;
-    }
-
-    public String getDepositorRequirements() {
-        return depositorRequirements;
-    }
-
-    public void setDepositorRequirements(String depositorRequirements) {
-        this.depositorRequirements = depositorRequirements;
-    }
-
-    public String getConditions() {
-        return conditions;
-    }
-
-    public void setConditions(String conditions) {
-        this.conditions = conditions;
-    }
-
-    public String getDisclaimer() {
-        return disclaimer;
-    }
-
-    public void setDisclaimer(String disclaimer) {
-        this.disclaimer = disclaimer;
     }
 
     public String getDataAccessPlace() {
@@ -252,9 +136,9 @@ public class TermsOfUseAndAccess implements Serializable {
     }
     
         
-    public TermsOfUseAndAccess copyTermsOfUseAndAccess(){
+    public TermsOfAccess copyTermsOfAccess(){
 
-        TermsOfUseAndAccess retVal = new TermsOfUseAndAccess();
+        TermsOfAccess retVal = new TermsOfAccess();
         retVal.setAvailabilityStatus(this.getAvailabilityStatus());
         retVal.setContactForAccess(this.getContactForAccess());
         retVal.setDataAccessPlace(this.getDataAccessPlace());
@@ -262,33 +146,9 @@ public class TermsOfUseAndAccess implements Serializable {
         retVal.setSizeOfCollection(this.getSizeOfCollection());
         retVal.setStudyCompletion(this.getStudyCompletion());
         retVal.setTermsOfAccess(this.getTermsOfAccess());
-        retVal.setFileAccessRequest(this.isFileAccessRequest());
-        retVal.setLicense(this.getLicense());
-        if (license == null) {
-            retVal.setTermsOfUse(this.getTermsOfUse());
-            retVal.setConfidentialityDeclaration(this.getConfidentialityDeclaration());
-            retVal.setSpecialPermissions(this.getSpecialPermissions());
-            retVal.setRestrictions(this.getRestrictions());
-            retVal.setCitationRequirements(this.getCitationRequirements());
-            retVal.setDepositorRequirements(this.getDepositorRequirements());
-            retVal.setConditions(this.getConditions());
-            retVal.setDisclaimer(this.getDisclaimer());
-        }
-
         return retVal;
     }
 
-    private void clearCustomTermsVariables(){
-        termsOfUse = null;
-        confidentialityDeclaration = null;
-        specialPermissions = null;
-        restrictions = null;
-        citationRequirements = null;
-        depositorRequirements = null;
-        conditions = null;
-        disclaimer = null;
-    }
-    
     @Transient
     private String validationMessage;
 
@@ -310,10 +170,10 @@ public class TermsOfUseAndAccess implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof TermsOfUseAndAccess)) {
+        if (!(object instanceof TermsOfAccess)) {
             return false;
         }
-        TermsOfUseAndAccess other = (TermsOfUseAndAccess) object;
+        TermsOfAccess other = (TermsOfAccess) object;
         if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }

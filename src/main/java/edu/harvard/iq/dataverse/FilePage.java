@@ -49,15 +49,10 @@ import java.util.logging.Logger;
 import jakarta.ejb.EJB;
 import jakarta.ejb.EJBException;
 import jakarta.faces.application.FacesMessage;
-import jakarta.faces.component.UIComponent;
 import jakarta.faces.context.FacesContext;
-import jakarta.faces.validator.ValidatorException;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.json.JsonArray;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonValue;
 import jakarta.validation.ConstraintViolation;
 
 import org.primefaces.PrimeFaces;
@@ -416,8 +411,8 @@ public class FilePage implements java.io.Serializable {
         String fileNames = null;
         editDataset = this.file.getOwner();
         if (restricted) { // get values from access popup
-            editDataset.getOrCreateEditVersion().getTermsOfUseAndAccess().setTermsOfAccess(termsOfAccess);
-            editDataset.getOrCreateEditVersion().getTermsOfUseAndAccess().setFileAccessRequest(fileAccessRequest);   
+            editDataset.getOrCreateEditVersion().getTermsOfAccess().setTermsOfAccess(termsOfAccess);
+            editDataset.getOrCreateEditVersion().getTermsOfUseAndLicense().setFileAccessRequest(fileAccessRequest);
         }
         //using this method to update the terms for datasets that are out of compliance 
         // with Terms of Access requirement - may get her with a file that is already restricted
@@ -806,7 +801,7 @@ public class FilePage implements java.io.Serializable {
                hasValidTermsOfAccess = true;
                return hasValidTermsOfAccess;
             } else {
-                hasValidTermsOfAccess = TermsOfUseAndAccessValidator.isTOUAValid(fileMetadata.getDatasetVersion().getTermsOfUseAndAccess(), null);
+                hasValidTermsOfAccess = TermsOfUseAndAccessValidator.isTOUAValid(fileMetadata.getDatasetVersion().getTermsOfAccess(), null);
                 return hasValidTermsOfAccess;
             }
         }    

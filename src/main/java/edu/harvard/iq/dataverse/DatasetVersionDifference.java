@@ -210,233 +210,244 @@ public final class DatasetVersionDifference {
     private void getTermsDifferences() {
 
         changedTermsAccess = new ArrayList<>();
-        if (newVersion.getTermsOfUseAndAccess() != null && originalVersion.getTermsOfUseAndAccess() != null) {
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getTermsOfUse()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getTermsOfUse()))) {
+        if (newVersion.getTermsOfAccess() != null && originalVersion.getTermsOfAccess() != null) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getTermsOfUse()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getTermsOfUse()))) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.header");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getTermsOfUse()), StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getTermsOfUse()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getTermsOfUse()),
+                    StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getTermsOfUse()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getConfidentialityDeclaration()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getConfidentialityDeclaration()))) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getConfidentialityDeclaration())
+                .equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getConfidentialityDeclaration()))) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.declaration");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getConfidentialityDeclaration()),
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getConfidentialityDeclaration()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getConfidentialityDeclaration()),
+                    StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getConfidentialityDeclaration()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getSpecialPermissions()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getSpecialPermissions()))) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getSpecialPermissions()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getSpecialPermissions()))) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.permissions");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getSpecialPermissions()),
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getSpecialPermissions()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getSpecialPermissions()),
+                    StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getSpecialPermissions()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getRestrictions()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getRestrictions()))) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getRestrictions()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getRestrictions()))) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.restrictions");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getRestrictions()),
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getRestrictions()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getRestrictions()),
+                    StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getRestrictions()));
 
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getCitationRequirements()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getCitationRequirements()))) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getCitationRequirements()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getCitationRequirements()))) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.citationRequirements");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getCitationRequirements()),
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getCitationRequirements()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getCitationRequirements()),
+                    StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getCitationRequirements()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getDepositorRequirements()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getDepositorRequirements()))) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getDepositorRequirements()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getDepositorRequirements()))) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.depositorRequirements");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getDepositorRequirements()),
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getDepositorRequirements()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getDepositorRequirements()),
+                    StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getDepositorRequirements()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getConditions()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getConditions()))) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getConditions()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getConditions()))) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.conditions");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getConditions()),
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getConditions()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getConditions()),
+                    StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getConditions()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getDisclaimer()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getDisclaimer()))) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getDisclaimer()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getDisclaimer()))) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.disclaimer");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getDisclaimer()), StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getDisclaimer()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getDisclaimer()),
+                    StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getDisclaimer()));
             }
+        }
+        if (newVersion.getTermsOfAccess() != null && originalVersion.getTermsOfAccess() != null) {
 
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getTermsOfAccess()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getTermsOfAccess()))) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getTermsOfAccess()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getTermsOfAccess()))) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.termsOfsAccess");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getTermsOfAccess()),
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getTermsOfAccess()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getTermsOfAccess()),
+                        StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getTermsOfAccess()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getDataAccessPlace()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getDataAccessPlace()))) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getDataAccessPlace()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getDataAccessPlace()))) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.dataAccessPlace");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getDataAccessPlace()),
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getDataAccessPlace()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getDataAccessPlace()),
+                        StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getDataAccessPlace()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getOriginalArchive()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getOriginalArchive()))) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getOriginalArchive()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getOriginalArchive()))) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.originalArchive");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getOriginalArchive()),
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getOriginalArchive()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getOriginalArchive()),
+                        StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getOriginalArchive()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getAvailabilityStatus()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getAvailabilityStatus()))) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getAvailabilityStatus()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getAvailabilityStatus()))) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.availabilityStatus");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getAvailabilityStatus()),
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getAvailabilityStatus()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getAvailabilityStatus()),
+                        StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getAvailabilityStatus()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getContactForAccess()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getContactForAccess()))) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getContactForAccess()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getContactForAccess()))) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.contactForAccess");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getContactForAccess()),
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getContactForAccess()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getContactForAccess()),
+                        StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getContactForAccess()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getSizeOfCollection()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getSizeOfCollection()))) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getSizeOfCollection()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getSizeOfCollection()))) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.sizeOfCollection");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getSizeOfCollection()),
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getSizeOfCollection()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getSizeOfCollection()),
+                        StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getSizeOfCollection()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getStudyCompletion()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getStudyCompletion()))) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getStudyCompletion()).equals(StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getStudyCompletion()))) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.studyCompletion");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getStudyCompletion()),
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getStudyCompletion()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getStudyCompletion()),
+                        StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getStudyCompletion()));
             }
         }
 
-        if (newVersion.getTermsOfUseAndAccess() != null && originalVersion.getTermsOfUseAndAccess() == null) {
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getTermsOfUse()).isEmpty()) {
+        if (newVersion.getTermsOfUseAndLicense() != null && originalVersion.getTermsOfUseAndLicense() == null) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getTermsOfUse()).isEmpty()) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.header");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "", StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getTermsOfUse()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "", StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getTermsOfUse()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getConfidentialityDeclaration()).isEmpty()){
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getConfidentialityDeclaration()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.declaration");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "",
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getConfidentialityDeclaration()));
+                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getConfidentialityDeclaration()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getSpecialPermissions()).isEmpty()){
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getSpecialPermissions()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.permissions");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "",
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getSpecialPermissions()));
+                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getSpecialPermissions()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getRestrictions()).isEmpty()){
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getRestrictions()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.restrictions");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "",
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getRestrictions()));
+                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getRestrictions()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getCitationRequirements()).isEmpty()){
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getCitationRequirements()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.citationRequirements");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "",
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getCitationRequirements()));
+                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getCitationRequirements()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getDepositorRequirements()).isEmpty()){
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getDepositorRequirements()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.depositorRequirements");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "",
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getDepositorRequirements()));
+                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getDepositorRequirements()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getConditions()).isEmpty()){
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getConditions()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.conditions");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "",
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getConditions()));
+                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getConditions()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getDisclaimer()).isEmpty()){
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getDisclaimer()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.disclaimer");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "", StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getDisclaimer()));
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "", StringUtil.nullToEmpty(newVersion.getTermsOfUseAndLicense().getDisclaimer()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getTermsOfAccess()).isEmpty()){
+        }
+
+        if (newVersion.getTermsOfAccess() != null && originalVersion.getTermsOfAccess() == null) {
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getTermsOfAccess()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.termsOfsAccess");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "",
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getTermsOfAccess()));
+                        StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getTermsOfAccess()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getDataAccessPlace()).isEmpty()){
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getDataAccessPlace()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.dataAccessPlace");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "",
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getDataAccessPlace()));
+                        StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getDataAccessPlace()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getOriginalArchive()).isEmpty()){
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getOriginalArchive()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.originalArchive");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "",
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getOriginalArchive()));
+                        StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getOriginalArchive()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getAvailabilityStatus()).isEmpty()){
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getAvailabilityStatus()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.availabilityStatus");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "",
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getAvailabilityStatus()));
+                        StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getAvailabilityStatus()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getContactForAccess()).isEmpty()){
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getContactForAccess()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.contactForAccess");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "",
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getContactForAccess()));
+                        StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getContactForAccess()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getSizeOfCollection()).isEmpty()){
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getSizeOfCollection()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.sizeOfCollection");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "",
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getSizeOfCollection()));
+                        StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getSizeOfCollection()));
             }
-            if (!StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getStudyCompletion()).isEmpty()){
+            if (!StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getStudyCompletion()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.studyCompletion");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, "",
-                        StringUtil.nullToEmpty(newVersion.getTermsOfUseAndAccess().getStudyCompletion()));
+                        StringUtil.nullToEmpty(newVersion.getTermsOfAccess().getStudyCompletion()));
             }            
         }        
 
-        if (newVersion.getTermsOfUseAndAccess() == null && originalVersion.getTermsOfUseAndAccess() != null) {
-            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getTermsOfUse()).isEmpty()) {
+        if (newVersion.getTermsOfUseAndLicense() == null && originalVersion.getTermsOfAccess() != null) {
+            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getTermsOfUse()).isEmpty()) {
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.header");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getTermsOfUse()), "");
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getTermsOfUse()), "");
             }
-            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getConfidentialityDeclaration()).isEmpty()){
+            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getConfidentialityDeclaration()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.declaration");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel,
-                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getConfidentialityDeclaration()), "");
+                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getConfidentialityDeclaration()), "");
             }
-            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getSpecialPermissions()).isEmpty()){
+            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getSpecialPermissions()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.permissions");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel,
-                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getSpecialPermissions()), "");
+                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getSpecialPermissions()), "");
             }
-            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getRestrictions()).isEmpty()){
+            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getRestrictions()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.restrictions");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, 
-                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getRestrictions()), "");
+                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getRestrictions()), "");
             }
-            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getCitationRequirements()).isEmpty()){
+            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getCitationRequirements()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.citationRequirements");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, 
-                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getCitationRequirements()), "");
+                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getCitationRequirements()), "");
             }
-            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getDepositorRequirements()).isEmpty()){
+            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getDepositorRequirements()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.depositorRequirements");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, 
-                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getDepositorRequirements()), "");
+                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getDepositorRequirements()), "");
             }
-            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getConditions()).isEmpty()){
+            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getConditions()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.conditions");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, 
-                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getConditions()), "");
+                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getConditions()), "");
             }
-            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getDisclaimer()).isEmpty()){
+            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getDisclaimer()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfUse.addInfo.disclaimer");
-                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel,  StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getDisclaimer()), "");
+                changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel,  StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndLicense().getDisclaimer()), "");
             }
-            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getTermsOfAccess()).isEmpty()){
+        }
+
+        if (newVersion.getTermsOfAccess() == null && originalVersion.getTermsOfAccess() != null) {
+            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getTermsOfAccess()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.termsOfsAccess");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, 
-                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getTermsOfAccess()), "");
+                        StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getTermsOfAccess()), "");
             }
-            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getDataAccessPlace()).isEmpty()){
+            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getDataAccessPlace()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.dataAccessPlace");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, 
-                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getDataAccessPlace()), "");
+                        StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getDataAccessPlace()), "");
             }
-            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getOriginalArchive()).isEmpty()){
+            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getOriginalArchive()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.originalArchive");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, 
-                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getOriginalArchive()), "");
+                        StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getOriginalArchive()), "");
             }
-            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getAvailabilityStatus()).isEmpty()){
+            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getAvailabilityStatus()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.availabilityStatus");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, 
-                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getAvailabilityStatus()), "");
+                        StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getAvailabilityStatus()), "");
             }
-            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getContactForAccess()).isEmpty()){
+            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getContactForAccess()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.contactForAccess");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, 
-                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getContactForAccess()), "");
+                        StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getContactForAccess()), "");
             }
-            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getSizeOfCollection()).isEmpty()){
+            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getSizeOfCollection()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.sizeOfCollection");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, 
-                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getSizeOfCollection()), "");
+                        StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getSizeOfCollection()), "");
             }
-            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getStudyCompletion()).isEmpty()){
+            if (!StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getStudyCompletion()).isEmpty()){
                 String diffLabel = BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.studyCompletion");
                 changedTermsAccess = addToTermsChangedList(changedTermsAccess, diffLabel, 
-                        StringUtil.nullToEmpty(originalVersion.getTermsOfUseAndAccess().getStudyCompletion()), "");
+                        StringUtil.nullToEmpty(originalVersion.getTermsOfAccess().getStudyCompletion()), "");
             }            
         }               
     }

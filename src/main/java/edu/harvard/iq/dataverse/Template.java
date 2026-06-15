@@ -113,15 +113,27 @@ public class Template implements Serializable {
     }
     
     @OneToOne(cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval=true)
-    @JoinColumn(name = "termsOfUseAndAccess_id")
-    private TermsOfUseAndAccess termsOfUseAndAccess;
+    @JoinColumn(name = "termsOfAccess_id")
+    private TermsOfAccess termsOfAccess;
 
-    public TermsOfUseAndAccess getTermsOfUseAndAccess() {
-        return termsOfUseAndAccess;
+    public TermsOfAccess getTermsOfAccess() {
+        return termsOfAccess;
     }
 
-    public void setTermsOfUseAndAccess(TermsOfUseAndAccess termsOfUseAndAccess) {
-        this.termsOfUseAndAccess = termsOfUseAndAccess;
+    public void setTermsOfAccess(TermsOfAccess termsOfAccess) {
+        this.termsOfAccess = termsOfAccess;
+    }
+
+    @OneToOne(cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval=true)
+    @JoinColumn(name = "termsOfUseAndLicense_id")
+    private TermsOfUseAndLicense termsOfUseAndLicense;
+
+    public TermsOfUseAndLicense getTermsOfUseAndLicense() {
+        return termsOfUseAndLicense;
+    }
+
+    public void setTermsOfUseAndLicense(TermsOfUseAndLicense termsOfUseAndLicense) {
+        this.termsOfUseAndLicense = termsOfUseAndLicense;
     }
 
     @OneToMany(mappedBy = "template", orphanRemoval = true, cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST})
@@ -355,17 +367,26 @@ public class Template implements Serializable {
         if (latestVersion.getDatasetFields() != null && !latestVersion.getDatasetFields().isEmpty()) {
             newTemplate.setDatasetFields(newTemplate.copyDatasetFields(source.getDatasetFields()));
         }
-        TermsOfUseAndAccess terms = null;
-        if(source.getTermsOfUseAndAccess() != null){
-            terms = source.getTermsOfUseAndAccess().copyTermsOfUseAndAccess();
+        TermsOfAccess termsOfAccess = null;
+        if(source.getTermsOfAccess() != null){
+            termsOfAccess = source.getTermsOfAccess().copyTermsOfAccess();
         } else {
-            terms = new TermsOfUseAndAccess();
-           // terms.setLicense(TermsOfUseAndAccess.defaultLicense);
-            terms.setFileAccessRequest(true);
+            termsOfAccess = new TermsOfAccess();
         }
-        terms.setTemplate(newTemplate);
-        newTemplate.setTermsOfUseAndAccess(terms);
+        termsOfAccess.setTemplate(newTemplate);
+        newTemplate.setTermsOfAccess(termsOfAccess);
         
+        TermsOfUseAndLicense termsOfUseAndLicense = null;
+        if(source.getTermsOfUseAndLicense() != null){
+            termsOfUseAndLicense = source.getTermsOfUseAndLicense().copyTermsOfUseAndLicense();
+        } else {
+            termsOfUseAndLicense = new TermsOfUseAndLicense();
+           // terms.setLicense(TermsOfUseAndAccess.defaultLicense);
+            termsOfUseAndLicense.setFileAccessRequest(true);
+        }
+        termsOfUseAndLicense.setTemplate(newTemplate);
+        newTemplate.setTermsOfUseAndLicense(termsOfUseAndLicense);
+
         newTemplate.getInstructionsMap().putAll(source.getInstructionsMap());
         newTemplate.updateInstructions();
         return newTemplate;

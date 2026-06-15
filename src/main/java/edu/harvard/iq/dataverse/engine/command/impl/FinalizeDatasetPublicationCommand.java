@@ -37,10 +37,6 @@ import java.util.ArrayList;
 import java.util.concurrent.Future;
 import org.apache.solr.client.solrj.SolrServerException;
 
-import jakarta.ejb.EJB;
-import jakarta.inject.Inject;
-
-
 /**
  *
  * Takes the last internal steps in publishing a dataset.
@@ -132,7 +128,7 @@ public class FinalizeDatasetPublicationCommand extends AbstractPublishDatasetCom
         }
         theDataset.getLatestVersion().setLastUpdateTime(getTimestamp());
         theDataset.setModificationTime(getTimestamp());
-        theDataset.setFileAccessRequest(theDataset.getLatestVersion().getTermsOfUseAndAccess().isFileAccessRequest());
+        theDataset.setFileAccessRequest(theDataset.getLatestVersion().getTermsOfUseAndLicense().isFileAccessRequest());
         
         //Use dataset pub date (which may not be the current date for migrated datasets)
         updateFiles(new Timestamp(theDataset.getLatestVersion().getReleaseTime().getTime()), ctxt);

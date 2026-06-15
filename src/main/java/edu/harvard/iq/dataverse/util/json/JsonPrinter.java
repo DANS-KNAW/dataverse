@@ -57,7 +57,6 @@ import java.util.*;
 import jakarta.json.Json;
 import jakarta.json.JsonArrayBuilder;
 import jakarta.json.JsonObjectBuilder;
-import jakarta.json.JsonValue;
 
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -393,23 +392,23 @@ public class JsonPrinter {
             bld.add("license", jsonLicense(dsv));
         } else {
             // Custom terms
-            bld.add("termsOfUse", dsv.getTermsOfUseAndAccess().getTermsOfUse())
-                    .add("confidentialityDeclaration", dsv.getTermsOfUseAndAccess().getConfidentialityDeclaration())
-                    .add("specialPermissions", dsv.getTermsOfUseAndAccess().getSpecialPermissions())
-                    .add("restrictions", dsv.getTermsOfUseAndAccess().getRestrictions())
-                    .add("citationRequirements", dsv.getTermsOfUseAndAccess().getCitationRequirements())
-                    .add("depositorRequirements", dsv.getTermsOfUseAndAccess().getDepositorRequirements())
-                    .add("conditions", dsv.getTermsOfUseAndAccess().getConditions())
-                    .add("disclaimer", dsv.getTermsOfUseAndAccess().getDisclaimer());
+            bld.add("termsOfUse", dsv.getTermsOfUseAndLicense().getTermsOfUse())
+                    .add("confidentialityDeclaration", dsv.getTermsOfUseAndLicense().getConfidentialityDeclaration())
+                    .add("specialPermissions", dsv.getTermsOfUseAndLicense().getSpecialPermissions())
+                    .add("restrictions", dsv.getTermsOfUseAndLicense().getRestrictions())
+                    .add("citationRequirements", dsv.getTermsOfUseAndLicense().getCitationRequirements())
+                    .add("depositorRequirements", dsv.getTermsOfUseAndLicense().getDepositorRequirements())
+                    .add("conditions", dsv.getTermsOfUseAndLicense().getConditions())
+                    .add("disclaimer", dsv.getTermsOfUseAndLicense().getDisclaimer())
+                .add("fileAccessRequest", dsv.getTermsOfUseAndLicense().isFileAccessRequest());
         }
-        bld.add("termsOfAccess", dsv.getTermsOfUseAndAccess().getTermsOfAccess())
-                .add("dataAccessPlace", dsv.getTermsOfUseAndAccess().getDataAccessPlace())
-                .add("originalArchive", dsv.getTermsOfUseAndAccess().getOriginalArchive())
-                .add("availabilityStatus", dsv.getTermsOfUseAndAccess().getAvailabilityStatus())
-                .add("contactForAccess", dsv.getTermsOfUseAndAccess().getContactForAccess())
-                .add("sizeOfCollection", dsv.getTermsOfUseAndAccess().getSizeOfCollection())
-                .add("studyCompletion", dsv.getTermsOfUseAndAccess().getStudyCompletion())
-                .add("fileAccessRequest", dsv.getTermsOfUseAndAccess().isFileAccessRequest());
+        bld.add("termsOfAccess", dsv.getTermsOfAccess().getTermsOfAccess())
+                .add("dataAccessPlace", dsv.getTermsOfAccess().getDataAccessPlace())
+                .add("originalArchive", dsv.getTermsOfAccess().getOriginalArchive())
+                .add("availabilityStatus", dsv.getTermsOfAccess().getAvailabilityStatus())
+                .add("contactForAccess", dsv.getTermsOfAccess().getContactForAccess())
+                .add("sizeOfCollection", dsv.getTermsOfAccess().getSizeOfCollection())
+                .add("studyCompletion", dsv.getTermsOfAccess().getStudyCompletion());
 
         bld.add("metadataBlocks", (anonymizedFieldTypeNamesList != null) ?
                 jsonByBlocks(dsv.getDatasetFields(), anonymizedFieldTypeNamesList)

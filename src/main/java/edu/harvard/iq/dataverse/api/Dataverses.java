@@ -125,7 +125,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.StreamingOutput;
@@ -268,8 +267,8 @@ public class Dataverses extends AbstractApiBean {
             version.setMinorVersionNumber(null);
             version.setVersionNumber(null);
             version.setVersionState(DatasetVersion.VersionState.DRAFT);
-            version.getTermsOfUseAndAccess().setFileAccessRequest(true);
-            version.getTermsOfUseAndAccess().setDatasetVersion(version);
+            version.getTermsOfUseAndLicense().setFileAccessRequest(true);
+            version.getTermsOfAccess().setDatasetVersion(version);
 
             ds.setAuthority(null);
             ds.setIdentifier(null);
@@ -329,8 +328,8 @@ public class Dataverses extends AbstractApiBean {
             version.setMinorVersionNumber(null);
             version.setVersionNumber(null);
             version.setVersionState(DatasetVersion.VersionState.DRAFT);
-            version.getTermsOfUseAndAccess().setFileAccessRequest(true);
-            version.getTermsOfUseAndAccess().setDatasetVersion(version);
+            version.getTermsOfUseAndLicense().setFileAccessRequest(true);
+            version.getTermsOfAccess().setDatasetVersion(version);
 
             ds.setAuthority(null);
             ds.setIdentifier(null);

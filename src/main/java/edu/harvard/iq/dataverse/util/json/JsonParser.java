@@ -17,7 +17,8 @@ import edu.harvard.iq.dataverse.DataverseContact;
 import edu.harvard.iq.dataverse.DataverseTheme;
 import edu.harvard.iq.dataverse.FileMetadata;
 import edu.harvard.iq.dataverse.MetadataBlockServiceBean;
-import edu.harvard.iq.dataverse.TermsOfUseAndAccess;
+import edu.harvard.iq.dataverse.TermsOfAccess;
+import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
 import edu.harvard.iq.dataverse.api.Util;
 import edu.harvard.iq.dataverse.api.dto.FieldDTO;
 import edu.harvard.iq.dataverse.authorization.groups.impl.ipaddress.IpGroup;
@@ -372,7 +373,8 @@ public class JsonParser {
             dsv.setArchiveTime(parseTime(obj.getString("archiveTime", null)));
             dsv.setUNF(obj.getString("UNF", null));
             // Terms of Use related fields
-            TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
+            TermsOfAccess termsOfAccess = new TermsOfAccess();
+            TermsOfUseAndLicense termsOfUseAndLicense = new TermsOfUseAndLicense();
 
             License license = null; 
             
@@ -396,28 +398,28 @@ public class JsonParser {
             }
             
             if (license == null) {
-                terms.setLicense(license);
-                terms.setTermsOfUse(obj.getString("termsOfUse", null));
-                terms.setConfidentialityDeclaration(obj.getString("confidentialityDeclaration", null));
-                terms.setSpecialPermissions(obj.getString("specialPermissions", null));
-                terms.setRestrictions(obj.getString("restrictions", null));
-                terms.setCitationRequirements(obj.getString("citationRequirements", null));
-                terms.setDepositorRequirements(obj.getString("depositorRequirements", null));
-                terms.setConditions(obj.getString("conditions", null));
-                terms.setDisclaimer(obj.getString("disclaimer", null));
+                termsOfUseAndLicense.setLicense(license);
+                termsOfUseAndLicense.setTermsOfUse(obj.getString("termsOfUse", null));
+                termsOfUseAndLicense.setConfidentialityDeclaration(obj.getString("confidentialityDeclaration", null));
+                termsOfUseAndLicense.setSpecialPermissions(obj.getString("specialPermissions", null));
+                termsOfUseAndLicense.setRestrictions(obj.getString("restrictions", null));
+                termsOfUseAndLicense.setCitationRequirements(obj.getString("citationRequirements", null));
+                termsOfUseAndLicense.setDepositorRequirements(obj.getString("depositorRequirements", null));
+                termsOfUseAndLicense.setConditions(obj.getString("conditions", null));
+                termsOfUseAndLicense.setDisclaimer(obj.getString("disclaimer", null));
             } else {
-                terms.setLicense(license);
+                termsOfUseAndLicense.setLicense(license);
             }
-            terms.setTermsOfAccess(obj.getString("termsOfAccess", null));
-            terms.setDataAccessPlace(obj.getString("dataAccessPlace", null));
-            terms.setOriginalArchive(obj.getString("originalArchive", null));
-            terms.setAvailabilityStatus(obj.getString("availabilityStatus", null));
-            terms.setContactForAccess(obj.getString("contactForAccess", null));
-            terms.setSizeOfCollection(obj.getString("sizeOfCollection", null));
-            terms.setStudyCompletion(obj.getString("studyCompletion", null));
-            terms.setFileAccessRequest(obj.getBoolean("fileAccessRequest", false));
-            dsv.setTermsOfUseAndAccess(terms);
-            terms.setDatasetVersion(dsv);
+            termsOfAccess.setTermsOfAccess(obj.getString("termsOfAccess", null));
+            termsOfAccess.setDataAccessPlace(obj.getString("dataAccessPlace", null));
+            termsOfAccess.setOriginalArchive(obj.getString("originalArchive", null));
+            termsOfAccess.setAvailabilityStatus(obj.getString("availabilityStatus", null));
+            termsOfAccess.setContactForAccess(obj.getString("contactForAccess", null));
+            termsOfAccess.setSizeOfCollection(obj.getString("sizeOfCollection", null));
+            termsOfAccess.setStudyCompletion(obj.getString("studyCompletion", null));
+            termsOfUseAndLicense.setFileAccessRequest(obj.getBoolean("fileAccessRequest", false));
+            dsv.setTermsOfAccess(termsOfAccess);
+            termsOfAccess.setDatasetVersion(dsv);
             JsonObject metadataBlocks = obj.getJsonObject("metadataBlocks");
             if (metadataBlocks == null){
                 throw new JsonParseException(BundleUtil.getStringFromBundle("jsonparser.error.metadatablocks.not.found"));

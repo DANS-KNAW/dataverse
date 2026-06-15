@@ -25,7 +25,7 @@ import static java.util.stream.Collectors.joining;
 import jakarta.validation.ConstraintViolation;
 import edu.harvard.iq.dataverse.GlobalIdServiceBean;
 import edu.harvard.iq.dataverse.MetadataBlock;
-import edu.harvard.iq.dataverse.TermsOfUseAndAccess;
+import edu.harvard.iq.dataverse.TermsOfAccess;
 import edu.harvard.iq.dataverse.settings.JvmSettings;
 
 /**
@@ -116,11 +116,11 @@ public abstract class AbstractDatasetCommand<T> extends AbstractCommand<T> {
                     .collect(joining(", ", "Validation Failed: ", "."));
                 
                 validationMessage  += constraintViolations.stream()
-                    .filter(cv -> cv.getRootBean() instanceof TermsOfUseAndAccess)
+                    .filter(cv -> cv.getRootBean() instanceof TermsOfAccess)
                     .map(cv -> cv.toString());
                 
                 for (ConstraintViolation cv : constraintViolations){
-                    if (cv.getRootBean() instanceof TermsOfUseAndAccess){
+                    if (cv.getRootBean() instanceof TermsOfAccess){
                         throw new IllegalCommandException(validationMessage,  this);
                     }
                 }

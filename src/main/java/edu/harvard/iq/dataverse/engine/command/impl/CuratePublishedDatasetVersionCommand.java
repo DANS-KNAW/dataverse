@@ -1,7 +1,6 @@
 package edu.harvard.iq.dataverse.engine.command.impl;
 
 import edu.harvard.iq.dataverse.authorization.Permission;
-import edu.harvard.iq.dataverse.datavariable.VarGroup;
 import edu.harvard.iq.dataverse.engine.command.CommandContext;
 import edu.harvard.iq.dataverse.engine.command.DataverseRequest;
 import edu.harvard.iq.dataverse.engine.command.RequiredPermissions;
@@ -14,13 +13,12 @@ import edu.harvard.iq.dataverse.util.DatasetFieldUtil;
 import edu.harvard.iq.dataverse.workflows.WorkflowComment;
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetVersion;
-import edu.harvard.iq.dataverse.TermsOfUseAndAccess;
+import edu.harvard.iq.dataverse.TermsOfAccess;
 import edu.harvard.iq.dataverse.DataFile;
 import edu.harvard.iq.dataverse.FileMetadata;
 import edu.harvard.iq.dataverse.DataFileCategory;
 import edu.harvard.iq.dataverse.DatasetVersionDifference;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -67,18 +65,18 @@ public class CuratePublishedDatasetVersionCommand extends AbstractDatasetCommand
         // Merge the new version into our JPA context
         ctxt.em().merge(updateVersion);
 
-        TermsOfUseAndAccess oldTerms = updateVersion.getTermsOfUseAndAccess();
-        TermsOfUseAndAccess newTerms = newVersion.getTermsOfUseAndAccess();
+        TermsOfAccess oldTerms = updateVersion.getTermsOfAccess();
+        TermsOfAccess newTerms = newVersion.getTermsOfAccess();
         newTerms.setDatasetVersion(updateVersion);
-        updateVersion.setTermsOfUseAndAccess(newTerms);
+        updateVersion.setTermsOfAccess(newTerms);
         //Put old terms on version that will be deleted....
-        newVersion.setTermsOfUseAndAccess(oldTerms);
+        newVersion.setTermsOfAccess(oldTerms);
         
         //Validate metadata and TofA conditions
         validateOrDie(updateVersion, isValidateLenient());
         
         //Also set the fileaccessrequest boolean on the dataset to match the new terms
-        getDataset().setFileAccessRequest(updateVersion.getTermsOfUseAndAccess().isFileAccessRequest());
+        getDataset().setFileAccessRequest(updateVersion.getTermsOfUseAndLicense().isFileAccessRequest());
         List<WorkflowComment> newComments = newVersion.getWorkflowComments();
         if (newComments!=null && newComments.size() >0) {
             for(WorkflowComment wfc: newComments) {

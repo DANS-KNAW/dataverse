@@ -2,22 +2,17 @@ package edu.harvard.iq.dataverse.engine.command.impl;
 
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetLock;
-import edu.harvard.iq.dataverse.GlobalIdServiceBean;
 import edu.harvard.iq.dataverse.authorization.Permission;
 import edu.harvard.iq.dataverse.authorization.users.AuthenticatedUser;
-import edu.harvard.iq.dataverse.engine.command.Command;
 import edu.harvard.iq.dataverse.engine.command.CommandContext;
 import edu.harvard.iq.dataverse.engine.command.DataverseRequest;
 import edu.harvard.iq.dataverse.engine.command.RequiredPermissions;
 import edu.harvard.iq.dataverse.engine.command.exception.CommandException;
 import edu.harvard.iq.dataverse.engine.command.exception.IllegalCommandException;
-import edu.harvard.iq.dataverse.privateurl.PrivateUrl;
 import edu.harvard.iq.dataverse.settings.SettingsServiceBean;
-import edu.harvard.iq.dataverse.util.BundleUtil;
 import edu.harvard.iq.dataverse.workflow.Workflow;
 import edu.harvard.iq.dataverse.workflow.WorkflowContext.TriggerType;
-import java.util.Date;
-import java.util.List;
+
 import java.util.Optional;
 import java.util.logging.Logger;
 import static java.util.stream.Collectors.joining;
@@ -81,17 +76,17 @@ public class PublishDatasetCommand extends AbstractPublishDatasetCommand<Publish
 
         if (theDataset.getPublicationDate() == null) {
             // First Release
-            theDataset.getLatestVersion().setVersionNumber(new Long(1)); // minor release is blocked by #verifyCommandArguments
-            theDataset.getLatestVersion().setMinorVersionNumber(new Long(0));
+            theDataset.getLatestVersion().setVersionNumber(1L); // minor release is blocked by #verifyCommandArguments
+            theDataset.getLatestVersion().setMinorVersionNumber(0L);
             
         } else if ( minorRelease ) {
             theDataset.getLatestVersion().setVersionNumber(new Long(theDataset.getVersionNumber()));
-            theDataset.getLatestVersion().setMinorVersionNumber(new Long(theDataset.getMinorVersionNumber() + 1));
+            theDataset.getLatestVersion().setMinorVersionNumber(theDataset.getMinorVersionNumber() + 1L);
             
         } else {
             // major, non-first release
-            theDataset.getLatestVersion().setVersionNumber(new Long(theDataset.getVersionNumber() + 1));
-            theDataset.getLatestVersion().setMinorVersionNumber(new Long(0));
+            theDataset.getLatestVersion().setVersionNumber(theDataset.getVersionNumber() + 1L);
+            theDataset.getLatestVersion().setMinorVersionNumber(0L);
         }
         
         // Perform any optional validation steps, if defined:
@@ -205,9 +200,9 @@ public class PublishDatasetCommand extends AbstractPublishDatasetCommand<Publish
             throw new IllegalCommandException("Only authenticated users can release a Dataset. Please authenticate and try again.", this);
         }
         
-        if (getDataset().getLatestVersion().getTermsOfUseAndAccess() == null
-                || (getDataset().getLatestVersion().getTermsOfUseAndAccess().getLicense() == null 
-                && StringUtil.isEmpty(getDataset().getLatestVersion().getTermsOfUseAndAccess().getTermsOfUse()))) {
+        if (getDataset().getLatestVersion().getTermsOfUseAndLicense() == null
+                || (getDataset().getLatestVersion().getTermsOfUseAndLicense().getLicense() == null
+                && StringUtil.isEmpty(getDataset().getLatestVersion().getTermsOfUseAndLicense().getTermsOfUse()))) {
             throw new IllegalCommandException("Dataset must have a valid license or Custom Terms Of Use configured before it can be published.", this);
         }
         

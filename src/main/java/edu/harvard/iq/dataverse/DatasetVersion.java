@@ -148,8 +148,12 @@ public class DatasetVersion implements Serializable {
     
     @OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval=true)
     @JoinColumn(name = "termsOfUseAndAccess_id")
-    private TermsOfUseAndAccess termsOfUseAndAccess;
+    private TermsOfAccess termsOfAccess;
     
+    @OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval=true)
+    @JoinColumn(name = "termsOfUseAndLicense_id")
+    private TermsOfUseAndLicense termsOfUseAndLicense;
+
     @OneToMany(mappedBy = "datasetVersion", orphanRemoval = true, cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST})
     private List<DatasetField> datasetFields = new ArrayList();
     
@@ -307,12 +311,20 @@ public class DatasetVersion implements Serializable {
         this.fileMetadatas = fileMetadatas;
     }
     
-    public TermsOfUseAndAccess getTermsOfUseAndAccess() {
-        return termsOfUseAndAccess;
+    public TermsOfAccess getTermsOfAccess() {
+        return termsOfAccess;
     }
 
-    public void setTermsOfUseAndAccess(TermsOfUseAndAccess termsOfUseAndAccess) {
-        this.termsOfUseAndAccess = termsOfUseAndAccess;
+    public void setTermsOfAccess(TermsOfAccess termsOfAccess) {
+        this.termsOfAccess = termsOfAccess;
+    }
+
+    public TermsOfUseAndLicense getTermsOfUseAndLicense() {
+        return termsOfUseAndLicense;
+    }
+
+    public void setTermsOfUseAndLicense(TermsOfUseAndLicense termsOfUseAndLicense) {
+        this.termsOfUseAndLicense = termsOfUseAndLicense;
     }
 
     public List<DatasetField> getDatasetFields() {
@@ -657,10 +669,15 @@ public class DatasetVersion implements Serializable {
         if (!template.getDatasetFields().isEmpty()) {
             this.setDatasetFields(this.copyDatasetFields(template.getDatasetFields()));
         }
-        if (template.getTermsOfUseAndAccess() != null) {
-            TermsOfUseAndAccess terms = template.getTermsOfUseAndAccess().copyTermsOfUseAndAccess();
+        if (template.getTermsOfAccess() != null) {
+            TermsOfAccess terms = template.getTermsOfAccess().copyTermsOfAccess();
             terms.setDatasetVersion(this);
-            this.setTermsOfUseAndAccess(terms);
+            this.setTermsOfAccess(terms);
+        }
+        if (template.getTermsOfUseAndLicense() != null) {
+            TermsOfUseAndLicense terms = template.getTermsOfUseAndLicense().copyTermsOfUseAndLicense();
+            terms.setDatasetVersion(this);
+            this.setTermsOfUseAndLicense(terms);
         }
     }
     
@@ -703,15 +720,26 @@ public class DatasetVersion implements Serializable {
                 dsv.getFileMetadatas().add(newFm);
             }
             
-            if (this.getTermsOfUseAndAccess()!= null){
-                TermsOfUseAndAccess terms = this.getTermsOfUseAndAccess().copyTermsOfUseAndAccess();
+            if (this.getTermsOfAccess() != null){
+                TermsOfAccess terms = this.getTermsOfAccess().copyTermsOfAccess();
                 terms.setDatasetVersion(dsv);
-                dsv.setTermsOfUseAndAccess(terms);
+                dsv.setTermsOfAccess(terms);
             } else {
-                TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
+                TermsOfAccess terms = new TermsOfAccess();
                 terms.setDatasetVersion(dsv);
                // terms.setLicense(TermsOfUseAndAccess.License.CC0);
-                dsv.setTermsOfUseAndAccess(terms);
+                dsv.setTermsOfAccess(terms);
+            }
+
+            if (this.getTermsOfUseAndLicense() != null){
+                TermsOfUseAndLicense terms = this.getTermsOfUseAndLicense().copyTermsOfUseAndLicense();
+                terms.setDatasetVersion(dsv);
+                dsv.setTermsOfUseAndLicense(terms);
+            } else {
+                TermsOfUseAndLicense terms = new TermsOfUseAndLicense();
+                terms.setDatasetVersion(dsv);
+               // terms.setLicense(TermsOfUseAndAccess.License.CC0);
+                dsv.setTermsOfUseAndLicense(terms);
             }
 
         dsv.setDataset(this.getDataset());
@@ -723,11 +751,12 @@ public class DatasetVersion implements Serializable {
         // from template or user entry
         this.setDatasetFields(new ArrayList<>());
         this.setDatasetFields(this.initDatasetFields());
-        TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
-        terms.setDatasetVersion(this);
-        terms.setLicense(license);
-        terms.setFileAccessRequest(true);
-        this.setTermsOfUseAndAccess(terms);
+        TermsOfAccess termsOfAccess = new TermsOfAccess();
+        TermsOfUseAndLicense termsOfUseAndLicense = new TermsOfUseAndLicense();
+        termsOfAccess.setDatasetVersion(this);
+        termsOfUseAndLicense.setLicense(license);
+        termsOfUseAndLicense.setFileAccessRequest(true);
+        this.setTermsOfAccess(termsOfAccess);
 
     }
 
@@ -1768,20 +1797,31 @@ public class DatasetVersion implements Serializable {
             }
         }
         
-        
-        TermsOfUseAndAccess toua = this.termsOfUseAndAccess;
+        TermsOfAccess toa = this.termsOfAccess;
         //Only need to test Terms of Use and Access if there are restricted files  
-        if (toua != null && this.isHasRestrictedFile()) {
-            Set<ConstraintViolation<TermsOfUseAndAccess>> constraintViolations = validator.validate(toua);
+        if (toa != null && this.isHasRestrictedFile()) {
+            Set<ConstraintViolation<TermsOfAccess>> constraintViolations = validator.validate(toa);
             if (constraintViolations.size() > 0) {
-                ConstraintViolation<TermsOfUseAndAccess> violation = constraintViolations.iterator().next();
+                ConstraintViolation<TermsOfAccess> violation = constraintViolations.iterator().next();
                 String message = BundleUtil.getStringFromBundle("dataset.message.toua.invalid");
                 logger.info(message);
-                this.termsOfUseAndAccess.setValidationMessage(message);
+                this.termsOfAccess.setValidationMessage(message);
                 returnSet.add(violation);
             }
         }
 
+        TermsOfUseAndLicense toual= this.termsOfUseAndLicense;
+        //Only need to test Terms of Use and Access if there are restricted files
+        if (toual != null && this.isHasRestrictedFile()) {
+            Set<ConstraintViolation<TermsOfUseAndLicense>> constraintViolations = validator.validate(toual);
+            if (constraintViolations.size() > 0) {
+                ConstraintViolation<TermsOfUseAndLicense> violation = constraintViolations.iterator().next();
+                String message = BundleUtil.getStringFromBundle("dataset.message.toua.invalid");
+                logger.info(message);
+                this.termsOfUseAndLicense.setValidationMessage(message);
+                returnSet.add(violation);
+            }
+        }
         
         return returnSet;
     }
@@ -2003,7 +2043,7 @@ public class DatasetVersion implements Serializable {
          * We used to include "https://schema.org/version/3.3" in the output for
          * "schemaVersion".
          */
-        TermsOfUseAndAccess terms = this.getTermsOfUseAndAccess();
+        TermsOfAccess terms = this.getTermsOfAccess();
         if (terms != null) {
             job.add("license",DatasetUtil.getLicenseURI(this));
         }
