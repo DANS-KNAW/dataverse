@@ -178,9 +178,11 @@ public class SchemaDotOrgExporterTest {
         Date publicationDate = dateFmt.parse("19551105");
         version.setReleaseTime(publicationDate);
         version.setVersionNumber(1l);
-        TermsOfAccess terms = new TermsOfAccess();
-        terms.setLicense(license);
-        version.setTermsOfAccess(terms);
+        TermsOfAccess termsOfAccess = new TermsOfAccess();
+        version.setTermsOfAccess(termsOfAccess);
+        TermsOfUseAndLicense termsOfUseAndLicense = new TermsOfUseAndLicense();
+        termsOfUseAndLicense.setLicense(license);
+        version.setTermsOfUseAndLicense(termsOfUseAndLicense);
 
         Dataset dataset = new Dataset();
         dataset.setProtocol("doi");
