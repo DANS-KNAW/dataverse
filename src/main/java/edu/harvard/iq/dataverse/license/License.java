@@ -11,7 +11,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
-import edu.harvard.iq.dataverse.TermsOfUseAndAccess;
+import edu.harvard.iq.dataverse.TermsOfAccess;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -88,11 +88,8 @@ public class License {
     @Column(name = "scheme_uri")
     private String schemeUri;
     
-    @Column(name = "language_code")
-    private String languageCode;
-
-    @OneToMany(mappedBy = "license")
-    private List<TermsOfUseAndAccess> termsOfUseAndAccess;
+    @OneToMany(mappedBy="license")
+    private List<TermsOfAccess> termsOfUseAndAccess;
 
     public License() {
     }
@@ -182,11 +179,11 @@ public class License {
         this.isDefault = isDefault;
     }
 
-    public List<TermsOfUseAndAccess> getTermsOfUseAndAccess() {
+    public List<TermsOfAccess> getTermsOfUseAndAccess() {
         return termsOfUseAndAccess;
     }
 
-    public void setTermsOfUseAndAccess(List<TermsOfUseAndAccess> termsOfUseAndAccess) {
+    public void setTermsOfUseAndAccess(List<TermsOfAccess> termsOfUseAndAccess) {
         this.termsOfUseAndAccess = termsOfUseAndAccess;
     }
 

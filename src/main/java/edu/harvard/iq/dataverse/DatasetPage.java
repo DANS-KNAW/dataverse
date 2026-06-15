@@ -68,6 +68,7 @@ import edu.harvard.iq.dataverse.util.FileUtil;
 import edu.harvard.iq.dataverse.util.JsfHelper;
 import static edu.harvard.iq.dataverse.util.JsfHelper.JH;
 import static edu.harvard.iq.dataverse.util.StringUtil.isEmpty;
+import static java.lang.Integer.*;
 
 import edu.harvard.iq.dataverse.util.StringUtil;
 import edu.harvard.iq.dataverse.util.SystemConfig;
@@ -474,7 +475,7 @@ public class DatasetPage implements java.io.Serializable {
                hasValidTermsOfAccess = true;
                return hasValidTermsOfAccess;
             } else {
-                hasValidTermsOfAccess = TermsOfUseAndAccessValidator.isTOUAValid(dataset.getLatestVersion().getTermsOfUseAndAccess(), null);
+                hasValidTermsOfAccess = TermsOfUseAndAccessValidator.isTOUAValid(dataset.getLatestVersion().getTermsOfAccess(), null);
                 return hasValidTermsOfAccess;
             }
         }    
@@ -1039,7 +1040,7 @@ public class DatasetPage implements java.io.Serializable {
 
         // Unlimited number of search results:
         // (but we are searching within one dataset(version), so it should be manageable)
-        solrQuery.setRows(Integer.MAX_VALUE);
+        solrQuery.setRows(MAX_VALUE);
 
         logger.fine("Solr query (file search): " + solrQuery);
 
@@ -1936,9 +1937,9 @@ public class DatasetPage implements java.io.Serializable {
         /*
         Issue 8646: necessary for the access popup which is shared by the dataset page and the file page
         */
-        setFileAccessRequest(workingVersion.getTermsOfUseAndAccess().isFileAccessRequest());
-        setTermsOfAccess(workingVersion.getTermsOfUseAndAccess().getTermsOfAccess());
-        
+        setFileAccessRequest(workingVersion.getTermsOfUseAndLicense().isFileAccessRequest());
+        setTermsOfAccess(workingVersion.getTermsOfAccess().getTermsOfAccess());
+
         resetVersionUI();
     }
 
@@ -2265,8 +2266,8 @@ public class DatasetPage implements java.io.Serializable {
                 JH.addMessage(FacesMessage.SEVERITY_WARN, BundleUtil.getStringFromBundle("dataset.message.label.fileAccess"),
                         BundleUtil.getStringFromBundle("dataset.message.publicInstall"));
             }
-            setFileAccessRequest(workingVersion.getTermsOfUseAndAccess().isFileAccessRequest());
-            setTermsOfAccess(workingVersion.getTermsOfUseAndAccess().getTermsOfAccess());
+            setFileAccessRequest(workingVersion.getTermsOfUseAndLicense().isFileAccessRequest());
+            setTermsOfAccess(workingVersion.getTermsOfAccess().getTermsOfAccess());
             resetVersionUI();
 
             // FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Add New Dataset", " - Enter metadata to create the dataset's citation. You can add more metadata about this dataset after it's created."));
@@ -2694,11 +2695,11 @@ public class DatasetPage implements java.io.Serializable {
         if (readOnly) {
             dataset = datasetService.find(dataset.getId());
         }
-        String termsOfAccess = workingVersion.getTermsOfUseAndAccess().getTermsOfAccess();
-        boolean requestAccess = workingVersion.getTermsOfUseAndAccess().isFileAccessRequest();
+        String termsOfAccess = workingVersion.getTermsOfAccess().getTermsOfAccess();
+        boolean requestAccess = workingVersion.getTermsOfUseAndLicense().isFileAccessRequest();
         workingVersion = dataset.getOrCreateEditVersion();
-        workingVersion.getTermsOfUseAndAccess().setTermsOfAccess(termsOfAccess);
-        workingVersion.getTermsOfUseAndAccess().setFileAccessRequest(requestAccess);
+        workingVersion.getTermsOfAccess().setTermsOfAccess(termsOfAccess);
+        workingVersion.getTermsOfUseAndLicense().setFileAccessRequest(requestAccess);
         List <FileMetadata> newSelectedFiles = new ArrayList<>();
         for (FileMetadata fmd : filesToRefresh){
             for (FileMetadata fmdn: workingVersion.getFileMetadatas()){
@@ -2768,7 +2769,7 @@ public class DatasetPage implements java.io.Serializable {
             //FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Edit Dataset Metadata", " - Add more metadata about your dataset to help others easily find it."));
         } else if (editMode.equals(EditMode.LICENSE)){
             if(!isHasValidTermsOfAccess()){
-                workingVersion.getTermsOfUseAndAccess().setFileAccessRequest(true);
+                workingVersion.getTermsOfUseAndLicense().setFileAccessRequest(true);
             }
             JH.addMessage(FacesMessage.SEVERITY_INFO, BundleUtil.getStringFromBundle("dataset.message.editTerms.label"), BundleUtil.getStringFromBundle("dataset.message.editTerms.message"));
             //FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Edit Dataset License and Terms", " - Update your dataset's license and terms of use."));
@@ -3772,8 +3773,8 @@ public class DatasetPage implements java.io.Serializable {
         }
 
         if (restricted) { // get values from access popup
-            workingVersion.getTermsOfUseAndAccess().setTermsOfAccess(termsOfAccess);
-            workingVersion.getTermsOfUseAndAccess().setFileAccessRequest(fileAccessRequest);
+            workingVersion.getTermsOfAccess().setTermsOfAccess(termsOfAccess);
+            workingVersion.getTermsOfUseAndLicense().setFileAccessRequest(fileAccessRequest);
         }
 
 
@@ -3954,8 +3955,8 @@ public class DatasetPage implements java.io.Serializable {
 
 
      public String saveWithTermsOfUse() {
-        workingVersion.getTermsOfUseAndAccess().setTermsOfAccess(enteredTermsOfAccess);
-        workingVersion.getTermsOfUseAndAccess().setFileAccessRequest(enteredFileAccessRequest);
+        workingVersion.getTermsOfAccess().setTermsOfAccess(enteredTermsOfAccess);
+         workingVersion.getTermsOfUseAndLicense().setFileAccessRequest(enteredFileAccessRequest);
         return save();
     }
 
@@ -3963,7 +3964,7 @@ public class DatasetPage implements java.io.Serializable {
 
         UIInput reasonRadio = (UIInput) toValidate.getAttributes().get("reasonRadio");
         Object reasonRadioValue = reasonRadio.getValue();
-        Integer radioVal = new Integer(reasonRadioValue.toString());
+        Integer radioVal = parseInt(reasonRadioValue.toString());
 
         if (radioVal == 7 && (value == null || value.toString().isEmpty())) {
             ((UIInput) toValidate).setValid(false);
@@ -5497,7 +5498,7 @@ public class DatasetPage implements java.io.Serializable {
         if (workingVersion == null) {
             return false;
         }
-        if (!workingVersion.getTermsOfUseAndAccess().isFileAccessRequest()){
+        if (!workingVersion.getTermsOfUseAndLicense().isFileAccessRequest()){
            // return false;
         }
         for (FileMetadata fmd : workingVersion.getFileMetadatas()){

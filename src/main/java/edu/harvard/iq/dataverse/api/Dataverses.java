@@ -402,8 +402,8 @@ public class Dataverses extends AbstractApiBean {
             version.setMinorVersionNumber(null);
             version.setVersionNumber(null);
             version.setVersionState(DatasetVersion.VersionState.DRAFT);
-            version.getTermsOfUseAndAccess().setFileAccessRequest(true);
-            version.getTermsOfUseAndAccess().setDatasetVersion(version);
+            version.getTermsOfUseAndLicense().setFileAccessRequest(true);
+            version.getTermsOfAccess().setDatasetVersion(version);
 
             ds.setAuthority(null);
             ds.setIdentifier(null);
@@ -463,8 +463,8 @@ public class Dataverses extends AbstractApiBean {
             version.setMinorVersionNumber(null);
             version.setVersionNumber(null);
             version.setVersionState(DatasetVersion.VersionState.DRAFT);
-            version.getTermsOfUseAndAccess().setFileAccessRequest(true);
-            version.getTermsOfUseAndAccess().setDatasetVersion(version);
+            version.getTermsOfUseAndLicense().setFileAccessRequest(true);
+            version.getTermsOfAccess().setDatasetVersion(version);
 
             ds.setAuthority(null);
             ds.setIdentifier(null);
