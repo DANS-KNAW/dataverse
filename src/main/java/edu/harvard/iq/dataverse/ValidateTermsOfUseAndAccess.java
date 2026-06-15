@@ -19,7 +19,7 @@ import jakarta.validation.Payload;
  */
 @Target({TYPE})
 @Retention(RUNTIME)
-@Constraint(validatedBy = {TermsOfUseAndAccessValidator.class})
+@Constraint(validatedBy = {TermsOfAccessValidator.class, TermsOfUseAndLicenseValidator.class})
 @Documented
 public @interface ValidateTermsOfUseAndAccess {
 
