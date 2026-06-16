@@ -1,6 +1,8 @@
 package edu.harvard.iq.dataverse.api.dto;
 
-import edu.harvard.iq.dataverse.TermsOfUseAndAccess;
+import edu.harvard.iq.dataverse.TermsOfAccess;
+import edu.harvard.iq.dataverse.TermsOfUseAndAccessValidator;
+import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
 
 public class CustomTermsDTO {
     private String termsOfUse;
@@ -76,8 +78,8 @@ public class CustomTermsDTO {
         this.disclaimer = disclaimer;
     }
 
-    public TermsOfUseAndAccess toTermsOfUseAndAccess() {
-        TermsOfUseAndAccess termsOfUseAndAccess = new TermsOfUseAndAccess();
+    public TermsOfUseAndLicense toTermsOfUseAndAccess() {
+        TermsOfUseAndLicense termsOfUseAndAccess = new TermsOfUseAndLicense();
         termsOfUseAndAccess.setTermsOfUse(termsOfUse);
         termsOfUseAndAccess.setConfidentialityDeclaration(confidentialityDeclaration);
         termsOfUseAndAccess.setSpecialPermissions(specialPermissions);

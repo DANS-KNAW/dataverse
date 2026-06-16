@@ -1164,13 +1164,14 @@ public class Datasets extends AbstractApiBean {
 
             JsonObject json = JsonUtil.getJsonObject(jsonBody);
 
-            TermsOfUseAndAccess toua = jsonParser().parseTermsOfAccess(json);
+            TermsOfAccess toa = jsonParser().parseTermsOfAccess(json);
+            TermsOfUseAndLicense toual = jsonParser().parseTermsOfUseAndLicesne(json);
 
-            if (publicInstall && (toua.isFileAccessRequest() || !toua.getTermsOfAccess().isEmpty())){
+            if (publicInstall && (toual.isFileAccessRequest() || !toa.getTermsOfAccess().isEmpty())){
                 return error(BAD_REQUEST, "Setting File Access Request or Terms of Access is not permitted on a public installation.");
             }
 
-            DatasetVersion updatedVersion = execCommand(new UpdateDatasetTermsOfAccessCommand(dataset, toua, createDataverseRequest(getRequestUser(crc)))).getLatestVersion();
+            DatasetVersion updatedVersion = execCommand(new UpdateDatasetTermsOfAccessCommand(dataset, toa, createDataverseRequest(getRequestUser(crc)), toual)).getLatestVersion();
 
             return ok(json(updatedVersion, true));
 
@@ -1227,8 +1228,10 @@ public class Datasets extends AbstractApiBean {
 
             Dataset ds = findDatasetOrDie(id);
 
-            boolean hasValidTerms = TermsOfUseAndAccessValidator.isTOUAValid(ds.getLatestVersion().getTermsOfUseAndAccess(), null);
-            if (!hasValidTerms) {
+            if (!TermsOfUseAndAccessValidator.isTOUAValid(ds.getLatestVersion().getTermsOfAccess(), null)) {
+                return error(Status.CONFLICT, BundleUtil.getStringFromBundle("dataset.message.toua.invalid"));
+            }
+            if (!TermsOfUseAndAccessValidator.isTOUAValid(ds.getLatestVersion().getTermsOfUseAndLicense(), null)) {
                 return error(Status.CONFLICT, BundleUtil.getStringFromBundle("dataset.message.toua.invalid"));
             }
 
@@ -1467,9 +1470,10 @@ public class Datasets extends AbstractApiBean {
             return ex.getResponse();
         }
 
-        boolean hasValidTerms = TermsOfUseAndAccessValidator.isTOUAValid(dataset.getLatestVersion().getTermsOfUseAndAccess(), null);
-
-        if (!hasValidTerms){
+        if (!TermsOfUseAndAccessValidator.isTOUAValid(dataset.getLatestVersion().getTermsOfAccess(), null)){
+            return error(Status.CONFLICT, BundleUtil.getStringFromBundle("dataset.message.toua.invalid"));
+        }
+        if (!TermsOfUseAndAccessValidator.isTOUAValid(dataset.getLatestVersion().getTermsOfUseAndLicense(), null)){
             return error(Status.CONFLICT, BundleUtil.getStringFromBundle("dataset.message.toua.invalid"));
         }
 
@@ -1733,9 +1737,10 @@ public class Datasets extends AbstractApiBean {
             return ex.getResponse();
         }
 
-        boolean hasValidTerms = TermsOfUseAndAccessValidator.isTOUAValid(dataset.getLatestVersion().getTermsOfUseAndAccess(), null);
-
-        if (!hasValidTerms){
+        if (!TermsOfUseAndAccessValidator.isTOUAValid(dataset.getLatestVersion().getTermsOfAccess(), null)){
+            return error(Status.CONFLICT, BundleUtil.getStringFromBundle("dataset.message.toua.invalid"));
+        }
+        if (!TermsOfUseAndAccessValidator.isTOUAValid(dataset.getLatestVersion().getTermsOfUseAndLicense(), null)){
             return error(Status.CONFLICT, BundleUtil.getStringFromBundle("dataset.message.toua.invalid"));
         }
 
@@ -6163,7 +6168,7 @@ public Response getDatasetExternalToolUrl(@Context ContainerRequestContext crc, 
                 return ok(BundleUtil.getStringFromBundle("datasets.api.updateLicense.success"));
             } else if (requestBody.getCustomTerms() != null) {
                 CustomTermsDTO customTerms = requestBody.getCustomTerms();
-                execCommand(new UpdateDatasetLicenseCommand(req, dataset, customTerms.toTermsOfUseAndAccess()));
+                execCommand(new UpdateDatasetLicenseCommand(req, dataset, customTerms.toTermsOfUseAndAccess(), customTerms.getCustomLicenseUrl()));
                 return ok(BundleUtil.getStringFromBundle("datasets.api.updateLicense.success"));
             } else {
                 return badRequest(BundleUtil.getStringFromBundle("datasets.api.updateLicense.licenseNameIsEmpty"));

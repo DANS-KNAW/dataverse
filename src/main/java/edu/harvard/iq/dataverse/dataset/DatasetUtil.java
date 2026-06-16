@@ -1,5 +1,6 @@
 package edu.harvard.iq.dataverse.dataset;
 
+import edu.harvard.iq.dataverse.CurationStatus;
 import edu.harvard.iq.dataverse.DataFile;
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetField;

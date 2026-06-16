@@ -26,6 +26,7 @@ import java.io.Serializable;
 @Entity
 @ValidateTermsOfUseAndAccess
 public class TermsOfUseAndLicense implements Serializable {
+    public static final String DEFAULT_NOTERMS = "This dataset is made available without information on how it can be used. You should communicate with the Contact(s) specified before use.";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

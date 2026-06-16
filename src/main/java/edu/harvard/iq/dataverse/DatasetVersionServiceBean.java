@@ -352,9 +352,9 @@ public class DatasetVersionServiceBean implements java.io.Serializable {
         //SEK - belt and suspenders here, but this is where the bug 10719 first manifested
         if (datasetVersion != null && datasetVersion.getId() != null) {
             try {
-                TermsOfUseAndAccess toua = (TermsOfUseAndAccess) em.createNamedQuery("TermsOfUseAndAccess.findByDatasetVersionIdAndDefaultTerms")
-                        .setParameter("id", datasetVersion.getId()).setParameter("defaultTerms", TermsOfUseAndAccess.DEFAULT_NOTERMS).getSingleResult();
-                if (toua != null && datasetVersion.getTermsOfUseAndAccess().getLicense() == null) {
+                TermsOfAccess toua = (TermsOfAccess) em.createNamedQuery("TermsOfUseAndAccess.findByDatasetVersionIdAndDefaultTerms")
+                        .setParameter("id", datasetVersion.getId()).setParameter("defaultTerms", TermsOfUseAndLicense.DEFAULT_NOTERMS).getSingleResult();
+                if (toua != null && datasetVersion.getTermsOfUseAndLicense().getLicense() == null) {
                     return true;
                 }
 
