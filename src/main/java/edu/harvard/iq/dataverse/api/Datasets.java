@@ -833,16 +833,16 @@ public class Datasets extends AbstractApiBean {
             if (updateDraft) {
                 final DatasetVersion editVersion = ds.getOrCreateEditVersion();
                 editVersion.setDatasetFields(incomingVersion.getDatasetFields());
-                editVersion.setTermsOfUseAndAccess(incomingVersion.getTermsOfUseAndAccess());
-                editVersion.getTermsOfUseAndAccess().setDatasetVersion(editVersion);
-                boolean hasValidTerms = TermsOfUseAndAccessValidator.isTOUAValid(editVersion.getTermsOfUseAndAccess(), null);
+                editVersion.setTermsOfAccess(incomingVersion.getTermsOfAccess());
+                editVersion.getTermsOfUseAndLicense().setDatasetVersion(editVersion);
+                boolean hasValidTerms = TermsOfUseAndAccessValidator.isTOUAValid(editVersion.getTermsOfUseAndLicense(), null);
                 if (!hasValidTerms) {
                     return error(Status.CONFLICT, BundleUtil.getStringFromBundle("dataset.message.toua.invalid"));
                 }
                 Dataset managedDataset = execCommand(new UpdateDatasetVersionCommand(ds, req));
                 managedVersion = managedDataset.getOrCreateEditVersion();
             } else {
-                boolean hasValidTerms = TermsOfUseAndAccessValidator.isTOUAValid(incomingVersion.getTermsOfUseAndAccess(), null);
+                boolean hasValidTerms = TermsOfUseAndAccessValidator.isTOUAValid(incomingVersion.getTermsOfUseAndLicense(), null);
                 if (!hasValidTerms) {
                     return error(Status.CONFLICT, BundleUtil.getStringFromBundle("dataset.message.toua.invalid"));
                 }
@@ -905,8 +905,9 @@ public class Datasets extends AbstractApiBean {
             //Get the current draft or create a new version to update
             DatasetVersion dsv = ds.getOrCreateEditVersion();
             dsv = JSONLDUtil.updateDatasetVersionMDFromJsonLD(dsv, jsonLDBody, metadataBlockService, datasetFieldSvc, !replaceTerms, false, licenseSvc);
-            dsv.getTermsOfUseAndAccess().setDatasetVersion(dsv);
-            boolean hasValidTerms = TermsOfUseAndAccessValidator.isTOUAValid(dsv.getTermsOfUseAndAccess(), null);
+            dsv.getTermsOfAccess().setDatasetVersion(dsv);
+            dsv.getTermsOfUseAndLicense().setDatasetVersion(dsv);
+            boolean hasValidTerms = TermsOfUseAndAccessValidator.isTOUAValid(dsv.getTermsOfAccess(), null);
             if (!hasValidTerms) {
                 return error(Status.CONFLICT, BundleUtil.getStringFromBundle("dataset.message.toua.invalid"));
             }
@@ -938,7 +939,8 @@ public class Datasets extends AbstractApiBean {
             //Get the current draft or create a new version to update
             DatasetVersion dsv = ds.getOrCreateEditVersion();
             dsv = JSONLDUtil.deleteDatasetVersionMDFromJsonLD(dsv, jsonLDBody, metadataBlockService, licenseSvc);
-            dsv.getTermsOfUseAndAccess().setDatasetVersion(dsv);
+            dsv.getTermsOfAccess().setDatasetVersion(dsv);
+            dsv.getTermsOfUseAndLicense().setDatasetVersion(dsv);
             DatasetVersion managedVersion;
             Dataset managedDataset = execCommand(new UpdateDatasetVersionCommand(ds, req));
             managedVersion = managedDataset.getLatestVersion();
@@ -971,8 +973,9 @@ public class Datasets extends AbstractApiBean {
             Dataset ds = findDatasetOrDie(id);
             JsonObject json = JsonUtil.getJsonObject(jsonBody);
             //Get the current draft or create a new version to update
-            DatasetVersion dsv = ds.getOrCreateEditVersion();
-            dsv.getTermsOfUseAndAccess().setDatasetVersion(dsv);
+                DatasetVersion dsv = ds.getOrCreateEditVersion();
+                dsv.getTermsOfAccess().setDatasetVersion(dsv);
+                dsv.getTermsOfUseAndLicense().setDatasetVersion(dsv);
             List<DatasetField> fields = new LinkedList<>();
             DatasetField singleField = null;
 

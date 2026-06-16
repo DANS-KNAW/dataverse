@@ -209,19 +209,19 @@ public class JSONLDUtil {
                                     throw new BadRequestException("Cannot specify " + JsonLDTerm.schemaOrg("license").getUrl() + " and " + JsonLDTerm.termsOfUse.getUrl());
                                 }
                                 if (StringUtils.isEmpty(jsonld.getString(key))) {
-                                    setSemTerm(termsOfAccess, key, licenseSvc.getDefault(), termsOfUseAndLicense);
+                                    setSemTerm(termsOfAccess, termsOfUseAndLicense, key, licenseSvc.getDefault());
                                 }
                                 else {
                                         License license = licenseSvc.getByNameOrUri(jsonld.getString(key));
                                         if (license == null) throw new BadRequestException("Invalid license");
-                                        setSemTerm(termsOfAccess, key, license, termsOfUseAndLicense);
+                                        setSemTerm(termsOfAccess, termsOfUseAndLicense, key, license);
                                 }
                             }
                             else if (key.equals("https://dataverse.org/schema/core#fileRequestAccess")) {
-                                setSemTerm(termsOfAccess, key, jsonld.getBoolean(key), termsOfUseAndLicense);
+                                setSemTerm(termsOfAccess, termsOfUseAndLicense, key, jsonld.getBoolean(key));
                             }
                             else {
-                                setSemTerm(termsOfAccess, key, jsonld.getString(key), termsOfUseAndLicense);
+                                setSemTerm(termsOfAccess, termsOfUseAndLicense, key, jsonld.getString(key));
                             }
                         }
                         else {
@@ -234,9 +234,9 @@ public class JSONLDUtil {
                             if (datafileTerms.contains(fileKey)) {
                                 if (!append || !isSet(termsOfAccess, termsOfUseAndLicense, fileKey)) {
                                     if (fileKey.equals(JsonLDTerm.fileRequestAccess.getUrl())) {
-                                        setSemTerm(termsOfAccess, fileKey, fAccessObject.getBoolean(fileKey), termsOfUseAndLicense);
+                                        setSemTerm(termsOfAccess, termsOfUseAndLicense, fileKey, fAccessObject.getBoolean(fileKey));
                                     } else {
-                                        setSemTerm(termsOfAccess, fileKey, fAccessObject.getString(fileKey), termsOfUseAndLicense);
+                                        setSemTerm(termsOfAccess, termsOfUseAndLicense, fileKey, fAccessObject.getString(fileKey));
                                     }
                                 } else {
                                     throw new BadRequestException(
@@ -253,6 +253,8 @@ public class JSONLDUtil {
         }
         dsv.setTermsOfAccess(termsOfAccess);
         termsOfAccess.setDatasetVersion(dsv);
+        dsv.setTermsOfUseAndLicense(termsOfUseAndLicense);
+        termsOfUseAndLicense.setDatasetVersion(dsv);
         dsv.setDatasetFields(dsfl);
 
         return dsv;
@@ -320,14 +322,14 @@ public class JSONLDUtil {
                     boolean found=false;
                     if (key.equals(JsonLDTerm.schemaOrg("license").getUrl())) {
                         if(licenseSvc.getByNameOrUri(jsonld.getString(key)) != null) {
-                            setSemTerm(termsOfAccess, key, licenseSvc.getDefault(), termsOfUseAndLicense);
+                            setSemTerm(termsOfAccess, termsOfUseAndLicense, key, licenseSvc.getDefault());
                         } else {
                             throw new BadRequestException(
                                     "Term: " + key + " with value: " + jsonld.getString(key) + " not found.");
                         }
                         found=true;
                     } else if (datasetTerms.contains(key)) {
-                        if(!deleteIfSemTermMatches(termsOfAccess, key, jsonld.get(key), termsOfUseAndLicense)) {
+                        if(!deleteIfSemTermMatches(termsOfAccess, termsOfUseAndLicense, key, jsonld.get(key))) {
                             throw new BadRequestException(
                                     "Term: " + key + " with value: " + jsonld.getString(key) + " not found.");
                         }
@@ -336,7 +338,7 @@ public class JSONLDUtil {
                         JsonObject fAccessObject = jsonld.getJsonObject(JsonLDTerm.fileTermsOfAccess.getUrl());
                         for (String fileKey : fAccessObject.keySet()) {
                             if (datafileTerms.contains(fileKey)) {
-                                if(!deleteIfSemTermMatches(termsOfAccess, key, jsonld.get(key), termsOfUseAndLicense)) {
+                                if(!deleteIfSemTermMatches(termsOfAccess, termsOfUseAndLicense, key, jsonld.get(key))) {
                                     throw new BadRequestException(
                                             "Term: " + key + " with value: " + jsonld.getString(key) + " not found.");
                                 }
@@ -348,6 +350,7 @@ public class JSONLDUtil {
                                 "Term: " + key + " not found.");
                                     }
                     
+                    dsv.setTermsOfUseAndLicense(termsOfUseAndLicense);
                     dsv.setTermsOfAccess(termsOfAccess);
                 }
             }
@@ -733,7 +736,7 @@ public class JSONLDUtil {
         }
     }
 
-    public static void setSemTerm(TermsOfAccess termsOfAccess, String semterm, Object value, TermsOfUseAndLicense termsOfUseAndLicense) {
+    public static void setSemTerm(TermsOfAccess termsOfAccess, TermsOfUseAndLicense termsOfUseAndLicense, String semterm, Object value) {
         switch (semterm) {
         case "http://schema.org/license":
             termsOfUseAndLicense.setLicense((License) value);
@@ -792,7 +795,7 @@ public class JSONLDUtil {
         }
     }
 
-    private static boolean deleteIfSemTermMatches(TermsOfAccess termsOfAcces, String semterm, JsonValue jsonValue, TermsOfUseAndLicense termsOfUseAndLicense) {
+    private static boolean deleteIfSemTermMatches(TermsOfAccess termsOfAcces, TermsOfUseAndLicense termsOfUseAndLicense, String semterm, JsonValue jsonValue) {
         boolean foundTerm=false;
         String val = null;
         if(jsonValue.getValueType().equals(ValueType.STRING)) {

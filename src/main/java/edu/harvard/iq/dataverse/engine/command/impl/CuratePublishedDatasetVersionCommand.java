@@ -1,5 +1,6 @@
 package edu.harvard.iq.dataverse.engine.command.impl;
 
+import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
 import edu.harvard.iq.dataverse.authorization.Permission;
 import edu.harvard.iq.dataverse.engine.command.CommandContext;
 import edu.harvard.iq.dataverse.engine.command.DataverseRequest;
@@ -71,16 +72,23 @@ public class CuratePublishedDatasetVersionCommand extends AbstractDatasetCommand
         // Merge the new version into our JPA context
         ctxt.em().merge(updateVersion);
 
-        TermsOfAccess oldTerms = updateVersion.getTermsOfAccess();
-        TermsOfAccess newTerms = newVersion.getTermsOfAccess();
-        newTerms.setDatasetVersion(updateVersion);
-        updateVersion.setTermsOfAccess(newTerms);
+        TermsOfAccess oldTermsOfAccess = updateVersion.getTermsOfAccess();
+        TermsOfAccess newTermsOfAccess = newVersion.getTermsOfAccess();
+        newTermsOfAccess.setDatasetVersion(updateVersion);
+        updateVersion.setTermsOfAccess(newTermsOfAccess);
         //Put old terms on version that will be deleted....
-        newVersion.setTermsOfAccess(oldTerms);
+        newVersion.setTermsOfAccess(oldTermsOfAccess);
         
+        TermsOfUseAndLicense oldTermsOfUseAndLicense = updateVersion.getTermsOfUseAndLicense();
+        TermsOfUseAndLicense newTermsOfUseAndLicense = newVersion.getTermsOfUseAndLicense();
+        newTermsOfUseAndLicense.setDatasetVersion(updateVersion);
+        updateVersion.setTermsOfUseAndLicense(newTermsOfUseAndLicense);
+        //Put old terms on version that will be deleted....
+        newVersion.setTermsOfUseAndLicense(oldTermsOfUseAndLicense);
+
         //Version Note
         updateVersion.setVersionNote(newVersion.getVersionNote());
-        
+
         // Clear unnecessary terms relationships ....
         newVersion.setTermsOfUseAndAccess(null);
         oldTerms.setDatasetVersion(null);
@@ -118,12 +126,12 @@ public class CuratePublishedDatasetVersionCommand extends AbstractDatasetCommand
         if (status != null && StringUtils.isNotBlank(status.getLabel())) {
             updateVersion.addCurationStatus(new CurationStatus(null, updateVersion, getRequest().getAuthenticatedUser()));
         }
-        
+
         // we have to merge to update the database but not flush because
         // we don't want to create two draft versions!
         Dataset tempDataset = getDataset();
         updateVersion = tempDataset.getLatestVersionForCopy();
-        
+
         // Look for file metadata changes and update published metadata if needed
         List<FileMetadata> pubFmds = updateVersion.getFileMetadatas();
         int pubFileCount = pubFmds.size();
@@ -233,7 +241,7 @@ public class CuratePublishedDatasetVersionCommand extends AbstractDatasetCommand
         setDataset(savedDataset);
 
         updateDatasetUser(ctxt);
-        
+
         // ToDo - see if there are other DatasetVersionUser entries unique to the draft
         // version that should be moved to the last published version
         // As this command is intended for minor fixes, often done by the person pushing
@@ -246,7 +254,7 @@ public class CuratePublishedDatasetVersionCommand extends AbstractDatasetCommand
     public boolean onSuccess(CommandContext ctxt, Object r) {
         boolean retVal = true;
         Dataset d = (Dataset) r;
-        
+
         ctxt.index().asyncIndexDataset(d, true);
         
         // And the exported metadata files

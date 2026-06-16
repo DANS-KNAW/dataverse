@@ -561,8 +561,7 @@ public class JsonPrinter {
                     .add("citationRequirements", dsv.getTermsOfUseAndLicense().getCitationRequirements())
                     .add("depositorRequirements", dsv.getTermsOfUseAndLicense().getDepositorRequirements())
                     .add("conditions", dsv.getTermsOfUseAndLicense().getConditions())
-                    .add("disclaimer", dsv.getTermsOfUseAndLicense().getDisclaimer())
-                .add("fileAccessRequest", dsv.getTermsOfUseAndLicense().isFileAccessRequest());
+                    .add("disclaimer", dsv.getTermsOfUseAndLicense().getDisclaimer());
         }
         bld.add("termsOfAccess", dsv.getTermsOfAccess().getTermsOfAccess())
                 .add("dataAccessPlace", dsv.getTermsOfAccess().getDataAccessPlace())
@@ -570,7 +569,8 @@ public class JsonPrinter {
                 .add("availabilityStatus", dsv.getTermsOfAccess().getAvailabilityStatus())
                 .add("contactForAccess", dsv.getTermsOfAccess().getContactForAccess())
                 .add("sizeOfCollection", dsv.getTermsOfAccess().getSizeOfCollection())
-                .add("studyCompletion", dsv.getTermsOfAccess().getStudyCompletion());
+                .add("studyCompletion", dsv.getTermsOfAccess().getStudyCompletion())
+            .add("fileAccessRequest", dsv.getTermsOfUseAndLicense().isFileAccessRequest());
 
         bld.add("metadataBlocks", (anonymizedFieldTypeNamesList != null) ?
                 jsonByBlocks(dsv.getDatasetFields(), anonymizedFieldTypeNamesList)

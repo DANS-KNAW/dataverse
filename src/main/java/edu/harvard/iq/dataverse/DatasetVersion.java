@@ -172,7 +172,7 @@ public class DatasetVersion implements Serializable {
     private List<FileMetadata> fileMetadatas = new ArrayList();
     
     @OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval=true)
-    @JoinColumn(name = "termsOfUseAndAccess_id")
+    @JoinColumn(name = "termsOfAccess_id")
     private TermsOfAccess termsOfAccess;
     
     @OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval=true)
@@ -760,7 +760,6 @@ public class DatasetVersion implements Serializable {
             } else {
                 TermsOfAccess terms = new TermsOfAccess();
                 terms.setDatasetVersion(dsv);
-               // terms.setLicense(TermsOfUseAndAccess.License.CC0);
                 dsv.setTermsOfAccess(terms);
             }
 
@@ -771,7 +770,7 @@ public class DatasetVersion implements Serializable {
             } else {
                 TermsOfUseAndLicense terms = new TermsOfUseAndLicense();
                 terms.setDatasetVersion(dsv);
-               // terms.setLicense(TermsOfUseAndAccess.License.CC0);
+                // terms.setLicense(License.CC0); TODO get from some licenseServiceBean?
                 dsv.setTermsOfUseAndLicense(terms);
             }
 
@@ -790,6 +789,7 @@ public class DatasetVersion implements Serializable {
         termsOfUseAndLicense.setLicense(license);
         termsOfUseAndLicense.setFileAccessRequest(true);
         this.setTermsOfAccess(termsOfAccess);
+        this.setTermsOfUseAndLicense(termsOfUseAndLicense);
 
     }
 
@@ -1884,24 +1884,21 @@ public class DatasetVersion implements Serializable {
         }
         
         TermsOfAccess toa = this.termsOfAccess;
-        //Only need to test Terms of Use and Access if there are restricted files  
+        TermsOfUseAndLicense toual= this.termsOfUseAndLicense;
+        //Only need to test Terms of Use and Access if there are restricted files
         if (toa != null && this.isHasRestrictedFile()) {
-            Set<ConstraintViolation<TermsOfAccess>> constraintViolations = validator.validate(toa);
-            if (constraintViolations.size() > 0) {
-                ConstraintViolation<TermsOfAccess> violation = constraintViolations.iterator().next();
+            Set<ConstraintViolation<TermsOfAccess>> accessViolations = validator.validate(toa);
+            if (accessViolations.size() > 0) {
+                ConstraintViolation<TermsOfAccess> violation = accessViolations.iterator().next();
                 String message = BundleUtil.getStringFromBundle("dataset.message.toua.invalid");
                 logger.info(message);
                 this.termsOfAccess.setValidationMessage(message);
                 returnSet.add(violation);
             }
-        }
-
-        TermsOfUseAndLicense toual= this.termsOfUseAndLicense;
-        //Only need to test Terms of Use and Access if there are restricted files
-        if (toual != null && this.isHasRestrictedFile()) {
-            Set<ConstraintViolation<TermsOfUseAndLicense>> constraintViolations = validator.validate(toual);
-            if (constraintViolations.size() > 0) {
-                ConstraintViolation<TermsOfUseAndLicense> violation = constraintViolations.iterator().next();
+            // TODO only the next needed?
+            Set<ConstraintViolation<TermsOfUseAndLicense>> ualViolations = validator.validate(toual);
+            if (ualViolations.size() > 0) {
+                ConstraintViolation<TermsOfUseAndLicense> violation = ualViolations.iterator().next();
                 String message = BundleUtil.getStringFromBundle("dataset.message.toua.invalid");
                 logger.info(message);
                 this.termsOfUseAndLicense.setValidationMessage(message);
@@ -2131,8 +2128,7 @@ public class DatasetVersion implements Serializable {
          * We used to include "https://schema.org/version/3.3" in the output for
          * "schemaVersion".
          */
-        TermsOfAccess terms = this.getTermsOfAccess();
-        if (terms != null) {
+        if (this.getTermsOfUseAndLicense() != null) {
             job.add("license",DatasetUtil.getLicenseURI(this));
         }
         

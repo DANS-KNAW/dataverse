@@ -89,7 +89,7 @@ public class License {
     private String schemeUri;
     
     @OneToMany(mappedBy="license")
-    private List<TermsOfAccess> termsOfUseAndAccess;
+    private List<TermsOfAccess> termsOfAccess;
 
     public License() {
     }
@@ -179,12 +179,12 @@ public class License {
         this.isDefault = isDefault;
     }
 
-    public List<TermsOfAccess> getTermsOfUseAndAccess() {
-        return termsOfUseAndAccess;
+    public List<TermsOfAccess> getTermsOfAccess() {
+        return termsOfAccess;
     }
 
-    public void setTermsOfUseAndAccess(List<TermsOfAccess> termsOfUseAndAccess) {
-        this.termsOfUseAndAccess = termsOfUseAndAccess;
+    public void setTermsOfAccess(List<TermsOfAccess> termsOfAccess) {
+        this.termsOfAccess = termsOfAccess;
     }
 
     public Long getSortOrder() {
