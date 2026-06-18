@@ -17,7 +17,7 @@ import java.util.List;
 public class UpdateDatasetLicenseCommand extends AbstractDatasetCommand<Dataset> {
     private License license = null;
     private TermsOfAccess customTermsOfAccess = null;
-    private TermsOfUseAndLicense customTermsOfUseAndAccess = null;
+    private TermsOfUseAndLicense customTermsOfUseAndLicense = null;
 
     public UpdateDatasetLicenseCommand(DataverseRequest aRequest, Dataset dataset, License license) {
         super(aRequest, dataset);
@@ -27,7 +27,7 @@ public class UpdateDatasetLicenseCommand extends AbstractDatasetCommand<Dataset>
     public UpdateDatasetLicenseCommand(DataverseRequest aRequest, Dataset dataset, TermsOfAccess customTermsOfUseAndAccess, TermsOfUseAndLicense customTermsOfUseAndLicense) {
         super(aRequest, dataset);
         this.customTermsOfAccess = customTermsOfUseAndAccess;
-        this.customTermsOfUseAndAccess = customTermsOfUseAndLicense;
+        this.customTermsOfUseAndLicense = customTermsOfUseAndLicense;
     }
 
 
@@ -45,12 +45,19 @@ public class UpdateDatasetLicenseCommand extends AbstractDatasetCommand<Dataset>
             termsOfUseAndLicense.setLicense(license);
 
             savedDataset = ctxt.engine().submit(new UpdateDatasetVersionCommand(getDataset(), getRequest()));
-        } else if (customTermsOfAccess != null) {
-            if (customTermsOfAccess.getTermsOfAccess() == null || customTermsOfUseAndAccess.getTermsOfUse().isBlank()) {
+        } else {
+            // TODO check changed logic
+            boolean blankTermsOfUse = customTermsOfUseAndLicense != null
+                                      && (customTermsOfUseAndLicense.getTermsOfUse() == null
+                                          || customTermsOfUseAndLicense.getTermsOfUse().isBlank());
+            boolean blankTermsOfAcess = customTermsOfAccess != null
+                                      && (customTermsOfAccess.getTermsOfAccess() == null
+                                          || customTermsOfAccess.getTermsOfAccess().isBlank());
+            if (blankTermsOfUse || blankTermsOfAcess) {
                 throw new InvalidCommandArgumentsException(BundleUtil.getStringFromBundle("updateDatasetLicenseCommand.errors.customTermsOfUseNotProvided"), this);
             }
             TermsOfUseAndLicense termsToUpdate = datasetVersion.getTermsOfUseAndLicense();
-            applyCustomTerms(termsToUpdate, customTermsOfAccess);
+            applyCustomTerms(termsToUpdate, customTermsOfUseAndLicense);
             termsToUpdate.setLicense(null);
             datasetVersion.setTermsOfUseAndLicense(termsToUpdate);
             savedDataset = ctxt.engine().submit(new UpdateDatasetVersionCommand(getDataset(), getRequest()));
@@ -62,10 +69,10 @@ public class UpdateDatasetLicenseCommand extends AbstractDatasetCommand<Dataset>
      * Copies all custom term-related fields from the 'source' object
      * to the 'target' object.
      *
-     * @param target The TermsOfUseAndAccess object to be modified
-     * @param source The TermsOfUseAndAccess object containing the new data
+     * @param target The TermsOfUseAndLicense object to be modified
+     * @param source The TermsOfUseAndLicense object containing the new data
      */
-    private void applyCustomTerms(TermsOfUseAndAccess target, TermsOfUseAndAccess source) {
+    private void applyCustomTerms(TermsOfUseAndLicense target, TermsOfUseAndLicense source) {
         target.setTermsOfUse(source.getTermsOfUse());
         target.setConfidentialityDeclaration(source.getConfidentialityDeclaration());
         target.setSpecialPermissions(source.getSpecialPermissions());

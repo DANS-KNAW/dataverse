@@ -4,7 +4,6 @@ package edu.harvard.iq.dataverse.engine.command.impl;
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetVersion;
 import edu.harvard.iq.dataverse.TermsOfAccess;
-import edu.harvard.iq.dataverse.TermsOfUseAndAccess;
 import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
 import edu.harvard.iq.dataverse.authorization.Permission;
 import edu.harvard.iq.dataverse.engine.command.CommandContext;
@@ -44,16 +43,22 @@ public class UpdateDatasetTermsOfAccessCommand  extends AbstractDatasetCommand<D
     public Dataset execute(CommandContext ctxt) throws CommandException {
         DatasetVersion datasetVersion = dataset.getOrCreateEditVersion();
    
-        datasetVersion.setTermsOfUseAndAccess(merge(datasetVersion, termsOfAccess));
-         
+        datasetVersion.setTermsOfUseAndLicense(merge(datasetVersion, termsOfUseAndLicense));
+        datasetVersion.setTermsOfAccess(merge(datasetVersion, termsOfAccess));
+
         datasetVersion.setVersionState(DatasetVersion.VersionState.DRAFT);
         return ctxt.engine().submit(updateDatasetVersionCommand == null ? new UpdateDatasetVersionCommand(this.dataset, getRequest()) : updateDatasetVersionCommand);
     }
     
-    private TermsOfUseAndAccess merge(DatasetVersion editVersion, TermsOfUseAndAccess incoming) {
+    private TermsOfUseAndLicense merge(DatasetVersion editVersion, TermsOfUseAndLicense incoming) {
         //only update the access parts
-        TermsOfUseAndAccess termsToUpdate = editVersion.getTermsOfUseAndAccess();
+        TermsOfUseAndLicense termsToUpdate = editVersion.getTermsOfUseAndLicense();
         termsToUpdate.setFileAccessRequest(incoming.isFileAccessRequest());
+        return termsToUpdate;
+    }
+
+    private TermsOfAccess merge(DatasetVersion editVersion, TermsOfAccess incoming) {
+        TermsOfAccess termsToUpdate = editVersion.getTermsOfAccess();
         termsToUpdate.setTermsOfAccess(incoming.getTermsOfAccess());
         termsToUpdate.setDataAccessPlace(incoming.getDataAccessPlace());
         termsToUpdate.setOriginalArchive(incoming.getOriginalArchive());
@@ -63,6 +68,4 @@ public class UpdateDatasetTermsOfAccessCommand  extends AbstractDatasetCommand<D
         termsToUpdate.setStudyCompletion(incoming.getStudyCompletion());
         return termsToUpdate;
     }
-    
-    
 }

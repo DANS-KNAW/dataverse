@@ -1623,33 +1623,38 @@ public class JsonPrinter {
                 .add("usageCount", template.getUsageCount())
                 .add("createTime", template.getCreateTime().toString())
                 .add("createDate", template.getCreateDate())
-                .add("termsOfUseAndAccess", jsonTermsOfUseAndAccess(template.getTermsOfUseAndAccess()))
+                .add("termsOfUseAndAccess", jsonTermsOfAccess(template.getTermsOfAccess()))
+                .add("termsOfUseAndAccess", jsonTermsOfUseAndLicense(template.getTermsOfUseAndLicense()))
                 .add("datasetFields", jsonByBlocks(template.getDatasetFields()))
                 .add("instructions", jsonTemplateInstructions(template.getInstructionsMap()))
                 .add("dataverseAlias", template.getDataverse().getAlias());
     }
 
-    public static JsonObjectBuilder jsonTermsOfUseAndAccess(TermsOfUseAndAccess termsOfUseAndAccess) {
-        License license = termsOfUseAndAccess.getLicense();
+    public static JsonObjectBuilder jsonTermsOfUseAndLicense(TermsOfUseAndLicense termsOfUseAndLicense) {
+        License license = termsOfUseAndLicense.getLicense();
         return jsonObjectBuilder()
-                .add("id", termsOfUseAndAccess.getId())
+                .add("id", termsOfUseAndLicense.getId())
                 .add("license", license != null ? json(license) : null)
-                .add("termsOfUse", termsOfUseAndAccess.getTermsOfUse())
-                .add("termsOfAccess", termsOfUseAndAccess.getTermsOfAccess())
-                .add("confidentialityDeclaration", termsOfUseAndAccess.getConfidentialityDeclaration())
-                .add("specialPermissions", termsOfUseAndAccess.getSpecialPermissions())
-                .add("restrictions", termsOfUseAndAccess.getRestrictions())
-                .add("citationRequirements", termsOfUseAndAccess.getCitationRequirements())
-                .add("depositorRequirements", termsOfUseAndAccess.getDepositorRequirements())
-                .add("conditions", termsOfUseAndAccess.getConditions())
-                .add("disclaimer", termsOfUseAndAccess.getDisclaimer())
-                .add("dataAccessPlace", termsOfUseAndAccess.getDataAccessPlace())
-                .add("originalArchive", termsOfUseAndAccess.getOriginalArchive())
-                .add("availabilityStatus", termsOfUseAndAccess.getAvailabilityStatus())
-                .add("sizeOfCollection", termsOfUseAndAccess.getSizeOfCollection())
-                .add("studyCompletion", termsOfUseAndAccess.getStudyCompletion())
-                .add("contactForAccess", termsOfUseAndAccess.getContactForAccess())
-                .add("fileAccessRequest", termsOfUseAndAccess.isFileAccessRequest());
+                .add("termsOfUse", termsOfUseAndLicense.getTermsOfUse())
+                .add("confidentialityDeclaration", termsOfUseAndLicense.getConfidentialityDeclaration())
+                .add("specialPermissions", termsOfUseAndLicense.getSpecialPermissions())
+                .add("restrictions", termsOfUseAndLicense.getRestrictions())
+                .add("citationRequirements", termsOfUseAndLicense.getCitationRequirements())
+                .add("depositorRequirements", termsOfUseAndLicense.getDepositorRequirements())
+                .add("conditions", termsOfUseAndLicense.getConditions())
+                .add("disclaimer", termsOfUseAndLicense.getDisclaimer())
+                .add("fileAccessRequest", termsOfUseAndLicense.isFileAccessRequest());
+    }
+
+    public static JsonObjectBuilder jsonTermsOfAccess(TermsOfAccess termsOfAccess) {
+        return jsonObjectBuilder()
+                .add("id", termsOfAccess.getId())
+                .add("dataAccessPlace", termsOfAccess.getDataAccessPlace())
+                .add("originalArchive", termsOfAccess.getOriginalArchive())
+                .add("availabilityStatus", termsOfAccess.getAvailabilityStatus())
+                .add("sizeOfCollection", termsOfAccess.getSizeOfCollection())
+                .add("studyCompletion", termsOfAccess.getStudyCompletion())
+                .add("contactForAccess", termsOfAccess.getContactForAccess());
     }
 
     public static JsonArrayBuilder jsonTemplateInstructions(Map<String, String> templateInstructions) {

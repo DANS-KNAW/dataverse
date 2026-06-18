@@ -3,14 +3,12 @@ package edu.harvard.iq.dataverse.engine.command.impl;
 import edu.harvard.iq.dataverse.DataFile;
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetField;
-import edu.harvard.iq.dataverse.DatasetFieldServiceBean;
 import edu.harvard.iq.dataverse.DatasetVersion;
 import edu.harvard.iq.dataverse.DatasetVersionDifference;
 import edu.harvard.iq.dataverse.DatasetVersionUser;
 import edu.harvard.iq.dataverse.Dataverse;
 import edu.harvard.iq.dataverse.DvObject;
 import edu.harvard.iq.dataverse.MetadataBlock;
-import edu.harvard.iq.dataverse.TermsOfUseAndAccess;
 import edu.harvard.iq.dataverse.authorization.users.AuthenticatedUser;
 import edu.harvard.iq.dataverse.engine.command.AbstractCommand;
 import edu.harvard.iq.dataverse.engine.command.CommandContext;
@@ -31,10 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import static java.util.stream.Collectors.joining;
 
-import jakarta.ejb.EJB;
 import jakarta.validation.ConstraintViolation;
-import edu.harvard.iq.dataverse.GlobalIdServiceBean;
-import edu.harvard.iq.dataverse.MetadataBlock;
 import edu.harvard.iq.dataverse.TermsOfAccess;
 import edu.harvard.iq.dataverse.settings.JvmSettings;
 
