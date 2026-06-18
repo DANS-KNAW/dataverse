@@ -87,7 +87,10 @@ public class License {
 
     @Column(name = "scheme_uri")
     private String schemeUri;
-    
+
+    @Column(name = "language_code")
+    private String languageCode;
+
     @OneToMany(mappedBy="license")
     private List<TermsOfAccess> termsOfAccess;
 

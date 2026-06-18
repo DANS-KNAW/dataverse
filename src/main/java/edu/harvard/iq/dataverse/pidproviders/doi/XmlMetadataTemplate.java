@@ -24,6 +24,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.ocpsoft.common.util.Strings;
@@ -42,7 +43,6 @@ import edu.harvard.iq.dataverse.DvObject;
 import edu.harvard.iq.dataverse.ExternalIdentifier;
 import edu.harvard.iq.dataverse.FileMetadata;
 import edu.harvard.iq.dataverse.GlobalId;
-import edu.harvard.iq.dataverse.TermsOfUseAndAccess;
 import edu.harvard.iq.dataverse.api.Util;
 import edu.harvard.iq.dataverse.dataset.DatasetType;
 import edu.harvard.iq.dataverse.dataset.DatasetUtil;
@@ -1236,7 +1236,7 @@ public class XmlMetadataTemplate {
 
             closed = df.isRestricted();
         }
-        TermsOfUseAndAccess terms = dv.getTermsOfUseAndAccess();
+        TermsOfUseAndLicense terms = dv.getTermsOfUseAndLicense();
         boolean requestsAllowed = terms.isFileAccessRequest();
         License license = terms.getLicense();
 

@@ -2,6 +2,7 @@ package edu.harvard.iq.dataverse.engine.command.impl;
 
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetLock;
+import edu.harvard.iq.dataverse.Dataverse;
 import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
 import edu.harvard.iq.dataverse.authorization.Permission;
 import edu.harvard.iq.dataverse.authorization.users.AuthenticatedUser;
@@ -11,10 +12,12 @@ import edu.harvard.iq.dataverse.engine.command.RequiredPermissions;
 import edu.harvard.iq.dataverse.engine.command.exception.CommandException;
 import edu.harvard.iq.dataverse.engine.command.exception.IllegalCommandException;
 import edu.harvard.iq.dataverse.settings.SettingsServiceBean;
+import edu.harvard.iq.dataverse.settings.SettingsServiceBean;
+import edu.harvard.iq.dataverse.util.BundleUtil;
 import edu.harvard.iq.dataverse.workflow.Workflow;
 import edu.harvard.iq.dataverse.workflow.WorkflowContext;
 import edu.harvard.iq.dataverse.workflow.WorkflowContext.TriggerType;
-
+import jakarta.persistence.OptimisticLockException;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;

@@ -1,5 +1,6 @@
 package edu.harvard.iq.dataverse.engine.command.impl;
 
+import edu.harvard.iq.dataverse.CurationStatus;
 import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
 import edu.harvard.iq.dataverse.authorization.Permission;
 import edu.harvard.iq.dataverse.engine.command.CommandContext;
@@ -22,6 +23,8 @@ import edu.harvard.iq.dataverse.RoleAssignment;
 import edu.harvard.iq.dataverse.DataFileCategory;
 import edu.harvard.iq.dataverse.DatasetVersionDifference;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -90,8 +93,10 @@ public class CuratePublishedDatasetVersionCommand extends AbstractDatasetCommand
         updateVersion.setVersionNote(newVersion.getVersionNote());
 
         // Clear unnecessary terms relationships ....
-        newVersion.setTermsOfUseAndAccess(null);
-        oldTerms.setDatasetVersion(null);
+        newVersion.setTermsOfUseAndLicense(null);
+        newVersion.setTermsOfAccess(null);
+        oldTermsOfAccess.setDatasetVersion(null);
+        oldTermsOfUseAndLicense.setDatasetVersion(null);
         // Without this there's a db exception related to the oldTerms being referenced
         // by the datasetversion table at the flush around line 212
         ctxt.em().flush();
