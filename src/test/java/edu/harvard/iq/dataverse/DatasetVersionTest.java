@@ -114,6 +114,7 @@ public class DatasetVersionTest {
         datasetVersion.setTermsOfAccess(termsOfAccess);
         TermsOfUseAndLicense termsOfUseAndLicense = new TermsOfUseAndLicense();
         termsOfUseAndLicense.setLicense(license);
+        datasetVersion.setTermsOfUseAndLicense(termsOfUseAndLicense);
         String jsonLd = datasetVersion.getJsonLd();
         logger.fine("jsonLd: " + JsonUtil.prettyPrint(jsonLd));
         JsonReader jsonReader = Json.createReader(new StringReader(jsonLd));

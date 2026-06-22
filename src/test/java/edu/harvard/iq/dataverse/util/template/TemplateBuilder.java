@@ -47,9 +47,9 @@ public final class TemplateBuilder {
         Dataverse dataverse = new Dataverse();
         dataverse.setAlias(dataverseAlias);
 
-        TermsOfUseAndLicense terms = build().getTermsOfUseAndLicense();
-
         Template template = new Template();
+        template.setTermsOfUseAndLicense(buildTermsOfUseAndLicense());
+        template.setTermsOfAccess(buildTermsOfAccess());
         template.setName(name);
         template.setIsDefaultForDataverse(isDefaultForDataverse);
         template.setUsageCount(usageCount);
@@ -58,12 +58,11 @@ public final class TemplateBuilder {
         template.setDatasetFields(new ArrayList<>());
 
         template.setDataverse(dataverse);
-        template.setTermsOfUseAndLicense(terms);
 
         return template;
     }
 
-    private TermsOfUseAndLicense buildTermsOfUseAndAccess() {
+    private TermsOfUseAndLicense buildTermsOfUseAndLicense() {
         TermsOfUseAndLicense terms = new TermsOfUseAndLicense();
         terms.setId(1L);
         terms.setTermsOfUse(termsOfUse);

@@ -380,7 +380,7 @@ public class JsonParser {
     }
     
     public TermsOfUseAndLicense parseTermsOfUseAndLicesne(JsonObject obj) throws JsonParseException {
-        JsonObject terms = obj.getJsonObject("termsOfUseAndAccess");
+        JsonObject terms = obj.getJsonObject("termsOfUseAndLicense");
         TermsOfUseAndLicense toal = new TermsOfUseAndLicense();
         toal.setTermsOfUse(terms.getString("termsOfUse", null));
         toal.setConfidentialityDeclaration(terms.getString("confidentialityDeclaration", null));
@@ -390,7 +390,7 @@ public class JsonParser {
         toal.setDepositorRequirements(terms.getString("depositorRequirements", null));
         toal.setConditions(terms.getString("conditions", null));
         toal.setDisclaimer(terms.getString("disclaimer", null));
-        // TODO finctinally different
+        // TODO functionally different
         toal.setFileAccessRequest(terms.getBoolean("fileAccessRequest", false));
         toal.setConfidentialityDeclaration(terms.getString("confidentialityDeclaration", null));
 
@@ -402,7 +402,7 @@ public class JsonParser {
     }
 
     public TermsOfAccess parseTermsOfAccess(JsonObject obj, TermsOfAccess touaIn) throws JsonParseException {
-        //This only gets values associated with the terms of access for restricted files when no TermsOfUseAndAccess object provided
+        //This only gets values associated with the terms of access for restricted files when no TermsOfAccess object provided
         // or added to an existing object when provided
 
         JsonObject terms;
@@ -411,7 +411,7 @@ public class JsonParser {
             terms = obj.getJsonObject("customTermsOfAccess");
             toaa = new TermsOfAccess();
         } else {
-            terms = obj.getJsonObject("termsOfUseAndAccess");
+            terms = obj.getJsonObject("termsOfAccess");
             toaa = touaIn;
         }
 

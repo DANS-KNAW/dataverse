@@ -53,7 +53,7 @@ public class UpdateDatasetLicenseCommand extends AbstractDatasetCommand<Dataset>
             boolean blankTermsOfAcess = customTermsOfAccess != null
                                       && (customTermsOfAccess.getTermsOfAccess() == null
                                           || customTermsOfAccess.getTermsOfAccess().isBlank());
-            if (blankTermsOfUse || blankTermsOfAcess) {
+            if (blankTermsOfUse && blankTermsOfAcess) {
                 throw new InvalidCommandArgumentsException(BundleUtil.getStringFromBundle("updateDatasetLicenseCommand.errors.customTermsOfUseNotProvided"), this);
             }
             TermsOfUseAndLicense termsToUpdate = datasetVersion.getTermsOfUseAndLicense();

@@ -564,6 +564,7 @@ public class JsonPrinter {
                     .add("disclaimer", dsv.getTermsOfUseAndLicense().getDisclaimer());
         }
         bld.add("termsOfAccess", dsv.getTermsOfAccess().getTermsOfAccess())
+                .add("termsOfAccess", dsv.getTermsOfAccess().getTermsOfAccess())
                 .add("dataAccessPlace", dsv.getTermsOfAccess().getDataAccessPlace())
                 .add("originalArchive", dsv.getTermsOfAccess().getOriginalArchive())
                 .add("availabilityStatus", dsv.getTermsOfAccess().getAvailabilityStatus())
@@ -1623,8 +1624,8 @@ public class JsonPrinter {
                 .add("usageCount", template.getUsageCount())
                 .add("createTime", template.getCreateTime().toString())
                 .add("createDate", template.getCreateDate())
-                .add("termsOfUseAndAccess", jsonTermsOfAccess(template.getTermsOfAccess()))
-                .add("termsOfUseAndAccess", jsonTermsOfUseAndLicense(template.getTermsOfUseAndLicense()))
+                .add("termsOfAccess", jsonTermsOfAccess(template.getTermsOfAccess()))
+                .add("termsOfUseAndLicense", jsonTermsOfUseAndLicense(template.getTermsOfUseAndLicense()))
                 .add("datasetFields", jsonByBlocks(template.getDatasetFields()))
                 .add("instructions", jsonTemplateInstructions(template.getInstructionsMap()))
                 .add("dataverseAlias", template.getDataverse().getAlias());
@@ -1649,6 +1650,7 @@ public class JsonPrinter {
     public static JsonObjectBuilder jsonTermsOfAccess(TermsOfAccess termsOfAccess) {
         return jsonObjectBuilder()
                 .add("id", termsOfAccess.getId())
+                .add("termsOfAccess", termsOfAccess.getTermsOfAccess())
                 .add("dataAccessPlace", termsOfAccess.getDataAccessPlace())
                 .add("originalArchive", termsOfAccess.getOriginalArchive())
                 .add("availabilityStatus", termsOfAccess.getAvailabilityStatus())

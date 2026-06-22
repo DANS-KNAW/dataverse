@@ -82,12 +82,12 @@ public class PublishDatasetCommand extends AbstractPublishDatasetCommand<Publish
 
         if (theDataset.getPublicationDate() == null) {
             // First Release
-            theDataset.getLatestVersion().setVersionNumber(1L); // minor release is blocked by #verifyCommandArguments
-            theDataset.getLatestVersion().setMinorVersionNumber(0L);
+            theDataset.getLatestVersion().setVersionNumber(new Long(1)); // minor release is blocked by #verifyCommandArguments
+            theDataset.getLatestVersion().setMinorVersionNumber(new Long(0));
             
         } else if ( minorRelease ) {
             theDataset.getLatestVersion().setVersionNumber(new Long(theDataset.getVersionNumber()));
-            theDataset.getLatestVersion().setMinorVersionNumber(theDataset.getMinorVersionNumber() + 1L);
+            theDataset.getLatestVersion().setMinorVersionNumber(new Long(theDataset.getMinorVersionNumber() + 1));
             
         } else {
             // major, non-first release

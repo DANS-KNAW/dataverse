@@ -524,32 +524,35 @@ public class JsonPrinterTest {
         termsOfAccess.setContactForAccess("Test Contact for Access");
         termsOfUseAndLicense.setFileAccessRequest(true);
 
-        JsonObjectBuilder job = JsonPrinter.jsonTermsOfUseAndLicense(termsOfUseAndLicense);
-        JsonObjectBuilder jobUAL = JsonPrinter.jsonTermsOfAccess(termsOfAccess);
+        JsonObjectBuilder jobA = JsonPrinter.jsonTermsOfAccess(termsOfAccess);
+        assertNotNull(jobA);
+        JsonObject jsonObjectA = jobA.build();
+
+        JsonObjectBuilder jobUAL = JsonPrinter.jsonTermsOfUseAndLicense(termsOfUseAndLicense);
         assertNotNull(jobUAL);
-        JsonObject jsonObject = jobUAL.build();
+        JsonObject jsonObjectUAL = jobUAL.build();
 
         // Assert all fields are present and correct
-        assertEquals(termsOfUseAndLicense.getId().longValue(), jsonObject.getJsonNumber("id").longValue());
-        assertEquals(termsOfUseAndLicense.getTermsOfUse(), jsonObject.getString("termsOfUse"));
-        assertEquals(termsOfAccess.getTermsOfAccess(), jsonObject.getString("termsOfAccess"));
-        assertEquals(termsOfUseAndLicense.getConfidentialityDeclaration(), jsonObject.getString("confidentialityDeclaration"));
-        assertEquals(termsOfUseAndLicense.getSpecialPermissions(), jsonObject.getString("specialPermissions"));
-        assertEquals(termsOfUseAndLicense.getRestrictions(), jsonObject.getString("restrictions"));
-        assertEquals(termsOfUseAndLicense.getCitationRequirements(), jsonObject.getString("citationRequirements"));
-        assertEquals(termsOfUseAndLicense.getDepositorRequirements(), jsonObject.getString("depositorRequirements"));
-        assertEquals(termsOfUseAndLicense.getConditions(), jsonObject.getString("conditions"));
-        assertEquals(termsOfUseAndLicense.getDisclaimer(), jsonObject.getString("disclaimer"));
-        assertEquals(termsOfAccess.getDataAccessPlace(), jsonObject.getString("dataAccessPlace"));
-        assertEquals(termsOfAccess.getOriginalArchive(), jsonObject.getString("originalArchive"));
-        assertEquals(termsOfAccess.getAvailabilityStatus(), jsonObject.getString("availabilityStatus"));
-        assertEquals(termsOfAccess.getSizeOfCollection(), jsonObject.getString("sizeOfCollection"));
-        assertEquals(termsOfAccess.getStudyCompletion(), jsonObject.getString("studyCompletion"));
-        assertEquals(termsOfAccess.getContactForAccess(), jsonObject.getString("contactForAccess"));
-        assertEquals(termsOfUseAndLicense.isFileAccessRequest(), jsonObject.getBoolean("fileAccessRequest"));
+        assertEquals(termsOfUseAndLicense.getId().longValue(), jsonObjectUAL.getJsonNumber("id").longValue());
+        assertEquals(termsOfUseAndLicense.getTermsOfUse(), jsonObjectUAL.getString("termsOfUse"));
+        assertEquals(termsOfAccess.getTermsOfAccess(), jsonObjectA.getString("termsOfAccess"));
+        assertEquals(termsOfUseAndLicense.getConfidentialityDeclaration(), jsonObjectUAL.getString("confidentialityDeclaration"));
+        assertEquals(termsOfUseAndLicense.getSpecialPermissions(), jsonObjectUAL.getString("specialPermissions"));
+        assertEquals(termsOfUseAndLicense.getRestrictions(), jsonObjectUAL.getString("restrictions"));
+        assertEquals(termsOfUseAndLicense.getCitationRequirements(), jsonObjectUAL.getString("citationRequirements"));
+        assertEquals(termsOfUseAndLicense.getDepositorRequirements(), jsonObjectUAL.getString("depositorRequirements"));
+        assertEquals(termsOfUseAndLicense.getConditions(), jsonObjectUAL.getString("conditions"));
+        assertEquals(termsOfUseAndLicense.getDisclaimer(), jsonObjectUAL.getString("disclaimer"));
+        assertEquals(termsOfAccess.getDataAccessPlace(), jsonObjectA.getString("dataAccessPlace"));
+        assertEquals(termsOfAccess.getOriginalArchive(), jsonObjectA.getString("originalArchive"));
+        assertEquals(termsOfAccess.getAvailabilityStatus(), jsonObjectA.getString("availabilityStatus"));
+        assertEquals(termsOfAccess.getSizeOfCollection(), jsonObjectA.getString("sizeOfCollection"));
+        assertEquals(termsOfAccess.getStudyCompletion(), jsonObjectA.getString("studyCompletion"));
+        assertEquals(termsOfAccess.getContactForAccess(), jsonObjectA.getString("contactForAccess"));
+        assertEquals(termsOfUseAndLicense.isFileAccessRequest(), jsonObjectUAL.getBoolean("fileAccessRequest"));
 
         // Assert license is null
-        assertNull(jsonObject.getJsonObject("license"));
+        assertNull(jsonObjectUAL.getJsonObject("license"));
 
         // Test with a license
         long testLicenseId = 1L;
@@ -557,9 +560,9 @@ public class JsonPrinterTest {
         jobUAL = JsonPrinter.jsonTermsOfUseAndLicense(termsOfUseAndLicense);
         // TODO split test?
         assertNotNull(jobUAL);
-        jsonObject = jobUAL.build();
-        assertFalse(jsonObject.isNull("license"));
-        assertEquals(testLicenseId, jsonObject.getJsonObject("license").getJsonNumber("id").longValue());
+        jsonObjectUAL = jobUAL.build();
+        assertFalse(jsonObjectUAL.isNull("license"));
+        assertEquals(testLicenseId, jsonObjectUAL.getJsonObject("license").getJsonNumber("id").longValue());
     }
 
     @Test
@@ -578,10 +581,14 @@ public class JsonPrinterTest {
         assertEquals(template.getCreateDate(), jsonObject.getString("createDate"));
         assertEquals(template.getDataverse().getAlias(), jsonObject.getString("dataverseAlias"));
 
-        // Verify termsOfUseAndAccess field by checking a sub-field
-        JsonObject termsJson = jsonObject.getJsonObject("termsOfUseAndAccess");
-        assertNotNull(termsJson);
-        assertEquals(template.getTermsOfUseAndLicense().getTermsOfUse(), termsJson.getString("termsOfUse"));
+        // Verify termsOfUseAndLicense field by checking a sub-field
+        JsonObject termsOUALJson = jsonObject.getJsonObject("termsOfUseAndLicense");
+        assertNotNull(termsOUALJson);
+        assertEquals(template.getTermsOfUseAndLicense().getTermsOfUse(), termsOUALJson.getString("termsOfUse"));
+
+        var termsOfAccessJson = jsonObject.getJsonObject("termsOfAccess");
+        assertNotNull(termsOfAccessJson);
+        assertEquals(template.getTermsOfAccess().getTermsOfAccess(), termsOfAccessJson.getString("termsOfAccess"));
 
         // Verify datasetFields field is an empty JSON object
         JsonObject datasetFieldsJson = jsonObject.getJsonObject("datasetFields");
@@ -645,8 +652,8 @@ public class JsonPrinterTest {
         dsFields.add(titleField);
         dsVersion.setDatasetFields(dsFields);
         dsVersion.setVersionState(DatasetVersion.VersionState.RELEASED);
-        dsVersion.setTermsOfUseAndLicense(new TermsOfUseAndLicense());
         dsVersion.setTermsOfAccess(new TermsOfAccess());
+        dsVersion.setTermsOfUseAndLicense(new TermsOfUseAndLicense());
         dataset.setId(id);
 
         dataset.setVersions(List.of(dsVersion));

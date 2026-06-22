@@ -182,7 +182,7 @@ public class TermsOfAccess implements Serializable {
 
     @Override
     public String toString() {
-        return "edu.harvard.iq.dataverse.TermsOfUseAndAccess[ id=" + id + " ]";
+        return this.getClass().getCanonicalName() + "[ id=" + id + " ]";
     }
     
 }

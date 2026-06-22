@@ -77,15 +77,15 @@ public class CustomTermsDTO {
     }
 
     public TermsOfUseAndLicense toTermsOfUseAndLicense() {
-        TermsOfUseAndLicense termsOfUseAndAccess = new TermsOfUseAndLicense();
-        termsOfUseAndAccess.setTermsOfUse(termsOfUse);
-        termsOfUseAndAccess.setConfidentialityDeclaration(confidentialityDeclaration);
-        termsOfUseAndAccess.setSpecialPermissions(specialPermissions);
-        termsOfUseAndAccess.setRestrictions(restrictions);
-        termsOfUseAndAccess.setCitationRequirements(citationRequirements);
-        termsOfUseAndAccess.setDepositorRequirements(depositorRequirements);
-        termsOfUseAndAccess.setConditions(conditions);
-        termsOfUseAndAccess.setDisclaimer(disclaimer);
-        return termsOfUseAndAccess;
+        TermsOfUseAndLicense termsOfUseAndLicense = new TermsOfUseAndLicense();
+        termsOfUseAndLicense.setTermsOfUse(termsOfUse);
+        termsOfUseAndLicense.setConfidentialityDeclaration(confidentialityDeclaration);
+        termsOfUseAndLicense.setSpecialPermissions(specialPermissions);
+        termsOfUseAndLicense.setRestrictions(restrictions);
+        termsOfUseAndLicense.setCitationRequirements(citationRequirements);
+        termsOfUseAndLicense.setDepositorRequirements(depositorRequirements);
+        termsOfUseAndLicense.setConditions(conditions);
+        termsOfUseAndLicense.setDisclaimer(disclaimer);
+        return termsOfUseAndLicense;
     }
 }

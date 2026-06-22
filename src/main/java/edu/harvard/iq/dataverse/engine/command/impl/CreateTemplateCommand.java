@@ -42,7 +42,8 @@ public class CreateTemplateCommand extends AbstractCommand<Template> {
             template.setDataverse(dataverse);
             template.setMetadataValueBlocks(getSystemMetadataBlocks(ctxt));
 
-            updateTermsOfUseAndAccess(ctxt, template);
+            updateTermsOfUseAndLicense(ctxt, template);
+            updateTermsOfAccess(ctxt, template);
             updateDatasetFieldInputLevels(template, ctxt);
 
             DatasetFieldUtil.tidyUpFields(template.getDatasetFields(), false);
@@ -61,12 +62,16 @@ public class CreateTemplateCommand extends AbstractCommand<Template> {
 
     }
 
-    private static void updateTermsOfUseAndAccess(CommandContext ctxt, Template template) {
+    private static void updateTermsOfUseAndLicense(CommandContext ctxt, Template template) {
         TermsOfUseAndLicense terms = new TermsOfUseAndLicense();
         terms.setFileAccessRequest(true);
         terms.setTemplate(template);
         terms.setLicense(ctxt.licenses().getDefault());
         template.setTermsOfUseAndLicense(terms);
+    }
+
+    private static void updateTermsOfAccess(CommandContext ctxt, Template template) {
+        template.setTermsOfAccess(new TermsOfAccess());
     }
 
     private void updateDatasetFieldInputLevels(Template template, CommandContext ctxt) {
