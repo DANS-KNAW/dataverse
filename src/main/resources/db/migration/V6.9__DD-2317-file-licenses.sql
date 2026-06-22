@@ -74,29 +74,3 @@ BEGIN
     END IF;
 END
 $$;
-
----------------------------------------------------------------------------------------------
--- Perhaps less code breaks with the view during development, no updates are possible though.
----------------------------------------------------------------------------------------------
-CREATE OR REPLACE VIEW termsofuseandaccess AS
-SELECT
- l.id,
- a.availabilitystatus,
- l.citationrequirements,
- l.conditions,
- l.confidentialitydeclaration,
- a.contactforaccess,
- a.dataaccessplace,
- l.depositorrequirements,
- l.disclaimer,
- l.fileaccessrequest,
- a.originalarchive,
- l.restrictions,
- a.sizeofcollection,
- l.specialpermissions,
- a.studycompletion,
- a.termsofaccess,
- l.termsofuse,
- l.license_id
-FROM termsofaccess a
-LEFT JOIN termsofuseorlicense l ON a.id = l.id;

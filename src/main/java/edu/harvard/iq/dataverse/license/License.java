@@ -1,5 +1,6 @@
 package edu.harvard.iq.dataverse.license;
 
+import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,8 +11,6 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-
-import edu.harvard.iq.dataverse.TermsOfAccess;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -92,7 +91,7 @@ public class License {
     private String languageCode;
 
     @OneToMany(mappedBy="license")
-    private List<TermsOfAccess> termsOfAccess;
+    private List<TermsOfUseAndLicense> termsOfUseAndLicense;
 
     public License() {
     }
@@ -182,12 +181,12 @@ public class License {
         this.isDefault = isDefault;
     }
 
-    public List<TermsOfAccess> getTermsOfAccess() {
-        return termsOfAccess;
+    public List<TermsOfUseAndLicense> getTermsOfUseAndLicense() {
+        return termsOfUseAndLicense;
     }
 
-    public void setTermsOfAccess(List<TermsOfAccess> termsOfAccess) {
-        this.termsOfAccess = termsOfAccess;
+    public void setTermsOfUseAndLicense(List<TermsOfUseAndLicense> termsOfUseAndLicense) {
+        this.termsOfUseAndLicense = termsOfUseAndLicense;
     }
 
     public Long getSortOrder() {

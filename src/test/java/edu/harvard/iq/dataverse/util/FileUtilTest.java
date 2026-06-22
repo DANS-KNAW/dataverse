@@ -9,9 +9,7 @@ import edu.harvard.iq.dataverse.FileMetadata;
 import edu.harvard.iq.dataverse.Guestbook;
 import edu.harvard.iq.dataverse.Retention;
 import edu.harvard.iq.dataverse.TermsOfAccess;
-import edu.harvard.iq.dataverse.TermsOfUseAndAccessValidator;
 import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
-import edu.harvard.iq.dataverse.TermsOfUseAndLicenseValidator;
 import edu.harvard.iq.dataverse.license.License;
 import edu.harvard.iq.dataverse.util.FileUtil.FileCitationExtension;
 

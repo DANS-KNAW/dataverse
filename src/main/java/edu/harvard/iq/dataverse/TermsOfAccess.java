@@ -35,7 +35,7 @@ public class TermsOfAccess implements Serializable {
         this.id = id;
     }
     
-    @OneToOne(mappedBy = "termsOfUseAndAccess")
+    @OneToOne(mappedBy = "termsOfAccess")
     private DatasetVersion datasetVersion;
 
     public DatasetVersion getDatasetVersion() {

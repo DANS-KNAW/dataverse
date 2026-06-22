@@ -35,7 +35,6 @@ import jakarta.json.Json;
 import jakarta.json.JsonObjectBuilder;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
-import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;

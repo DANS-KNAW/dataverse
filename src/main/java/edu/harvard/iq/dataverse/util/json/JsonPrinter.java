@@ -44,7 +44,6 @@ import edu.harvard.iq.dataverse.util.MailUtil;
 import edu.harvard.iq.dataverse.workflow.Workflow;
 import edu.harvard.iq.dataverse.workflow.step.WorkflowStepData;
 
-import java.io.IOException;
 import java.util.*;
 
 import jakarta.json.Json;
