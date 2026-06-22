@@ -2,7 +2,8 @@ package edu.harvard.iq.dataverse.util.template;
 
 import edu.harvard.iq.dataverse.Dataverse;
 import edu.harvard.iq.dataverse.Template;
-import edu.harvard.iq.dataverse.TermsOfUseAndAccess;
+import edu.harvard.iq.dataverse.TermsOfAccess;
+import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public final class TemplateBuilder {
         Dataverse dataverse = new Dataverse();
         dataverse.setAlias(dataverseAlias);
 
-        TermsOfUseAndAccess terms = buildTermsOfUseAndAccess();
+        TermsOfUseAndLicense terms = build().getTermsOfUseAndLicense();
 
         Template template = new Template();
         template.setName(name);
@@ -57,16 +58,15 @@ public final class TemplateBuilder {
         template.setDatasetFields(new ArrayList<>());
 
         template.setDataverse(dataverse);
-        template.setTermsOfUseAndAccess(terms);
+        template.setTermsOfUseAndLicense(terms);
 
         return template;
     }
 
-    private TermsOfUseAndAccess buildTermsOfUseAndAccess() {
-        TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
+    private TermsOfUseAndLicense buildTermsOfUseAndAccess() {
+        TermsOfUseAndLicense terms = new TermsOfUseAndLicense();
         terms.setId(1L);
         terms.setTermsOfUse(termsOfUse);
-        terms.setTermsOfAccess(termsOfAccess);
         terms.setConfidentialityDeclaration("Test Confidentiality Declaration");
         terms.setSpecialPermissions("Test Special Permissions");
         terms.setRestrictions("Test Restrictions");
@@ -74,6 +74,13 @@ public final class TemplateBuilder {
         terms.setDepositorRequirements("Test Depositor Requirements");
         terms.setConditions("Test Conditions");
         terms.setDisclaimer("Test Disclaimer");
+        return terms;
+    }
+
+    private TermsOfAccess buildTermsOfAccess() {
+        TermsOfAccess terms = new TermsOfAccess();
+        terms.setId(1L);
+        terms.setTermsOfAccess(termsOfAccess);
         terms.setDataAccessPlace("Test Data Access Place");
         terms.setOriginalArchive("Test Original Archive");
         terms.setAvailabilityStatus("Test Availability Status");

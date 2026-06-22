@@ -77,7 +77,7 @@ public class CreateTemplateCommandTest {
         verify(templateServiceBeanStub).save(templateSpy);
         verify(templateSpy, never()).setDataverse(any(Dataverse.class));
         verify(templateSpy, never()).setMetadataValueBlocks(any());
-        verify(templateSpy, never()).setTermsOfUseAndAccess(any());
+        verify(templateSpy, never()).setTermsOfAccess(any());
     }
 
     @Test
@@ -133,9 +133,9 @@ public class CreateTemplateCommandTest {
         assertEquals("citation", mdbCaptor.getValue().get(0).getName());
 
         // 3. Verify TermsOfUseAndAccess were created and set correctly
-        ArgumentCaptor<TermsOfUseAndAccess> termsCaptor = ArgumentCaptor.forClass(TermsOfUseAndAccess.class);
-        verify(templateSpy).setTermsOfUseAndAccess(termsCaptor.capture());
-        TermsOfUseAndAccess capturedTerms = termsCaptor.getValue();
+        ArgumentCaptor<TermsOfUseAndLicense> termsCaptor = ArgumentCaptor.forClass(TermsOfUseAndLicense.class);
+        verify(templateSpy).setTermsOfUseAndLicense(termsCaptor.capture());
+        TermsOfUseAndLicense capturedTerms = termsCaptor.getValue();
         assertTrue(capturedTerms.isFileAccessRequest());
         assertEquals("CC0", capturedTerms.getLicense().getName());
 

@@ -7,6 +7,7 @@ import edu.harvard.iq.dataverse.Dataverse;
 import edu.harvard.iq.dataverse.Embargo;
 import edu.harvard.iq.dataverse.FileMetadata;
 import edu.harvard.iq.dataverse.Guestbook;
+import edu.harvard.iq.dataverse.Retention;
 import edu.harvard.iq.dataverse.TermsOfAccess;
 import edu.harvard.iq.dataverse.TermsOfUseAndAccessValidator;
 import edu.harvard.iq.dataverse.TermsOfUseAndLicense;

@@ -2,7 +2,8 @@ package edu.harvard.iq.dataverse.engine.command.impl;
 
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetVersion;
-import edu.harvard.iq.dataverse.TermsOfUseAndAccess;
+import edu.harvard.iq.dataverse.TermsOfAccess;
+import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
 import edu.harvard.iq.dataverse.engine.DataverseEngine;
 import edu.harvard.iq.dataverse.engine.command.CommandContext;
 import edu.harvard.iq.dataverse.engine.command.DataverseRequest;
@@ -37,9 +38,13 @@ public class UpdateDatasetLicenseCommandTest {
     @Mock
     private DatasetVersion datasetVersionMock;
     @Spy
-    private TermsOfUseAndAccess termsOfUseAndAccessSpy = new TermsOfUseAndAccess();
+    private TermsOfUseAndLicense termsOfUseAndLicenseSpy = new TermsOfUseAndLicense();
     @Mock
-    private TermsOfUseAndAccess customTermsOfUseAndAccessMock;
+    private TermsOfUseAndLicense customTermsOfUseAndLicenseMock;
+    @Spy
+    private TermsOfUseAndLicense termsOfAccessSpy = new TermsOfUseAndLicense();
+    @Mock
+    private TermsOfAccess customTermsOfAccessMock;
     @Mock
     private DataverseEngine dataverseEngineMock;
     @Mock
@@ -53,7 +58,7 @@ public class UpdateDatasetLicenseCommandTest {
         MockitoAnnotations.openMocks(this);
 
         when(datasetMock.getOrCreateEditVersion()).thenReturn(datasetVersionMock);
-        when(datasetVersionMock.getTermsOfUseAndAccess()).thenReturn(termsOfUseAndAccessSpy);
+        when(datasetVersionMock.getTermsOfUseAndLicense()).thenReturn(termsOfUseAndLicenseSpy);
         when(dataverseEngineMock.submit(updateDatasetVersionCommandStub)).thenReturn(datasetMock);
         when(commandContextMock.engine()).thenReturn(dataverseEngineMock);
 
@@ -75,7 +80,7 @@ public class UpdateDatasetLicenseCommandTest {
         sut.execute(commandContextMock);
 
         // Assert
-        assertEquals(activeLicense, termsOfUseAndAccessSpy.getLicense());
+        assertEquals(activeLicense, termsOfUseAndLicenseSpy.getLicense());
         verify(datasetVersionMock).setVersionState(DatasetVersion.VersionState.DRAFT);
         verify(commandContextMock).engine();
     }
@@ -103,17 +108,17 @@ public class UpdateDatasetLicenseCommandTest {
         String conditions = "conditions";
         String disclaimer = "disclaimer";
 
-        when(customTermsOfUseAndAccessMock.getTermsOfUse()).thenReturn(termsOfUse);
-        when(customTermsOfUseAndAccessMock.getConfidentialityDeclaration()).thenReturn(confidentialityDeclaration);
-        when(customTermsOfUseAndAccessMock.getSpecialPermissions()).thenReturn(specialPermissions);
-        when(customTermsOfUseAndAccessMock.getRestrictions()).thenReturn(restrictions);
-        when(customTermsOfUseAndAccessMock.getCitationRequirements()).thenReturn(citationRequirements);
-        when(customTermsOfUseAndAccessMock.getDepositorRequirements()).thenReturn(depositorRequirements);
-        when(customTermsOfUseAndAccessMock.getConditions()).thenReturn(conditions);
-        when(customTermsOfUseAndAccessMock.getDisclaimer()).thenReturn(disclaimer);
+        when(customTermsOfUseAndLicenseMock.getTermsOfUse()).thenReturn(termsOfUse);
+        when(customTermsOfUseAndLicenseMock.getConfidentialityDeclaration()).thenReturn(confidentialityDeclaration);
+        when(customTermsOfUseAndLicenseMock.getSpecialPermissions()).thenReturn(specialPermissions);
+        when(customTermsOfUseAndLicenseMock.getRestrictions()).thenReturn(restrictions);
+        when(customTermsOfUseAndLicenseMock.getCitationRequirements()).thenReturn(citationRequirements);
+        when(customTermsOfUseAndLicenseMock.getDepositorRequirements()).thenReturn(depositorRequirements);
+        when(customTermsOfUseAndLicenseMock.getConditions()).thenReturn(conditions);
+        when(customTermsOfUseAndLicenseMock.getDisclaimer()).thenReturn(disclaimer);
 
-        termsOfUseAndAccessSpy.setLicense(activeLicense);
-        UpdateDatasetLicenseCommand sut = new UpdateDatasetLicenseCommand(dataverseRequestStub, datasetMock, customTermsOfUseAndAccessMock);
+        termsOfUseAndLicenseSpy.setLicense(activeLicense);
+        UpdateDatasetLicenseCommand sut = new UpdateDatasetLicenseCommand(dataverseRequestStub, datasetMock, customTermsOfAccessMock, customTermsOfUseAndLicenseMock);
 
         // Act
         sut.execute(commandContextMock);
@@ -121,17 +126,17 @@ public class UpdateDatasetLicenseCommandTest {
         // Assert
         verify(datasetVersionMock).setVersionState(DatasetVersion.VersionState.DRAFT);
 
-        assertEquals(termsOfUse, termsOfUseAndAccessSpy.getTermsOfUse());
-        assertEquals(confidentialityDeclaration, termsOfUseAndAccessSpy.getConfidentialityDeclaration());
-        assertEquals(specialPermissions, termsOfUseAndAccessSpy.getSpecialPermissions());
-        assertEquals(restrictions, termsOfUseAndAccessSpy.getRestrictions());
-        assertEquals(citationRequirements, termsOfUseAndAccessSpy.getCitationRequirements());
-        assertEquals(depositorRequirements, termsOfUseAndAccessSpy.getDepositorRequirements());
-        assertEquals(conditions, termsOfUseAndAccessSpy.getConditions());
-        assertEquals(disclaimer, termsOfUseAndAccessSpy.getDisclaimer());
-        assertEquals(null, termsOfUseAndAccessSpy.getLicense());
+        assertEquals(termsOfUse, termsOfUseAndLicenseSpy.getTermsOfUse());
+        assertEquals(confidentialityDeclaration, termsOfUseAndLicenseSpy.getConfidentialityDeclaration());
+        assertEquals(specialPermissions, termsOfUseAndLicenseSpy.getSpecialPermissions());
+        assertEquals(restrictions, termsOfUseAndLicenseSpy.getRestrictions());
+        assertEquals(citationRequirements, termsOfUseAndLicenseSpy.getCitationRequirements());
+        assertEquals(depositorRequirements, termsOfUseAndLicenseSpy.getDepositorRequirements());
+        assertEquals(conditions, termsOfUseAndLicenseSpy.getConditions());
+        assertEquals(disclaimer, termsOfUseAndLicenseSpy.getDisclaimer());
+        assertEquals(null, termsOfUseAndLicenseSpy.getLicense());
 
-        verify(datasetVersionMock).setTermsOfUseAndAccess(termsOfUseAndAccessSpy);
+        verify(datasetVersionMock).setTermsOfUseAndLicense(termsOfUseAndLicenseSpy);
         verify(commandContextMock).engine();
     }
 
@@ -140,8 +145,8 @@ public class UpdateDatasetLicenseCommandTest {
     @ValueSource(strings = {"", " "})
     public void execute_shouldThrowException_whenCustomTermsOfUseAreNullOrBlank(String invalidTerms) {
         // Arrange
-        when(customTermsOfUseAndAccessMock.getTermsOfUse()).thenReturn(invalidTerms);
-        UpdateDatasetLicenseCommand sut = new UpdateDatasetLicenseCommand(dataverseRequestStub, datasetMock, customTermsOfUseAndAccessMock);
+        when(customTermsOfUseAndLicenseMock.getTermsOfUse()).thenReturn(invalidTerms);
+        UpdateDatasetLicenseCommand sut = new UpdateDatasetLicenseCommand(dataverseRequestStub, datasetMock, customTermsOfAccessMock, customTermsOfUseAndLicenseMock);
         String expectedMessage = BundleUtil.getStringFromBundle("updateDatasetLicenseCommand.errors.customTermsOfUseNotProvided");
 
         // Act & Assert

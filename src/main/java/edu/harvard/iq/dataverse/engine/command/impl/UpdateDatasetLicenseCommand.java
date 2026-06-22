@@ -24,9 +24,9 @@ public class UpdateDatasetLicenseCommand extends AbstractDatasetCommand<Dataset>
         this.license = license;
     }
 
-    public UpdateDatasetLicenseCommand(DataverseRequest aRequest, Dataset dataset, TermsOfAccess customTermsOfUseAndAccess, TermsOfUseAndLicense customTermsOfUseAndLicense) {
+    public UpdateDatasetLicenseCommand(DataverseRequest aRequest, Dataset dataset, TermsOfAccess customTermsOfAccess, TermsOfUseAndLicense customTermsOfUseAndLicense) {
         super(aRequest, dataset);
-        this.customTermsOfAccess = customTermsOfUseAndAccess;
+        this.customTermsOfAccess = customTermsOfAccess;
         this.customTermsOfUseAndLicense = customTermsOfUseAndLicense;
     }
 
