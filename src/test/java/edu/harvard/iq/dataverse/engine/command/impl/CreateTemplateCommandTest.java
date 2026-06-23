@@ -133,9 +133,9 @@ public class CreateTemplateCommandTest {
         assertEquals("citation", mdbCaptor.getValue().get(0).getName());
 
         // 3. Verify TermsOfUseAndAccess were created and set correctly
-        ArgumentCaptor<TermsOfUseAndLicense> termsCaptor = ArgumentCaptor.forClass(TermsOfUseAndLicense.class);
-        verify(templateSpy).setTermsOfUseAndLicense(termsCaptor.capture());
-        TermsOfUseAndLicense capturedTerms = termsCaptor.getValue();
+        ArgumentCaptor<TermsOfUseOrLicense> termsCaptor = ArgumentCaptor.forClass(TermsOfUseOrLicense.class);
+        verify(templateSpy).setTermsOfUseOrLicense(termsCaptor.capture());
+        TermsOfUseOrLicense capturedTerms = termsCaptor.getValue();
         assertTrue(capturedTerms.isFileAccessRequest());
         assertEquals("CC0", capturedTerms.getLicense().getName());
 

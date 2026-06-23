@@ -176,8 +176,8 @@ public class DatasetVersion implements Serializable {
     private TermsOfAccess termsOfAccess;
     
     @OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval=true)
-    @JoinColumn(name = "termsOfUseAndLicense_id")
-    private TermsOfUseAndLicense termsOfUseAndLicense;
+    @JoinColumn(name = "default_termsOfUseOrLicense_id")
+    private TermsOfUseOrLicense termsOfUseOrLicense;
 
     @OneToMany(mappedBy = "datasetVersion", orphanRemoval = true, cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST})
     private List<DatasetField> datasetFields = new ArrayList();
@@ -346,12 +346,12 @@ public class DatasetVersion implements Serializable {
         this.termsOfAccess = termsOfAccess;
     }
 
-    public TermsOfUseAndLicense getTermsOfUseAndLicense() {
-        return termsOfUseAndLicense;
+    public TermsOfUseOrLicense getTermsOfUseOrLicense() {
+        return termsOfUseOrLicense;
     }
 
-    public void setTermsOfUseAndLicense(TermsOfUseAndLicense termsOfUseAndLicense) {
-        this.termsOfUseAndLicense = termsOfUseAndLicense;
+    public void setTermsOfUseOrLicense(TermsOfUseOrLicense termsOfUseOrLicense) {
+        this.termsOfUseOrLicense = termsOfUseOrLicense;
     }
 
     public List<DatasetField> getDatasetFields() {
@@ -707,10 +707,10 @@ public class DatasetVersion implements Serializable {
             terms.setDatasetVersion(this);
             this.setTermsOfAccess(terms);
         }
-        if (template.getTermsOfUseAndLicense() != null) {
-            TermsOfUseAndLicense terms = template.getTermsOfUseAndLicense().copyTermsOfUseAndLicense();
+        if (template.getTermsOfUseOrLicense() != null) {
+            TermsOfUseOrLicense terms = template.getTermsOfUseOrLicense().copyTermsOfUseOrLicense();
             terms.setDatasetVersion(this);
-            this.setTermsOfUseAndLicense(terms);
+            this.setTermsOfUseOrLicense(terms);
         }
     }
     
@@ -763,15 +763,15 @@ public class DatasetVersion implements Serializable {
                 dsv.setTermsOfAccess(terms);
             }
 
-            if (this.getTermsOfUseAndLicense() != null){
-                TermsOfUseAndLicense terms = this.getTermsOfUseAndLicense().copyTermsOfUseAndLicense();
+            if (this.getTermsOfUseOrLicense() != null){
+                TermsOfUseOrLicense terms = this.getTermsOfUseOrLicense().copyTermsOfUseOrLicense();
                 terms.setDatasetVersion(dsv);
-                dsv.setTermsOfUseAndLicense(terms);
+                dsv.setTermsOfUseOrLicense(terms);
             } else {
-                TermsOfUseAndLicense terms = new TermsOfUseAndLicense();
+                TermsOfUseOrLicense terms = new TermsOfUseOrLicense();
                 terms.setDatasetVersion(dsv);
                 // terms.setLicense(License.CC0); TODO get from some licenseServiceBean?
-                dsv.setTermsOfUseAndLicense(terms);
+                dsv.setTermsOfUseOrLicense(terms);
             }
 
         dsv.setDataset(this.getDataset());
@@ -784,12 +784,12 @@ public class DatasetVersion implements Serializable {
         this.setDatasetFields(new ArrayList<>());
         this.setDatasetFields(this.initDatasetFields());
         TermsOfAccess termsOfAccess = new TermsOfAccess();
-        TermsOfUseAndLicense termsOfUseAndLicense = new TermsOfUseAndLicense();
+        TermsOfUseOrLicense termsOfUseOrLicense = new TermsOfUseOrLicense();
         termsOfAccess.setDatasetVersion(this);
-        termsOfUseAndLicense.setLicense(license);
-        termsOfUseAndLicense.setFileAccessRequest(true);
+        termsOfUseOrLicense.setLicense(license);
+        termsOfUseOrLicense.setFileAccessRequest(true);
         this.setTermsOfAccess(termsOfAccess);
-        this.setTermsOfUseAndLicense(termsOfUseAndLicense);
+        this.setTermsOfUseOrLicense(termsOfUseOrLicense);
 
     }
 
@@ -1884,7 +1884,7 @@ public class DatasetVersion implements Serializable {
         }
         
         TermsOfAccess toa = this.termsOfAccess;
-        TermsOfUseAndLicense toual= this.termsOfUseAndLicense;
+        TermsOfUseOrLicense toual= this.termsOfUseOrLicense;
         //Only need to test Terms of Use and Access if there are restricted files
         if (toa != null && this.isHasRestrictedFile()) {
             Set<ConstraintViolation<TermsOfAccess>> accessViolations = validator.validate(toa);
@@ -1896,12 +1896,12 @@ public class DatasetVersion implements Serializable {
                 returnSet.add(violation);
             }
             // TODO only the next needed?
-            Set<ConstraintViolation<TermsOfUseAndLicense>> ualViolations = validator.validate(toual);
+            Set<ConstraintViolation<TermsOfUseOrLicense>> ualViolations = validator.validate(toual);
             if (ualViolations.size() > 0) {
-                ConstraintViolation<TermsOfUseAndLicense> violation = ualViolations.iterator().next();
+                ConstraintViolation<TermsOfUseOrLicense> violation = ualViolations.iterator().next();
                 String message = BundleUtil.getStringFromBundle("dataset.message.toua.invalid");
                 logger.info(message);
-                this.termsOfUseAndLicense.setValidationMessage(message);
+                this.termsOfUseOrLicense.setValidationMessage(message);
                 returnSet.add(violation);
             }
         }
@@ -2128,7 +2128,7 @@ public class DatasetVersion implements Serializable {
          * We used to include "https://schema.org/version/3.3" in the output for
          * "schemaVersion".
          */
-        if (this.getTermsOfUseAndLicense() != null) {
+        if (this.getTermsOfUseOrLicense() != null) {
             job.add("license",DatasetUtil.getLicenseURI(this));
         }
         

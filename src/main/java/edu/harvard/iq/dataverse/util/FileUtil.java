@@ -1211,9 +1211,9 @@ public class FileUtil implements java.io.Serializable  {
                 return true;
             }
         }
-        if (datasetVersion.getTermsOfUseAndLicense() != null) {
+        if (datasetVersion.getTermsOfUseOrLicense() != null) {
             License license = DatasetUtil.getLicense(datasetVersion);
-            if ((license == null && StringUtils.isNotBlank(datasetVersion.getTermsOfUseAndLicense().getTermsOfUse()))
+            if ((license == null && StringUtils.isNotBlank(datasetVersion.getTermsOfUseOrLicense().getTermsOfUse()))
                     || (license != null && !license.isDefault())) {
                 logger.fine("Popup required because of license.");
                 return true;

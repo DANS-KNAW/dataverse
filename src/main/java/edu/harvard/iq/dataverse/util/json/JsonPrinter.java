@@ -553,14 +553,14 @@ public class JsonPrinter {
             bld.add("license", jsonLicense(dsv));
         } else {
             // Custom terms
-            bld.add("termsOfUse", dsv.getTermsOfUseAndLicense().getTermsOfUse())
-                    .add("confidentialityDeclaration", dsv.getTermsOfUseAndLicense().getConfidentialityDeclaration())
-                    .add("specialPermissions", dsv.getTermsOfUseAndLicense().getSpecialPermissions())
-                    .add("restrictions", dsv.getTermsOfUseAndLicense().getRestrictions())
-                    .add("citationRequirements", dsv.getTermsOfUseAndLicense().getCitationRequirements())
-                    .add("depositorRequirements", dsv.getTermsOfUseAndLicense().getDepositorRequirements())
-                    .add("conditions", dsv.getTermsOfUseAndLicense().getConditions())
-                    .add("disclaimer", dsv.getTermsOfUseAndLicense().getDisclaimer());
+            bld.add("termsOfUse", dsv.getTermsOfUseOrLicense().getTermsOfUse())
+                    .add("confidentialityDeclaration", dsv.getTermsOfUseOrLicense().getConfidentialityDeclaration())
+                    .add("specialPermissions", dsv.getTermsOfUseOrLicense().getSpecialPermissions())
+                    .add("restrictions", dsv.getTermsOfUseOrLicense().getRestrictions())
+                    .add("citationRequirements", dsv.getTermsOfUseOrLicense().getCitationRequirements())
+                    .add("depositorRequirements", dsv.getTermsOfUseOrLicense().getDepositorRequirements())
+                    .add("conditions", dsv.getTermsOfUseOrLicense().getConditions())
+                    .add("disclaimer", dsv.getTermsOfUseOrLicense().getDisclaimer());
         }
         bld.add("termsOfAccess", dsv.getTermsOfAccess().getTermsOfAccess())
                 .add("termsOfAccess", dsv.getTermsOfAccess().getTermsOfAccess())
@@ -570,7 +570,7 @@ public class JsonPrinter {
                 .add("contactForAccess", dsv.getTermsOfAccess().getContactForAccess())
                 .add("sizeOfCollection", dsv.getTermsOfAccess().getSizeOfCollection())
                 .add("studyCompletion", dsv.getTermsOfAccess().getStudyCompletion())
-            .add("fileAccessRequest", dsv.getTermsOfUseAndLicense().isFileAccessRequest());
+            .add("fileAccessRequest", dsv.getTermsOfUseOrLicense().isFileAccessRequest());
 
         bld.add("metadataBlocks", (anonymizedFieldTypeNamesList != null) ?
                 jsonByBlocks(dsv.getDatasetFields(), anonymizedFieldTypeNamesList)
@@ -1624,26 +1624,26 @@ public class JsonPrinter {
                 .add("createTime", template.getCreateTime().toString())
                 .add("createDate", template.getCreateDate())
                 .add("termsOfAccess", jsonTermsOfAccess(template.getTermsOfAccess()))
-                .add("termsOfUseAndLicense", jsonTermsOfUseAndLicense(template.getTermsOfUseAndLicense()))
+                .add("termsOfUseOrLicense", jsonTermsOfUseOrLicense(template.getTermsOfUseOrLicense()))
                 .add("datasetFields", jsonByBlocks(template.getDatasetFields()))
                 .add("instructions", jsonTemplateInstructions(template.getInstructionsMap()))
                 .add("dataverseAlias", template.getDataverse().getAlias());
     }
 
-    public static JsonObjectBuilder jsonTermsOfUseAndLicense(TermsOfUseAndLicense termsOfUseAndLicense) {
-        License license = termsOfUseAndLicense.getLicense();
+    public static JsonObjectBuilder jsonTermsOfUseOrLicense(TermsOfUseOrLicense termsOfUseOrLicense) {
+        License license = termsOfUseOrLicense.getLicense();
         return jsonObjectBuilder()
-                .add("id", termsOfUseAndLicense.getId())
+                .add("id", termsOfUseOrLicense.getId())
                 .add("license", license != null ? json(license) : null)
-                .add("termsOfUse", termsOfUseAndLicense.getTermsOfUse())
-                .add("confidentialityDeclaration", termsOfUseAndLicense.getConfidentialityDeclaration())
-                .add("specialPermissions", termsOfUseAndLicense.getSpecialPermissions())
-                .add("restrictions", termsOfUseAndLicense.getRestrictions())
-                .add("citationRequirements", termsOfUseAndLicense.getCitationRequirements())
-                .add("depositorRequirements", termsOfUseAndLicense.getDepositorRequirements())
-                .add("conditions", termsOfUseAndLicense.getConditions())
-                .add("disclaimer", termsOfUseAndLicense.getDisclaimer())
-                .add("fileAccessRequest", termsOfUseAndLicense.isFileAccessRequest());
+                .add("termsOfUse", termsOfUseOrLicense.getTermsOfUse())
+                .add("confidentialityDeclaration", termsOfUseOrLicense.getConfidentialityDeclaration())
+                .add("specialPermissions", termsOfUseOrLicense.getSpecialPermissions())
+                .add("restrictions", termsOfUseOrLicense.getRestrictions())
+                .add("citationRequirements", termsOfUseOrLicense.getCitationRequirements())
+                .add("depositorRequirements", termsOfUseOrLicense.getDepositorRequirements())
+                .add("conditions", termsOfUseOrLicense.getConditions())
+                .add("disclaimer", termsOfUseOrLicense.getDisclaimer())
+                .add("fileAccessRequest", termsOfUseOrLicense.isFileAccessRequest());
     }
 
     public static JsonObjectBuilder jsonTermsOfAccess(TermsOfAccess termsOfAccess) {

@@ -771,7 +771,7 @@ public class EditDatafilesPage implements java.io.Serializable {
 
         if (restricted) { // get values from access popup
             workingVersion.getTermsOfAccess().setTermsOfAccess(termsOfAccess);
-            workingVersion.getTermsOfUseAndLicense().setFileAccessRequest(fileAccessRequest);
+            workingVersion.getTermsOfUseOrLicense().setFileAccessRequest(fileAccessRequest);
         }
 
         String fileNames = null;

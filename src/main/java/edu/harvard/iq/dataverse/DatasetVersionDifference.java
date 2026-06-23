@@ -208,7 +208,7 @@ public final class DatasetVersionDifference {
             return Integer.valueOf(a).compareTo(b);
         });
         getTermsOfAccessDifferences();
-        getTermsOfUseAndLicenseDifferences();
+        getTermsOfUseOrLicenseDifferences();
     }
     
 
@@ -242,17 +242,17 @@ public final class DatasetVersionDifference {
                 BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.termsOfAccess.addInfo.studyCompletion"));
     }
 
-    private void getTermsOfUseAndLicenseDifferences() {
+    private void getTermsOfUseOrLicenseDifferences() {
 
-        TermsOfUseAndLicense originalTerms = originalVersion.getTermsOfUseAndLicense();
+        TermsOfUseOrLicense originalTerms = originalVersion.getTermsOfUseOrLicense();
         if(originalTerms == null) {
-            originalTerms = new TermsOfUseAndLicense();
+            originalTerms = new TermsOfUseOrLicense();
         }
         // newTerms should never be null
-        TermsOfUseAndLicense newTerms = newVersion.getTermsOfUseAndLicense();
+        TermsOfUseOrLicense newTerms = newVersion.getTermsOfUseOrLicense();
         if(newTerms == null) {
             logger.warning("New version does not have TermsOfUseAndAccess");
-            newTerms = new TermsOfUseAndLicense();
+            newTerms = new TermsOfUseOrLicense();
         }
 
         checkAndAddToChangeList(originalTerms.getTermsOfUse(), newTerms.getTermsOfUse(),

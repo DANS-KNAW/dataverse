@@ -8,7 +8,7 @@ import edu.harvard.iq.dataverse.DatasetServiceBean;
 import edu.harvard.iq.dataverse.DatasetVersion;
 import edu.harvard.iq.dataverse.DatasetVersionServiceBean;
 import edu.harvard.iq.dataverse.FileMetadata;
-import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
+import edu.harvard.iq.dataverse.TermsOfUseOrLicense;
 import edu.harvard.iq.dataverse.authorization.groups.impl.ipaddress.ip.IpAddress;
 import edu.harvard.iq.dataverse.authorization.users.AuthenticatedUser;
 import edu.harvard.iq.dataverse.dataaccess.DataAccess;
@@ -643,7 +643,7 @@ public class DatasetUtil {
 
     public static License getLicense(DatasetVersion dsv) {
         License license = null;
-        TermsOfUseAndLicense terms = dsv.getTermsOfUseAndLicense();
+        TermsOfUseOrLicense terms = dsv.getTermsOfUseOrLicense();
         if(terms!=null) {
             license = terms.getLicense();
         }

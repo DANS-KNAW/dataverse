@@ -16,8 +16,8 @@ import jakarta.validation.ConstraintValidatorContext;
 public class TermsOfUseAndAccessValidator {
 
     /**
-     * Validates a TermsOfAccess or TermsOfUseAndLicense object.
-     * @param value the object to validate (TermsOfAccess or TermsOfUseAndLicense)
+         * Validates a TermsOfAccess or TermsOfUseOrLicense object.
+         * @param value the object to validate (TermsOfAccess or TermsOfUseOrLicense)
      * @param context the constraint validator context
      * @return true if valid, false otherwise
      */
@@ -25,8 +25,8 @@ public class TermsOfUseAndAccessValidator {
 
         if (value instanceof TermsOfAccess) {
             return TermsOfAccessValidator.isTOUAValid((TermsOfAccess) value, context);
-        } else if (value instanceof TermsOfUseAndLicense) {
-            return TermsOfUseAndLicenseValidator.isTOUAValid((TermsOfUseAndLicense) value, context);
+        } else if (value instanceof TermsOfUseOrLicense) {
+            return TermsOfUseOrLicenseValidator.isTOUAValid((TermsOfUseOrLicense) value, context);
         } else {
             return true;
         }

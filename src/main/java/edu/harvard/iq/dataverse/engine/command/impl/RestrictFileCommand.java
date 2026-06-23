@@ -74,10 +74,10 @@ public class RestrictFileCommand extends AbstractVoidCommand {
             Dataset dataset = file.getOwner();
             DatasetVersion workingVersion = dataset.getOrCreateEditVersion();
             if (restrict && fileAccessRequest != null) {
-                if (workingVersion.getTermsOfUseAndLicense() == null) {
-                    workingVersion.setTermsOfUseAndLicense(new TermsOfUseAndLicense());
+                if (workingVersion.getTermsOfUseOrLicense() == null) {
+                    workingVersion.setTermsOfUseOrLicense(new TermsOfUseOrLicense());
                 }
-                workingVersion.getTermsOfUseAndLicense().setFileAccessRequest(fileAccessRequest);
+                workingVersion.getTermsOfUseOrLicense().setFileAccessRequest(fileAccessRequest);
                 workingVersion.getTermsOfAccess().setTermsOfAccess(termsOfAccess);
             }
             // We need the FileMetadata for the file in the draft dataset version and the

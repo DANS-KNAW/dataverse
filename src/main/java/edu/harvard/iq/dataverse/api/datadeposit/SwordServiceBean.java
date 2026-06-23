@@ -7,7 +7,7 @@ import edu.harvard.iq.dataverse.DatasetFieldServiceBean;
 import edu.harvard.iq.dataverse.DatasetFieldType;
 import edu.harvard.iq.dataverse.DatasetVersion;
 import edu.harvard.iq.dataverse.TermsOfAccess;
-import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
+import edu.harvard.iq.dataverse.TermsOfUseOrLicense;
 import edu.harvard.iq.dataverse.authorization.users.AuthenticatedUser;
 import edu.harvard.iq.dataverse.authorization.users.User;
 import edu.harvard.iq.dataverse.dataset.DatasetUtil;
@@ -164,9 +164,9 @@ public class SwordServiceBean {
         datasetVersionToMutate.setTermsOfAccess(termsOfAccess);
         termsOfAccess.setDatasetVersion(datasetVersionToMutate);
 
-        TermsOfUseAndLicense termsOfUseAndLicense = new TermsOfUseAndLicense();
-        datasetVersionToMutate.setTermsOfUseAndLicense(termsOfUseAndLicense);
-        termsOfUseAndLicense.setDatasetVersion(datasetVersionToMutate);
+        TermsOfUseOrLicense termsOfUseOrLicense = new TermsOfUseOrLicense();
+        datasetVersionToMutate.setTermsOfUseOrLicense(termsOfUseOrLicense);
+        termsOfUseOrLicense.setDatasetVersion(datasetVersionToMutate);
 
         if (listOfLicensesProvided == null) {
             License existingLicense = DatasetUtil.getLicense(datasetVersionToMutate);
@@ -185,8 +185,8 @@ public class SwordServiceBean {
                         defaultLicense = null;
                     }
                 }
-                termsOfUseAndLicense.setLicense(defaultLicense);
-                termsOfUseAndLicense.setFileAccessRequest(datasetVersionToMutate.getTermsOfUseAndLicense().isFileAccessRequest());
+                termsOfUseOrLicense.setLicense(defaultLicense);
+                termsOfUseOrLicense.setFileAccessRequest(datasetVersionToMutate.getTermsOfUseOrLicense().isFileAccessRequest());
                 termsOfAccess.setDatasetVersion(datasetVersionToMutate);
                 setTermsOfUse(datasetVersionToMutate, dcterms, defaultLicense);
             }
@@ -201,7 +201,7 @@ public class SwordServiceBean {
             throw new SwordError("License provided was blank.");
         }
         if (StringUtils.equalsIgnoreCase(licenseProvided, BundleUtil.getStringFromBundle("license.custom"))){
-            termsOfUseAndLicense.setLicense(null);
+            termsOfUseOrLicense.setLicense(null);
             setTermsOfUse(datasetVersionToMutate, dcterms, null);
         } else {
             License licenseToSet = licenseServiceBean.getByNameOrUri(licenseProvided);
@@ -212,14 +212,14 @@ public class SwordServiceBean {
                 }
                 throw new SwordError("Couldn't find an active license with: " + licenseProvided + ". Valid licenses: " + licenses);
             }
-            termsOfUseAndLicense.setLicense(licenseToSet);
+            termsOfUseOrLicense.setLicense(licenseToSet);
             setTermsOfUse(datasetVersionToMutate, dcterms, licenseToSet);
         }
     }
 
     private void setTermsOfUse(DatasetVersion datasetVersionToMutate, Map<String, List<String>> dcterms, License providedLicense) throws SwordError {
         if (providedLicense != null) {
-            String existingTermsOfUse = datasetVersionToMutate.getTermsOfUseAndLicense().getTermsOfUse();
+            String existingTermsOfUse = datasetVersionToMutate.getTermsOfUseOrLicense().getTermsOfUse();
             if (existingTermsOfUse != null) {
                 throw new SwordError("Can not change license to \"" + providedLicense.getName() + "\" due to existing Terms of Use (dcterms:rights): \"" + existingTermsOfUse + "\". You can specify a Custom license.");
             }
@@ -245,7 +245,7 @@ public class SwordServiceBean {
                      */
                     // throw new SwordError("Terms of Use (dcterms:rights) provided was blank.");
                 } else {
-                    datasetVersionToMutate.getTermsOfUseAndLicense().setTermsOfUse(termsOfUseProvided);
+                    datasetVersionToMutate.getTermsOfUseOrLicense().setTermsOfUse(termsOfUseProvided);
                 }
             }
         }

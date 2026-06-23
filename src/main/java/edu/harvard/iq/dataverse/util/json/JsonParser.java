@@ -18,7 +18,7 @@ import edu.harvard.iq.dataverse.DataverseTheme;
 import edu.harvard.iq.dataverse.FileMetadata;
 import edu.harvard.iq.dataverse.MetadataBlockServiceBean;
 import edu.harvard.iq.dataverse.TermsOfAccess;
-import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
+import edu.harvard.iq.dataverse.TermsOfUseOrLicense;
 import edu.harvard.iq.dataverse.api.Util;
 import edu.harvard.iq.dataverse.api.dto.DataverseDTO;
 import edu.harvard.iq.dataverse.api.dto.FieldDTO;
@@ -379,9 +379,9 @@ public class JsonParser {
         return enums;
     }
     
-    public TermsOfUseAndLicense parseTermsOfUseAndLicesne(JsonObject obj) throws JsonParseException {
-        JsonObject terms = obj.getJsonObject("termsOfUseAndLicense");
-        TermsOfUseAndLicense toal = new TermsOfUseAndLicense();
+    public TermsOfUseOrLicense parseTermsOfUseAndLicesne(JsonObject obj) throws JsonParseException {
+        JsonObject terms = obj.getJsonObject("termsOfUseOrLicense");
+        TermsOfUseOrLicense toal = new TermsOfUseOrLicense();
         toal.setTermsOfUse(terms.getString("termsOfUse", null));
         toal.setConfidentialityDeclaration(terms.getString("confidentialityDeclaration", null));
         toal.setSpecialPermissions(terms.getString("specialPermissions", null));
@@ -498,7 +498,7 @@ public class JsonParser {
             dsv.setUNF(obj.getString("UNF", null));
             // Terms of Use related fields
             TermsOfAccess termsOfAccess = new TermsOfAccess();
-            TermsOfUseAndLicense termsOfUseAndLicense = new TermsOfUseAndLicense();
+            TermsOfUseOrLicense termsOfUseOrLicense = new TermsOfUseOrLicense();
 
             License license = null;
 
@@ -540,17 +540,17 @@ public class JsonParser {
             }           
 
             if (license == null) {
-                termsOfUseAndLicense.setLicense(license);
-                termsOfUseAndLicense.setTermsOfUse(obj.getString("termsOfUse", null));
-                termsOfUseAndLicense.setConfidentialityDeclaration(obj.getString("confidentialityDeclaration", null));
-                termsOfUseAndLicense.setSpecialPermissions(obj.getString("specialPermissions", null));
-                termsOfUseAndLicense.setRestrictions(obj.getString("restrictions", null));
-                termsOfUseAndLicense.setCitationRequirements(obj.getString("citationRequirements", null));
-                termsOfUseAndLicense.setDepositorRequirements(obj.getString("depositorRequirements", null));
-                termsOfUseAndLicense.setConditions(obj.getString("conditions", null));
-                termsOfUseAndLicense.setDisclaimer(obj.getString("disclaimer", null));
+                termsOfUseOrLicense.setLicense(license);
+                termsOfUseOrLicense.setTermsOfUse(obj.getString("termsOfUse", null));
+                termsOfUseOrLicense.setConfidentialityDeclaration(obj.getString("confidentialityDeclaration", null));
+                termsOfUseOrLicense.setSpecialPermissions(obj.getString("specialPermissions", null));
+                termsOfUseOrLicense.setRestrictions(obj.getString("restrictions", null));
+                termsOfUseOrLicense.setCitationRequirements(obj.getString("citationRequirements", null));
+                termsOfUseOrLicense.setDepositorRequirements(obj.getString("depositorRequirements", null));
+                termsOfUseOrLicense.setConditions(obj.getString("conditions", null));
+                termsOfUseOrLicense.setDisclaimer(obj.getString("disclaimer", null));
             } else {
-                termsOfUseAndLicense.setLicense(license);
+                termsOfUseOrLicense.setLicense(license);
             }
             termsOfAccess.setTermsOfAccess(obj.getString("termsOfAccess", null));
             termsOfAccess.setDataAccessPlace(obj.getString("dataAccessPlace", null));
@@ -559,7 +559,7 @@ public class JsonParser {
             termsOfAccess.setContactForAccess(obj.getString("contactForAccess", null));
             termsOfAccess.setSizeOfCollection(obj.getString("sizeOfCollection", null));
             termsOfAccess.setStudyCompletion(obj.getString("studyCompletion", null));
-            termsOfUseAndLicense.setFileAccessRequest(obj.getBoolean("fileAccessRequest", false));
+            termsOfUseOrLicense.setFileAccessRequest(obj.getBoolean("fileAccessRequest", false));
             dsv.setTermsOfAccess(termsOfAccess);
             termsOfAccess.setDatasetVersion(dsv);
             JsonObject metadataBlocks = obj.getJsonObject("metadataBlocks");

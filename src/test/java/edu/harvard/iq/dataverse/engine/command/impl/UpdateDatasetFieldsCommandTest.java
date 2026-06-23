@@ -28,7 +28,7 @@ public class UpdateDatasetFieldsCommandTest {
     @Mock
     private DataverseRequest dataverseRequestStub;
     @Mock
-    private TermsOfUseAndLicense termsOfUseAndLicenseStub;
+    private TermsOfUseOrLicense termsOfUseOrLicenseStub;
     @Mock
     private TermsOfAccess termsOfAccessStub;
     @Mock
@@ -48,7 +48,7 @@ public class UpdateDatasetFieldsCommandTest {
         when(commandContextMock.engine()).thenReturn(dataverseEngineMock);
         when(commandContextMock.datasetFieldsValidator()).thenReturn(datasetFieldsValidatorMock);
         when(datasetMock.getOrCreateEditVersion()).thenReturn(datasetVersionMock);
-        when(datasetVersionMock.getTermsOfUseAndLicense()).thenReturn(termsOfUseAndLicenseStub);
+        when(datasetVersionMock.getTermsOfUseOrLicense()).thenReturn(termsOfUseOrLicenseStub);
         when(datasetVersionMock.getTermsOfAccess()).thenReturn(termsOfAccessStub);
     }
 
@@ -311,7 +311,7 @@ public class UpdateDatasetFieldsCommandTest {
 
     private DatasetVersion prepareDatasetVersionWithCompoundField(DatasetFieldType fieldType, List<DatasetField> datasetFields) {
         DatasetVersion datasetVersion = new DatasetVersion();
-        datasetVersion.setTermsOfUseAndLicense(new TermsOfUseAndLicense());
+        datasetVersion.setTermsOfUseOrLicense(new TermsOfUseOrLicense());
         datasetVersion.setTermsOfAccess(new TermsOfAccess());
 
         List<DatasetField> fields = new ArrayList<>();
@@ -350,7 +350,7 @@ public class UpdateDatasetFieldsCommandTest {
 
     private DatasetVersion prepareDatasetVersionWithSingleValueField(DatasetFieldType fieldType, String originalValue) {
         DatasetVersion datasetVersion = new DatasetVersion();
-        datasetVersion.setTermsOfUseAndLicense(new TermsOfUseAndLicense());
+        datasetVersion.setTermsOfUseOrLicense(new TermsOfUseOrLicense());
         datasetVersion.setTermsOfAccess(new TermsOfAccess());
 
         List<DatasetField> fields = new ArrayList<>();
@@ -377,7 +377,7 @@ public class UpdateDatasetFieldsCommandTest {
 
     private DatasetVersion prepareDatasetVersionWithSingleControlledVocabularyValueField(DatasetFieldType fieldType, ControlledVocabularyValue controlledVocabularyValue) {
         DatasetVersion datasetVersion = new DatasetVersion();
-        datasetVersion.setTermsOfUseAndLicense(new TermsOfUseAndLicense());
+        datasetVersion.setTermsOfUseOrLicense(new TermsOfUseOrLicense());
         datasetVersion.setTermsOfAccess(new TermsOfAccess());
 
         List<DatasetField> fields = new ArrayList<>();

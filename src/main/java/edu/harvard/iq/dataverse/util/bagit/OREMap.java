@@ -15,7 +15,7 @@ import edu.harvard.iq.dataverse.Embargo;
 import edu.harvard.iq.dataverse.FileMetadata;
 import edu.harvard.iq.dataverse.Retention;
 import edu.harvard.iq.dataverse.TermsOfAccess;
-import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
+import edu.harvard.iq.dataverse.TermsOfUseOrLicense;
 import edu.harvard.iq.dataverse.branding.BrandingUtil;
 import edu.harvard.iq.dataverse.export.OAI_OREExporter;
 import edu.harvard.iq.dataverse.settings.SettingsServiceBean;
@@ -154,24 +154,24 @@ public class OREMap {
         }
 
         TermsOfAccess termsOfAccess = version.getTermsOfAccess();
-        TermsOfUseAndLicense termsOfUseAndLicense = version.getTermsOfUseAndLicense();
-        if (termsOfUseAndLicense.getLicense() != null) {
+        TermsOfUseOrLicense termsOfUseOrLicense = version.getTermsOfUseOrLicense();
+        if (termsOfUseOrLicense.getLicense() != null) {
             aggBuilder.add(JsonLDTerm.schemaOrg("license").getLabel(),
-                termsOfUseAndLicense.getLicense().getUri().toString());
+                termsOfUseOrLicense.getLicense().getUri().toString());
         } else {
-            addIfNotNull(aggBuilder, JsonLDTerm.termsOfUse, termsOfUseAndLicense.getTermsOfUse());
-            addIfNotNull(aggBuilder, JsonLDTerm.confidentialityDeclaration, termsOfUseAndLicense.getConfidentialityDeclaration());
-            addIfNotNull(aggBuilder, JsonLDTerm.specialPermissions, termsOfUseAndLicense.getSpecialPermissions());
-            addIfNotNull(aggBuilder, JsonLDTerm.restrictions, termsOfUseAndLicense.getRestrictions());
-            addIfNotNull(aggBuilder, JsonLDTerm.citationRequirements, termsOfUseAndLicense.getCitationRequirements());
-            addIfNotNull(aggBuilder, JsonLDTerm.depositorRequirements, termsOfUseAndLicense.getDepositorRequirements());
-            addIfNotNull(aggBuilder, JsonLDTerm.conditions, termsOfUseAndLicense.getConditions());
-            addIfNotNull(aggBuilder, JsonLDTerm.disclaimer, termsOfUseAndLicense.getDisclaimer());
+            addIfNotNull(aggBuilder, JsonLDTerm.termsOfUse, termsOfUseOrLicense.getTermsOfUse());
+            addIfNotNull(aggBuilder, JsonLDTerm.confidentialityDeclaration, termsOfUseOrLicense.getConfidentialityDeclaration());
+            addIfNotNull(aggBuilder, JsonLDTerm.specialPermissions, termsOfUseOrLicense.getSpecialPermissions());
+            addIfNotNull(aggBuilder, JsonLDTerm.restrictions, termsOfUseOrLicense.getRestrictions());
+            addIfNotNull(aggBuilder, JsonLDTerm.citationRequirements, termsOfUseOrLicense.getCitationRequirements());
+            addIfNotNull(aggBuilder, JsonLDTerm.depositorRequirements, termsOfUseOrLicense.getDepositorRequirements());
+            addIfNotNull(aggBuilder, JsonLDTerm.conditions, termsOfUseOrLicense.getConditions());
+            addIfNotNull(aggBuilder, JsonLDTerm.disclaimer, termsOfUseOrLicense.getDisclaimer());
         }
         // Add fileTermsofAccess as an object since it is compound
         JsonObjectBuilder fAccess = Json.createObjectBuilder();
         addIfNotNull(fAccess, JsonLDTerm.termsOfAccess, termsOfAccess.getTermsOfAccess());
-        addIfNotNull(fAccess, JsonLDTerm.fileRequestAccess, termsOfUseAndLicense.isFileAccessRequest());
+        addIfNotNull(fAccess, JsonLDTerm.fileRequestAccess, termsOfUseOrLicense.isFileAccessRequest());
         addIfNotNull(fAccess, JsonLDTerm.dataAccessPlace, termsOfAccess.getDataAccessPlace());
         addIfNotNull(fAccess, JsonLDTerm.originalArchive, termsOfAccess.getOriginalArchive());
         addIfNotNull(fAccess, JsonLDTerm.availabilityStatus, termsOfAccess.getAvailabilityStatus());

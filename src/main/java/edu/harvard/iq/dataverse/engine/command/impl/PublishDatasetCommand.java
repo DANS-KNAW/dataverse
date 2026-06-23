@@ -3,7 +3,7 @@ package edu.harvard.iq.dataverse.engine.command.impl;
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetLock;
 import edu.harvard.iq.dataverse.Dataverse;
-import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
+import edu.harvard.iq.dataverse.TermsOfUseOrLicense;
 import edu.harvard.iq.dataverse.authorization.Permission;
 import edu.harvard.iq.dataverse.authorization.users.AuthenticatedUser;
 import edu.harvard.iq.dataverse.engine.command.CommandContext;
@@ -195,10 +195,10 @@ public class PublishDatasetCommand extends AbstractPublishDatasetCommand<Publish
             throw new IllegalCommandException("Only authenticated users can release a Dataset. Please authenticate and try again.", this);
         }
 
-        var termsOfUseAndLicense = getDataset().getLatestVersion().getTermsOfUseAndLicense();
-        if (termsOfUseAndLicense == null || (
-                termsOfUseAndLicense.getLicense() == null
-                && StringUtil.isEmpty(termsOfUseAndLicense.getTermsOfUse())
+        var termsOfUseOrLicense = getDataset().getLatestVersion().getTermsOfUseOrLicense();
+        if (termsOfUseOrLicense == null || (
+                termsOfUseOrLicense.getLicense() == null
+                && StringUtil.isEmpty(termsOfUseOrLicense.getTermsOfUse())
         )) {
             throw new IllegalCommandException("Dataset must have a valid license or Custom Terms Of Use configured before it can be published.", this);
         }

@@ -1,7 +1,7 @@
 package edu.harvard.iq.dataverse.engine.command.impl;
 
 import edu.harvard.iq.dataverse.CurationStatus;
-import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
+import edu.harvard.iq.dataverse.TermsOfUseOrLicense;
 import edu.harvard.iq.dataverse.authorization.Permission;
 import edu.harvard.iq.dataverse.engine.command.CommandContext;
 import edu.harvard.iq.dataverse.engine.command.DataverseRequest;
@@ -82,21 +82,21 @@ public class CuratePublishedDatasetVersionCommand extends AbstractDatasetCommand
         //Put old terms on version that will be deleted....
         newVersion.setTermsOfAccess(oldTermsOfAccess);
         
-        TermsOfUseAndLicense oldTermsOfUseAndLicense = updateVersion.getTermsOfUseAndLicense();
-        TermsOfUseAndLicense newTermsOfUseAndLicense = newVersion.getTermsOfUseAndLicense();
-        newTermsOfUseAndLicense.setDatasetVersion(updateVersion);
-        updateVersion.setTermsOfUseAndLicense(newTermsOfUseAndLicense);
+        TermsOfUseOrLicense oldTermsOfUseOrLicense = updateVersion.getTermsOfUseOrLicense();
+        TermsOfUseOrLicense newTermsOfUseOrLicense = newVersion.getTermsOfUseOrLicense();
+        newTermsOfUseOrLicense.setDatasetVersion(updateVersion);
+        updateVersion.setTermsOfUseOrLicense(newTermsOfUseOrLicense);
         //Put old terms on version that will be deleted....
-        newVersion.setTermsOfUseAndLicense(oldTermsOfUseAndLicense);
+        newVersion.setTermsOfUseOrLicense(oldTermsOfUseOrLicense);
 
         //Version Note
         updateVersion.setVersionNote(newVersion.getVersionNote());
 
         // Clear unnecessary terms relationships ....
-        newVersion.setTermsOfUseAndLicense(null);
+        newVersion.setTermsOfUseOrLicense(null);
         newVersion.setTermsOfAccess(null);
         oldTermsOfAccess.setDatasetVersion(null);
-        oldTermsOfUseAndLicense.setDatasetVersion(null);
+        oldTermsOfUseOrLicense.setDatasetVersion(null);
         // Without this there's a db exception related to the oldTerms being referenced
         // by the datasetversion table at the flush around line 212
         ctxt.em().flush();
@@ -105,7 +105,7 @@ public class CuratePublishedDatasetVersionCommand extends AbstractDatasetCommand
         validateOrDie(updateVersion, isValidateLenient());
         
         //Also set the fileaccessrequest boolean on the dataset to match the new terms
-        getDataset().setFileAccessRequest(updateVersion.getTermsOfUseAndLicense().isFileAccessRequest());
+        getDataset().setFileAccessRequest(updateVersion.getTermsOfUseOrLicense().isFileAccessRequest());
         List<WorkflowComment> newComments = newVersion.getWorkflowComments();
         if (newComments!=null && newComments.size() >0) {
             for(WorkflowComment wfc: newComments) {

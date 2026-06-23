@@ -1,6 +1,6 @@
 package edu.harvard.iq.dataverse.license;
 
-import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
+import edu.harvard.iq.dataverse.TermsOfUseOrLicense;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -91,7 +91,7 @@ public class License {
     private String languageCode;
 
     @OneToMany(mappedBy="license")
-    private List<TermsOfUseAndLicense> termsOfUseAndLicense;
+    private List<TermsOfUseOrLicense> termsOfUseOrLicense;
 
     public License() {
     }
@@ -181,12 +181,12 @@ public class License {
         this.isDefault = isDefault;
     }
 
-    public List<TermsOfUseAndLicense> getTermsOfUseAndLicense() {
-        return termsOfUseAndLicense;
+    public List<TermsOfUseOrLicense> getTermsOfUseOrLicense() {
+        return termsOfUseOrLicense;
     }
 
-    public void setTermsOfUseAndLicense(List<TermsOfUseAndLicense> termsOfUseAndLicense) {
-        this.termsOfUseAndLicense = termsOfUseAndLicense;
+    public void setTermsOfUseOrLicense(List<TermsOfUseOrLicense> termsOfUseOrLicense) {
+        this.termsOfUseOrLicense = termsOfUseOrLicense;
     }
 
     public Long getSortOrder() {

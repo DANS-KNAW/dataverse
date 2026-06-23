@@ -111,7 +111,7 @@ public class DatasetField implements Serializable {
                 }
                 else {
                     // TODO log something not expected,
-                    //  how can splitting TermsOfAccessAndUse into TermsOfAccess and TermsOfUseAndLicense
+                    //  how can splitting TermsOfAccessAndUse into TermsOfAccess and TermsOfUseOrLicense
                     //  cause (or reveal) trouble with the title field?
                     //  See JsonPrinterTest.testDatasetWithNondefaultType
                 }

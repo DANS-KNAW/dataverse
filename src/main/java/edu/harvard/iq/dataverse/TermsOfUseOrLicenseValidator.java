@@ -13,7 +13,7 @@ import jakarta.validation.ConstraintValidatorContext;
  *
  * @author skraffmi
  */
-public class TermsOfUseAndLicenseValidator implements ConstraintValidator<ValidateTermsOfUseAndAccess, TermsOfUseAndLicense> {
+public class TermsOfUseOrLicenseValidator implements ConstraintValidator<ValidateTermsOfUseAndAccess, TermsOfUseOrLicense> {
 
     @Override
     public void initialize(ValidateTermsOfUseAndAccess constraintAnnotation) {
@@ -21,13 +21,13 @@ public class TermsOfUseAndLicenseValidator implements ConstraintValidator<Valida
     }
 
     @Override
-    public boolean isValid(TermsOfUseAndLicense value, ConstraintValidatorContext context) {
+    public boolean isValid(TermsOfUseOrLicense value, ConstraintValidatorContext context) {
 
         return isTOUAValid(value, context);
 
     }
 
-    public static boolean isTOUAValid(TermsOfUseAndLicense value, ConstraintValidatorContext context){
+    public static boolean isTOUAValid(TermsOfUseOrLicense value, ConstraintValidatorContext context){
 
         //if part of a template it is valid
         if (value.getTemplate() != null){
@@ -57,4 +57,5 @@ public class TermsOfUseAndLicenseValidator implements ConstraintValidator<Valida
         return valid;
     }
 }
+
 

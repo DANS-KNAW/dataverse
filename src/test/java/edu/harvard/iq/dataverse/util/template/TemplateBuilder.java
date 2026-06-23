@@ -3,7 +3,7 @@ package edu.harvard.iq.dataverse.util.template;
 import edu.harvard.iq.dataverse.Dataverse;
 import edu.harvard.iq.dataverse.Template;
 import edu.harvard.iq.dataverse.TermsOfAccess;
-import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
+import edu.harvard.iq.dataverse.TermsOfUseOrLicense;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ public final class TemplateBuilder {
         dataverse.setAlias(dataverseAlias);
 
         Template template = new Template();
-        template.setTermsOfUseAndLicense(buildTermsOfUseAndLicense());
+        template.setTermsOfUseOrLicense(buildTermsOfUseOrLicense());
         template.setTermsOfAccess(buildTermsOfAccess());
         template.setName(name);
         template.setIsDefaultForDataverse(isDefaultForDataverse);
@@ -62,8 +62,8 @@ public final class TemplateBuilder {
         return template;
     }
 
-    private TermsOfUseAndLicense buildTermsOfUseAndLicense() {
-        TermsOfUseAndLicense terms = new TermsOfUseAndLicense();
+    private TermsOfUseOrLicense buildTermsOfUseOrLicense() {
+        TermsOfUseOrLicense terms = new TermsOfUseOrLicense();
         terms.setId(1L);
         terms.setTermsOfUse(termsOfUse);
         terms.setConfidentialityDeclaration("Test Confidentiality Declaration");

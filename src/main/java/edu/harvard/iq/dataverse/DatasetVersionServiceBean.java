@@ -352,8 +352,8 @@ public class DatasetVersionServiceBean implements java.io.Serializable {
         if (datasetVersion != null && datasetVersion.getId() != null) {
             try {
                 TermsOfAccess toua = (TermsOfAccess) em.createNamedQuery("TermsOfUseAndAccess.findByDatasetVersionIdAndDefaultTerms")
-                        .setParameter("id", datasetVersion.getId()).setParameter("defaultTerms", TermsOfUseAndLicense.DEFAULT_NOTERMS).getSingleResult();
-                if (toua != null && datasetVersion.getTermsOfUseAndLicense().getLicense() == null) {
+                        .setParameter("id", datasetVersion.getId()).setParameter("defaultTerms", TermsOfUseOrLicense.DEFAULT_NOTERMS).getSingleResult();
+                if (toua != null && datasetVersion.getTermsOfUseOrLicense().getLicense() == null) {
                     return true;
                 }
 

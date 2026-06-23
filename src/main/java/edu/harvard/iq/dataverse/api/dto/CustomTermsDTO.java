@@ -1,6 +1,6 @@
 package edu.harvard.iq.dataverse.api.dto;
 
-import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
+import edu.harvard.iq.dataverse.TermsOfUseOrLicense;
 
 public class CustomTermsDTO {
     private String termsOfUse;
@@ -76,16 +76,16 @@ public class CustomTermsDTO {
         this.disclaimer = disclaimer;
     }
 
-    public TermsOfUseAndLicense toTermsOfUseAndLicense() {
-        TermsOfUseAndLicense termsOfUseAndLicense = new TermsOfUseAndLicense();
-        termsOfUseAndLicense.setTermsOfUse(termsOfUse);
-        termsOfUseAndLicense.setConfidentialityDeclaration(confidentialityDeclaration);
-        termsOfUseAndLicense.setSpecialPermissions(specialPermissions);
-        termsOfUseAndLicense.setRestrictions(restrictions);
-        termsOfUseAndLicense.setCitationRequirements(citationRequirements);
-        termsOfUseAndLicense.setDepositorRequirements(depositorRequirements);
-        termsOfUseAndLicense.setConditions(conditions);
-        termsOfUseAndLicense.setDisclaimer(disclaimer);
-        return termsOfUseAndLicense;
+    public TermsOfUseOrLicense toTermsOfUseOrLicense() {
+        TermsOfUseOrLicense termsOfUseOrLicense = new TermsOfUseOrLicense();
+        termsOfUseOrLicense.setTermsOfUse(termsOfUse);
+        termsOfUseOrLicense.setConfidentialityDeclaration(confidentialityDeclaration);
+        termsOfUseOrLicense.setSpecialPermissions(specialPermissions);
+        termsOfUseOrLicense.setRestrictions(restrictions);
+        termsOfUseOrLicense.setCitationRequirements(citationRequirements);
+        termsOfUseOrLicense.setDepositorRequirements(depositorRequirements);
+        termsOfUseOrLicense.setConditions(conditions);
+        termsOfUseOrLicense.setDisclaimer(disclaimer);
+        return termsOfUseOrLicense;
     }
 }

@@ -20,12 +20,12 @@ import java.io.Serializable;
 
 /**
  *
- * 
+ *
  * @author skraffmi
  */
 @Entity
 @ValidateTermsOfUseAndAccess
-public class TermsOfUseAndLicense implements Serializable {
+public class TermsOfUseOrLicense implements Serializable {
     public static final String DEFAULT_NOTERMS = "This dataset is made available without information on how it can be used. You should communicate with the Contact(s) specified before use.";
 
     @Id
@@ -39,8 +39,8 @@ public class TermsOfUseAndLicense implements Serializable {
     public void setId(Long id) {
         this.id = id;
     }
-    
-    @OneToOne(mappedBy = "termsOfUseAndLicense")
+
+    @OneToOne(mappedBy = "termsOfUseOrLicense")
     private DatasetVersion datasetVersion;
 
     public DatasetVersion getDatasetVersion() {
@@ -50,8 +50,8 @@ public class TermsOfUseAndLicense implements Serializable {
     public void setDatasetVersion(DatasetVersion datasetVersion) {
         this.datasetVersion = datasetVersion;
     }
-    
-    @OneToOne(mappedBy = "termsOfUseAndLicense")
+
+    @OneToOne(mappedBy = "termsOfUseOrLicense")
     private Template template;
 
     public Template getTemplate() {
@@ -61,35 +61,35 @@ public class TermsOfUseAndLicense implements Serializable {
     public void setTemplate(Template template) {
         this.template = template;
     }
-    
+
     @ManyToOne
     @JoinColumn(name="license_id")
     private License license;
 
-    @Column(columnDefinition="TEXT")      
+    @Column(columnDefinition="TEXT")
     private String termsOfUse;
-    
+
     @Column(columnDefinition="TEXT")
     private String confidentialityDeclaration;
-    
-    @Column(columnDefinition="TEXT") 
+
+    @Column(columnDefinition="TEXT")
     private String specialPermissions;
-    
-    @Column(columnDefinition="TEXT") 
+
+    @Column(columnDefinition="TEXT")
     private String restrictions;
-    
-    @Column(columnDefinition="TEXT") 
+
+    @Column(columnDefinition="TEXT")
     private String citationRequirements;
-    
-    @Column(columnDefinition="TEXT") 
+
+    @Column(columnDefinition="TEXT")
     private String depositorRequirements;
-    
-    @Column(columnDefinition="TEXT") 
+
+    @Column(columnDefinition="TEXT")
     private String conditions;
-    
-    @Column(columnDefinition="TEXT") 
+
+    @Column(columnDefinition="TEXT")
     private String disclaimer;
-    
+
 
     private boolean fileAccessRequest;
 
@@ -100,7 +100,7 @@ public class TermsOfUseAndLicense implements Serializable {
     public void setFileAccessRequest(boolean fileAccessRequest) {
         this.fileAccessRequest = fileAccessRequest;
     }
-    
+
     public License getLicense() {
         return license;
     }
@@ -176,9 +176,9 @@ public class TermsOfUseAndLicense implements Serializable {
         this.disclaimer = disclaimer;
     }
 
-    public TermsOfUseAndLicense copyTermsOfUseAndLicense(){
+    public TermsOfUseOrLicense copyTermsOfUseOrLicense(){
 
-        TermsOfUseAndLicense retVal = new TermsOfUseAndLicense();
+        TermsOfUseOrLicense retVal = new TermsOfUseOrLicense();
         retVal.setFileAccessRequest(this.isFileAccessRequest());
         retVal.setLicense(this.getLicense());
         if (license == null) {
@@ -205,7 +205,7 @@ public class TermsOfUseAndLicense implements Serializable {
         conditions = null;
         disclaimer = null;
     }
-    
+
     @Transient
     private String validationMessage;
 
@@ -216,7 +216,7 @@ public class TermsOfUseAndLicense implements Serializable {
     public void setValidationMessage(String validationMessage) {
         this.validationMessage = validationMessage;
     }
-    
+
     @Override
     public int hashCode() {
         int hash = 0;
@@ -227,10 +227,10 @@ public class TermsOfUseAndLicense implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof TermsOfUseAndLicense)) {
+        if (!(object instanceof TermsOfUseOrLicense)) {
             return false;
         }
-        TermsOfUseAndLicense other = (TermsOfUseAndLicense) object;
+        TermsOfUseOrLicense other = (TermsOfUseOrLicense) object;
         if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
@@ -241,5 +241,6 @@ public class TermsOfUseAndLicense implements Serializable {
     public String toString() {
         return this.getClass().getCanonicalName() + "[ id=" + id + " ]";
     }
-    
+
 }
+

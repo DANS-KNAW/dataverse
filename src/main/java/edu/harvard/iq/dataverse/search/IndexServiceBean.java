@@ -31,7 +31,7 @@ import edu.harvard.iq.dataverse.FileMetadata;
 import edu.harvard.iq.dataverse.GlobalId;
 import edu.harvard.iq.dataverse.PermissionServiceBean;
 import edu.harvard.iq.dataverse.Retention;
-import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
+import edu.harvard.iq.dataverse.TermsOfUseOrLicense;
 import edu.harvard.iq.dataverse.authorization.AuthenticationServiceBean;
 import edu.harvard.iq.dataverse.authorization.providers.builtin.BuiltinUserServiceBean;
 import edu.harvard.iq.dataverse.batch.util.LoggingUtil;
@@ -2034,14 +2034,14 @@ public class IndexServiceBean {
         if (datasetVersion != null && datasetVersion.getTermsOfAccess() != null) {
             //test to see if the terms of use are the default set in 5.10 - if so and there's no license then don't add license to solr doc.   
             //fixes 10513
-            if(TermsOfUseAndLicense.DEFAULT_NOTERMS.equals(datasetVersion.getTermsOfUseAndLicense().getTermsOfUse())) {
+            if(TermsOfUseOrLicense.DEFAULT_NOTERMS.equals(datasetVersion.getTermsOfUseOrLicense().getTermsOfUse())) {
                 return; 
             }
             
             String licenseName = "Custom Terms";
-            if (datasetVersion.getTermsOfUseAndLicense().getLicense() != null) {
-                licenseName = datasetVersion.getTermsOfUseAndLicense().getLicense().getName();
-            } else if (datasetVersion.getTermsOfUseAndLicense().getTermsOfUse() == null) {
+            if (datasetVersion.getTermsOfUseOrLicense().getLicense() != null) {
+                licenseName = datasetVersion.getTermsOfUseOrLicense().getLicense().getName();
+            } else if (datasetVersion.getTermsOfUseOrLicense().getTermsOfUse() == null) {
                 // this fixes #10513 for datasets harvested in oai_dc - these 
                 // have neither the license id, nor any actual custom terms 
                 return; 

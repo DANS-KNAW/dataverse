@@ -4,7 +4,7 @@ package edu.harvard.iq.dataverse.engine.command.impl;
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetVersion;
 import edu.harvard.iq.dataverse.TermsOfAccess;
-import edu.harvard.iq.dataverse.TermsOfUseAndLicense;
+import edu.harvard.iq.dataverse.TermsOfUseOrLicense;
 import edu.harvard.iq.dataverse.authorization.Permission;
 import edu.harvard.iq.dataverse.engine.command.CommandContext;
 import edu.harvard.iq.dataverse.engine.command.DataverseRequest;
@@ -22,20 +22,20 @@ public class UpdateDatasetTermsOfAccessCommand  extends AbstractDatasetCommand<D
     
     private final Dataset dataset;
     private final TermsOfAccess termsOfAccess;
-    private final TermsOfUseAndLicense termsOfUseAndLicense;
+    private final TermsOfUseOrLicense termsOfUseOrLicense;
     private final UpdateDatasetVersionCommand updateDatasetVersionCommand;
     
-    public UpdateDatasetTermsOfAccessCommand(Dataset dataset, TermsOfAccess termsOfAccess,  DataverseRequest request, TermsOfUseAndLicense termsOfUseAndLicense) {
-        this(dataset, termsOfAccess, termsOfUseAndLicense,  request, null);
+    public UpdateDatasetTermsOfAccessCommand(Dataset dataset, TermsOfAccess termsOfAccess,  DataverseRequest request, TermsOfUseOrLicense termsOfUseOrLicense) {
+        this(dataset, termsOfAccess, termsOfUseOrLicense,  request, null);
     }
 
     //Command included for testing purposes
-    public UpdateDatasetTermsOfAccessCommand( Dataset dataset, TermsOfAccess termsOfAccess, TermsOfUseAndLicense termsOfUseAndLicense,
+    public UpdateDatasetTermsOfAccessCommand( Dataset dataset, TermsOfAccess termsOfAccess, TermsOfUseOrLicense termsOfUseOrLicense,
         DataverseRequest aRequest, UpdateDatasetVersionCommand updateDatasetVersionCommand) {
         super(aRequest, dataset);
         this.dataset = dataset;
         this.termsOfAccess = termsOfAccess;
-        this.termsOfUseAndLicense = termsOfUseAndLicense;
+        this.termsOfUseOrLicense = termsOfUseOrLicense;
         this.updateDatasetVersionCommand = updateDatasetVersionCommand;
     }
 
@@ -43,16 +43,16 @@ public class UpdateDatasetTermsOfAccessCommand  extends AbstractDatasetCommand<D
     public Dataset execute(CommandContext ctxt) throws CommandException {
         DatasetVersion datasetVersion = dataset.getOrCreateEditVersion();
    
-        datasetVersion.setTermsOfUseAndLicense(merge(datasetVersion, termsOfUseAndLicense));
+        datasetVersion.setTermsOfUseOrLicense(merge(datasetVersion, termsOfUseOrLicense));
         datasetVersion.setTermsOfAccess(merge(datasetVersion, termsOfAccess));
 
         datasetVersion.setVersionState(DatasetVersion.VersionState.DRAFT);
         return ctxt.engine().submit(updateDatasetVersionCommand == null ? new UpdateDatasetVersionCommand(this.dataset, getRequest()) : updateDatasetVersionCommand);
     }
     
-    private TermsOfUseAndLicense merge(DatasetVersion editVersion, TermsOfUseAndLicense incoming) {
+    private TermsOfUseOrLicense merge(DatasetVersion editVersion, TermsOfUseOrLicense incoming) {
         //only update the access parts
-        TermsOfUseAndLicense termsToUpdate = editVersion.getTermsOfUseAndLicense();
+        TermsOfUseOrLicense termsToUpdate = editVersion.getTermsOfUseOrLicense();
         termsToUpdate.setFileAccessRequest(incoming.isFileAccessRequest());
         return termsToUpdate;
     }

@@ -111,9 +111,9 @@ public class DatasetVersionTest {
         dataset.setOwner(dataverse);
         TermsOfAccess termsOfAccess = new TermsOfAccess();
         datasetVersion.setTermsOfAccess(termsOfAccess);
-        TermsOfUseAndLicense termsOfUseAndLicense = new TermsOfUseAndLicense();
-        termsOfUseAndLicense.setLicense(license);
-        datasetVersion.setTermsOfUseAndLicense(termsOfUseAndLicense);
+        TermsOfUseOrLicense termsOfUseOrLicense = new TermsOfUseOrLicense();
+        termsOfUseOrLicense.setLicense(license);
+        datasetVersion.setTermsOfUseOrLicense(termsOfUseOrLicense);
         String jsonLd = datasetVersion.getJsonLd();
         logger.fine("jsonLd: " + JsonUtil.prettyPrint(jsonLd));
         JsonReader jsonReader = Json.createReader(new StringReader(jsonLd));
@@ -163,10 +163,10 @@ public class DatasetVersionTest {
         dataverse.setName("LibraScholar");
         dataset.setOwner(dataverse);
 
-        TermsOfUseAndLicense termsOfUseAndLicense = new TermsOfUseAndLicense();
-        termsOfUseAndLicense.setLicense(null);
-        termsOfUseAndLicense.setTermsOfUse("Call me maybe");
-        datasetVersion.setTermsOfUseAndLicense(termsOfUseAndLicense);
+        TermsOfUseOrLicense termsOfUseOrLicense = new TermsOfUseOrLicense();
+        termsOfUseOrLicense.setLicense(null);
+        termsOfUseOrLicense.setTermsOfUse("Call me maybe");
+        datasetVersion.setTermsOfUseOrLicense(termsOfUseOrLicense);
         datasetVersion.setTermsOfAccess(new TermsOfAccess());
 
         String jsonLd = datasetVersion.getJsonLd();

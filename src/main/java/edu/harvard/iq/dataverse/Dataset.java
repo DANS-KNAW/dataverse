@@ -447,16 +447,16 @@ public class Dataset extends DvObjectContainer {
                 dsv.setTermsOfAccess(terms);
             }
 
-            if (latestVersion.getTermsOfUseAndLicense() != null){
-                TermsOfUseAndLicense terms = latestVersion.getTermsOfUseAndLicense().copyTermsOfUseAndLicense();
+            if (latestVersion.getTermsOfUseOrLicense() != null){
+                TermsOfUseOrLicense terms = latestVersion.getTermsOfUseOrLicense().copyTermsOfUseOrLicense();
                 terms.setDatasetVersion(dsv);
-                dsv.setTermsOfUseAndLicense(terms);
+                dsv.setTermsOfUseOrLicense(terms);
             } else {
-                TermsOfUseAndLicense terms = new TermsOfUseAndLicense();
+                TermsOfUseOrLicense terms = new TermsOfUseOrLicense();
                 terms.setDatasetVersion(dsv);
                 terms.setLicense(null);
                 terms.setFileAccessRequest(true);
-                dsv.setTermsOfUseAndLicense(terms);
+                dsv.setTermsOfUseOrLicense(terms);
             }
         }
 

@@ -1937,7 +1937,7 @@ public class DatasetPage implements java.io.Serializable {
         /*
         Issue 8646: necessary for the access popup which is shared by the dataset page and the file page
         */
-        setFileAccessRequest(workingVersion.getTermsOfUseAndLicense().isFileAccessRequest());
+        setFileAccessRequest(workingVersion.getTermsOfUseOrLicense().isFileAccessRequest());
         setTermsOfAccess(workingVersion.getTermsOfAccess().getTermsOfAccess());
 
         resetVersionUI();
@@ -2266,7 +2266,7 @@ public class DatasetPage implements java.io.Serializable {
                 JH.addMessage(FacesMessage.SEVERITY_WARN, BundleUtil.getStringFromBundle("dataset.message.label.fileAccess"),
                         BundleUtil.getStringFromBundle("dataset.message.publicInstall"));
             }
-            setFileAccessRequest(workingVersion.getTermsOfUseAndLicense().isFileAccessRequest());
+            setFileAccessRequest(workingVersion.getTermsOfUseOrLicense().isFileAccessRequest());
             setTermsOfAccess(workingVersion.getTermsOfAccess().getTermsOfAccess());
             resetVersionUI();
 
@@ -2696,10 +2696,10 @@ public class DatasetPage implements java.io.Serializable {
             dataset = datasetService.find(dataset.getId());
         }
         String termsOfAccess = workingVersion.getTermsOfAccess().getTermsOfAccess();
-        boolean requestAccess = workingVersion.getTermsOfUseAndLicense().isFileAccessRequest();
+        boolean requestAccess = workingVersion.getTermsOfUseOrLicense().isFileAccessRequest();
         workingVersion = dataset.getOrCreateEditVersion();
         workingVersion.getTermsOfAccess().setTermsOfAccess(termsOfAccess);
-        workingVersion.getTermsOfUseAndLicense().setFileAccessRequest(requestAccess);
+        workingVersion.getTermsOfUseOrLicense().setFileAccessRequest(requestAccess);
         List <FileMetadata> newSelectedFiles = new ArrayList<>();
         for (FileMetadata fmd : filesToRefresh){
             for (FileMetadata fmdn: workingVersion.getFileMetadatas()){
@@ -2769,7 +2769,7 @@ public class DatasetPage implements java.io.Serializable {
             //FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Edit Dataset Metadata", " - Add more metadata about your dataset to help others easily find it."));
         } else if (editMode.equals(EditMode.LICENSE)){
             if(!isHasValidTermsOfAccess()){
-                workingVersion.getTermsOfUseAndLicense().setFileAccessRequest(true);
+                workingVersion.getTermsOfUseOrLicense().setFileAccessRequest(true);
             }
             JH.addMessage(FacesMessage.SEVERITY_INFO, BundleUtil.getStringFromBundle("dataset.message.editTerms.label"), BundleUtil.getStringFromBundle("dataset.message.editTerms.message"));
             //FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Edit Dataset License and Terms", " - Update your dataset's license and terms of use."));
@@ -3774,7 +3774,7 @@ public class DatasetPage implements java.io.Serializable {
 
         if (restricted) { // get values from access popup
             workingVersion.getTermsOfAccess().setTermsOfAccess(termsOfAccess);
-            workingVersion.getTermsOfUseAndLicense().setFileAccessRequest(fileAccessRequest);
+            workingVersion.getTermsOfUseOrLicense().setFileAccessRequest(fileAccessRequest);
         }
 
 
@@ -3956,7 +3956,7 @@ public class DatasetPage implements java.io.Serializable {
 
      public String saveWithTermsOfUse() {
         workingVersion.getTermsOfAccess().setTermsOfAccess(enteredTermsOfAccess);
-         workingVersion.getTermsOfUseAndLicense().setFileAccessRequest(enteredFileAccessRequest);
+         workingVersion.getTermsOfUseOrLicense().setFileAccessRequest(enteredFileAccessRequest);
         return save();
     }
 
@@ -5498,7 +5498,7 @@ public class DatasetPage implements java.io.Serializable {
         if (workingVersion == null) {
             return false;
         }
-        if (!workingVersion.getTermsOfUseAndLicense().isFileAccessRequest()){
+        if (!workingVersion.getTermsOfUseOrLicense().isFileAccessRequest()){
            // return false;
         }
         for (FileMetadata fmd : workingVersion.getFileMetadatas()){
