@@ -229,8 +229,8 @@ public class FilePage implements java.io.Serializable {
                 return permissionsWrapper.notAuthorized();
             }
             
-            //termsOfAccess = fileMetadata.getDatasetVersion().getTermsOfUseAndAccess().getTermsOfAccess();
-            //fileAccessRequest = fileMetadata.getDatasetVersion().getTermsOfUseAndAccess().isFileAccessRequest();
+            //termsOfAccess = fileMetadata.getDatasetVersion().getTermsOfAccess().getTermsOfAccess();
+            //fileAccessRequest = fileMetadata.getDatasetVersion().getTermsOfAccess().isFileAccessRequest();
 
             this.guestbookResponse = this.guestbookResponseService.initGuestbookResponseForFragment(fileMetadata, session);
 
