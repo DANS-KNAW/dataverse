@@ -1,34 +1,34 @@
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='termsofaccess') THEN
-        CREATE TABLE TERMSOFACCESS (
-                                       ID  SERIAL NOT NULL,
-                                       AVAILABILITYSTATUS TEXT,
-                                       CONTACTFORACCESS TEXT,
-                                       DATAACCESSPLACE TEXT,
-                                       ORIGINALARCHIVE TEXT,
-                                       SIZEOFCOLLECTION TEXT,
-                                       STUDYCOMPLETION TEXT,
-                                       TERMSOFACCESS TEXT,
-                                       FILEACCESSREQUEST BOOLEAN,
-                                       PRIMARY KEY (ID)
-        );
+CREATE TABLE TERMSOFACCESS (
+                               ID  SERIAL NOT NULL,
+                               AVAILABILITYSTATUS TEXT,
+                               CONTACTFORACCESS TEXT,
+                               DATAACCESSPLACE TEXT,
+                               ORIGINALARCHIVE TEXT,
+                               SIZEOFCOLLECTION TEXT,
+                               STUDYCOMPLETION TEXT,
+                               TERMSOFACCESS TEXT,
+                               FILEACCESSREQUEST BOOLEAN,
+                               PRIMARY KEY (ID)
+);
 
-        CREATE TABLE TERMSOFUSEORLICENSE (
-                                       ID  SERIAL NOT NULL,
-                                       CITATIONREQUIREMENTS TEXT,
-                                       CONDITIONS TEXT,
-                                       CONFIDENTIALITYDECLARATION TEXT,
-                                       DEPOSITORREQUIREMENTS TEXT,
-                                       DISCLAIMER TEXT,
-                                       FILEACCESSREQUEST BOOLEAN,
-                                       LICENSE_ID BIGINT REFERENCES LICENSE(ID),
-                                       RESTRICTIONS TEXT,
-                                       SPECIALPERMISSIONS TEXT,
-                                       TERMSOFUSE TEXT,
-                                       PRIMARY KEY (ID)
-        );
-    END IF;
+CREATE TABLE TERMSOFUSEORLICENSE (
+                                     ID  SERIAL NOT NULL,
+                                     CITATIONREQUIREMENTS TEXT,
+                                     CONDITIONS TEXT,
+                                     CONFIDENTIALITYDECLARATION TEXT,
+                                     DEPOSITORREQUIREMENTS TEXT,
+                                     DISCLAIMER TEXT,
+                                     FILEACCESSREQUEST BOOLEAN,
+                                     LICENSE_ID BIGINT REFERENCES LICENSE(ID),
+                                     RESTRICTIONS TEXT,
+                                     SPECIALPERMISSIONS TEXT,
+                                     TERMSOFUSE TEXT,
+                                     PRIMARY KEY (ID)
+);
+END IF;
 END
 $$;
 
@@ -39,9 +39,13 @@ BEGIN
         SELECT id, citationrequirements, conditions, confidentialitydeclaration, depositorrequirements, disclaimer, fileaccessrequest, license_id, restrictions, specialpermissions, termsofuse
         FROM termsofuseandaccess;
 
+        PERFORM setval('termsofaccess_id_seq', MAX(id)) FROM termsofaccess;
+
         INSERT INTO termsofaccess (id, availabilitystatus, contactforaccess, dataaccessplace, originalarchive, sizeofcollection, studycompletion, termsofaccess, fileaccessrequest)
         SELECT id, availabilitystatus, contactforaccess, dataaccessplace, originalarchive, sizeofcollection, studycompletion, termsofaccess, fileaccessrequest
         FROM termsofuseandaccess;
+
+        PERFORM setval('termsofuseorlicense_id_seq', MAX(id)) FROM termsofuseorlicense;
 
         ALTER TABLE datasetversion ADD COLUMN termsofaccess_id BIGINT REFERENCES termsofaccess(id);
         ALTER TABLE datasetversion ADD COLUMN default_termsofuseorlicense_id BIGINT REFERENCES termsofuseorlicense(id);
