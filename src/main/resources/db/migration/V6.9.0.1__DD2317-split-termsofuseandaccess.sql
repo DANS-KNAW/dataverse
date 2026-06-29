@@ -1,6 +1,6 @@
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='datasetversion' and column_name='termsofuseandaccess_id') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='termsofaccess') THEN
         CREATE TABLE TERMSOFACCESS (
                                        ID  SERIAL NOT NULL,
                                        AVAILABILITYSTATUS TEXT,
@@ -29,11 +29,6 @@ BEGIN
                                        PRIMARY KEY (ID)
         );
 
-        GRANT SELECT, INSERT, UPDATE, DELETE ON termsofaccess TO dvnuser;
-        GRANT SELECT, INSERT, UPDATE, DELETE ON termsofuseorlicense TO dvnuser;
-        GRANT USAGE, SELECT ON SEQUENCE termsofaccess_id_seq TO dvnuser;
-        GRANT USAGE, SELECT ON SEQUENCE termsofuseorlicense_id_seq TO dvnuser;
-
         INSERT INTO termsofuseorlicense (id, citationrequirements, conditions, confidentialitydeclaration, depositorrequirements, disclaimer, fileaccessrequest, license_id, restrictions, specialpermissions, termsofuse)
         SELECT id, citationrequirements, conditions, confidentialitydeclaration, depositorrequirements, disclaimer, fileaccessrequest, license_id, restrictions, specialpermissions, termsofuse
         FROM termsofuseandaccess;
@@ -60,6 +55,11 @@ BEGIN
         ALTER TABLE template ALTER COLUMN termsofuseorlicense_id SET NOT NULL;
 
         DROP TABLE termsofuseandaccess;
+
+        GRANT SELECT, INSERT, UPDATE, DELETE ON termsofaccess TO dvnuser;
+        GRANT SELECT, INSERT, UPDATE, DELETE ON termsofuseorlicense TO dvnuser;
+        GRANT USAGE, SELECT ON SEQUENCE termsofaccess_id_seq TO dvnuser;
+        GRANT USAGE, SELECT ON SEQUENCE termsofuseorlicense_id_seq TO dvnuser;
     END IF;
 END
 $$;
