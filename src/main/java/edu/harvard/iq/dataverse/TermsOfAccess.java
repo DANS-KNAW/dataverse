@@ -78,7 +78,17 @@ public class TermsOfAccess implements Serializable {
     
     @Column(columnDefinition="TEXT") 
     private String studyCompletion;
-    
+
+    private boolean fileAccessRequest;
+
+    public boolean isFileAccessRequest() {
+        return fileAccessRequest;
+    }
+
+    public void setFileAccessRequest(boolean fileAccessRequest) {
+        this.fileAccessRequest = fileAccessRequest;
+    }
+
     public String getTermsOfAccess() {
         return termsOfAccess;
     }
@@ -146,6 +156,7 @@ public class TermsOfAccess implements Serializable {
         retVal.setSizeOfCollection(this.getSizeOfCollection());
         retVal.setStudyCompletion(this.getStudyCompletion());
         retVal.setTermsOfAccess(this.getTermsOfAccess());
+        retVal.setFileAccessRequest(this.isFileAccessRequest());
         return retVal;
     }
 
