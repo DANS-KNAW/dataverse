@@ -1,7 +1,7 @@
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='termsofaccess') THEN
-CREATE TABLE TERMSOFACCESS (
+        CREATE TABLE TERMSOFACCESS (
                                ID  SERIAL NOT NULL,
                                AVAILABILITYSTATUS TEXT,
                                CONTACTFORACCESS TEXT,
@@ -12,9 +12,9 @@ CREATE TABLE TERMSOFACCESS (
                                TERMSOFACCESS TEXT,
                                FILEACCESSREQUEST BOOLEAN,
                                PRIMARY KEY (ID)
-);
+        );
 
-CREATE TABLE TERMSOFUSEORLICENSE (
+        CREATE TABLE TERMSOFUSEORLICENSE (
                                      ID  SERIAL NOT NULL,
                                      CITATIONREQUIREMENTS TEXT,
                                      CONDITIONS TEXT,
@@ -27,8 +27,8 @@ CREATE TABLE TERMSOFUSEORLICENSE (
                                      SPECIALPERMISSIONS TEXT,
                                      TERMSOFUSE TEXT,
                                      PRIMARY KEY (ID)
-);
-END IF;
+        );
+    END IF;
 END
 $$;
 
@@ -39,13 +39,9 @@ BEGIN
         SELECT id, citationrequirements, conditions, confidentialitydeclaration, depositorrequirements, disclaimer, fileaccessrequest, license_id, restrictions, specialpermissions, termsofuse
         FROM termsofuseandaccess;
 
-        PERFORM setval('termsofaccess_id_seq', MAX(id)) FROM termsofaccess;
-
         INSERT INTO termsofaccess (id, availabilitystatus, contactforaccess, dataaccessplace, originalarchive, sizeofcollection, studycompletion, termsofaccess, fileaccessrequest)
         SELECT id, availabilitystatus, contactforaccess, dataaccessplace, originalarchive, sizeofcollection, studycompletion, termsofaccess, fileaccessrequest
         FROM termsofuseandaccess;
-
-        PERFORM setval('termsofuseorlicense_id_seq', MAX(id)) FROM termsofuseorlicense;
 
         ALTER TABLE datasetversion ADD COLUMN termsofaccess_id BIGINT REFERENCES termsofaccess(id);
         ALTER TABLE datasetversion ADD COLUMN default_termsofuseorlicense_id BIGINT REFERENCES termsofuseorlicense(id);
@@ -70,6 +66,15 @@ BEGIN
         GRANT SELECT, INSERT, UPDATE, DELETE ON termsofuseorlicense TO dvnuser;
         GRANT USAGE, SELECT ON SEQUENCE termsofaccess_id_seq TO dvnuser;
         GRANT USAGE, SELECT ON SEQUENCE termsofuseorlicense_id_seq TO dvnuser;
+    END IF;
+END
+$$;
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM termsofaccess) THEN
+        PERFORM setval('termsofaccess_id_seq', MAX(id)) FROM termsofaccess;
+        PERFORM setval('termsofuseorlicense_id_seq', MAX(id)) FROM termsofuseorlicense;
     END IF;
 END
 $$;
