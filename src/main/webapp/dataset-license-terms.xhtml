@@ -87,7 +87,7 @@
                                           data-toggle="tooltip" data-placement="auto right" data-original-title="#{bundle['file.dataFilesTab.terms.list.termsOfUse.termsOfUse.title']}"></span>
                                 </label>
                                 <div class="col-sm-9">
-                                    <h:outputText value="#{MarkupChecker:sanitizeBasicHTML(termsOfAccess.termsOfUse)}" escape="false"/>
+                                    <h:outputText value="#{MarkupChecker:sanitizeBasicHTML(termsOfUseOrLicense.termsOfUse)}" escape="false"/>
                                </div>
                             </div>
                             <div class="form-group" jsf:rendered="#{!empty termsOfUseOrLicense.confidentialityDeclaration}">
