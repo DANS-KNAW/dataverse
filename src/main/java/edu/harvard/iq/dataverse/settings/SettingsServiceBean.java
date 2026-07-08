@@ -774,6 +774,10 @@ public class SettingsServiceBean {
         PostExternalSearchUrl,
         //Experimental setting to provide a display name for the POST external search service
         PostExternalSearchName,
+        /**
+         * Number of times to retry when a file download fails during bag generation.
+         */
+        BagGeneratorRetries,
         //COAR Notify Relationship Anouncement Workflow Step settings
         // Which field(s) to trigger on, e.g. 'publication'
         COARNotifyRelationshipAnnouncementTriggerFields,

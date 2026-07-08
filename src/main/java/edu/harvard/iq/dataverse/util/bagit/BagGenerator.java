@@ -81,6 +81,7 @@ import edu.harvard.iq.dataverse.DataFile;
 import edu.harvard.iq.dataverse.DatasetFieldConstant;
 import edu.harvard.iq.dataverse.DataFile.ChecksumType;
 import edu.harvard.iq.dataverse.pidproviders.PidUtil;
+import edu.harvard.iq.dataverse.settings.SettingsServiceBean;
 import edu.harvard.iq.dataverse.settings.JvmSettings;
 import static edu.harvard.iq.dataverse.settings.SettingsServiceBean.Key.BagGeneratorThreads;
 
@@ -103,7 +104,7 @@ public class BagGenerator {
 
     static final String CRLF = "\r\n";
 
-    protected static final int MAX_RETRIES = 5;
+    protected static int maxRetries = 5;
 
     private ParallelScatterZipCreator scatterZipCreator = null;
     private ScatterZipOutputStream dirs = null;
@@ -279,7 +280,9 @@ public class BagGenerator {
      *
      * @return success true/false
      */
-    public boolean generateBag(OutputStream outputStream) throws Exception {
+    public synchronized boolean generateBag(OutputStream outputStream) throws Exception {
+        //See how many times to retry file downloads (default = 5)
+        maxRetries = CDI.current().select(SettingsServiceBean.class).get().getValueForKeyAsLong(SettingsServiceBean.Key.BagGeneratorRetries, 5L).intValue();
 
         File tmp = File.createTempFile("qdr-scatter-dirs", "tmp");
         dirs = ScatterZipOutputStream.fileBased(tmp);
@@ -1306,7 +1309,7 @@ public class BagGenerator {
                 try {
                     URI uri = new URI(uriString);
                     int tries = 0;
-                    while (tries < MAX_RETRIES) {
+                    while (tries < maxRetries) {
 
                         logger.finest("Get # " + tries + " for " + uriString);
                         HttpGet getFile = createNewGetRequest(uri, null);
@@ -1360,29 +1363,29 @@ public class BagGenerator {
                                 } catch (InterruptedException ie) {
                                     logger.log(Level.SEVERE, "InterruptedException during retry delay for file: " + uriString, ie);
                                     Thread.currentThread().interrupt(); // Restore interrupt status
-                                    tries += MAX_RETRIES; // Skip remaining attempts
+                                    tries += maxRetries; // Skip remaining attempts
                                 }
                             }
                         } catch (ClientProtocolException e) {
-                            tries += MAX_RETRIES;
+                            tries += maxRetries;
                             logger.log(Level.SEVERE, "ClientProtocolException when retrieving file: " + uriString + " (attempt " + tries + ")", e);
                         } catch (SocketTimeoutException e) {
                             // Specific handling for timeout exceptions
                             tries++;
-                            logger.log(Level.SEVERE, "SocketTimeoutException when retrieving file: " + uriString + " (attempt " + tries + " of " + MAX_RETRIES + ") - Request exceeded timeout", e);
-                            if (tries == MAX_RETRIES) {
+                            logger.log(Level.SEVERE, "SocketTimeoutException when retrieving file: " + uriString + " (attempt " + tries + " of " + maxRetries + ") - Request exceeded timeout", e);
+                            if (tries == maxRetries) {
                                 logger.log(Level.SEVERE, "FINAL FAILURE: File could not be retrieved after all retries due to timeouts: " + uriString, e);
                             }
                         } catch (InterruptedIOException e) {
                             // Catches interruptions during I/O operations
-                            tries += MAX_RETRIES;
+                            tries += maxRetries;
                             logger.log(Level.SEVERE, "InterruptedIOException when retrieving file: " + uriString + " - Operation was interrupted", e);
                             Thread.currentThread().interrupt(); // Restore interrupt status
                         } catch (IOException e) {
                             // Retry if this is a potentially temporary error such as a timeout
                             tries++;
-                            logger.log(Level.WARNING, "IOException when retrieving file: " + uriString + " (attempt " + tries + " of " + MAX_RETRIES+ ")", e);
-                            if (tries == MAX_RETRIES) {
+                            logger.log(Level.WARNING, "IOException when retrieving file: " + uriString + " (attempt " + tries + " of " + maxRetries + ")", e);
+                            if (tries == maxRetries) {
                                 logger.log(Level.SEVERE, "FINAL FAILURE: File could not be retrieved after all retries: " + uriString, e);
                             }
                         }
