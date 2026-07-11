@@ -778,6 +778,11 @@ public class SystemConfig {
         boolean defaultResponse = true;
         return settingsService.isTrueForKey(SettingsServiceBean.Key.ShibAttributeCharacterSetConversionEnabled, defaultResponse);
     }
+    // DANS Shib login without discofeed
+    public boolean isShibIdpSelectEnabled() {
+        boolean defaultResponse = true;
+        return settingsService.isTrueForKey(SettingsServiceBean.Key.ShibIdpSelectEnabled, defaultResponse);
+    }
 
     /**
      * getPVDictionaries
