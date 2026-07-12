@@ -2798,7 +2798,7 @@ public class Datasets extends AbstractApiBean {
             String storageIdentifier = null;
             try {
                 storageIdentifier = FileUtil.getStorageIdentifierFromLocation(s3io.getStorageLocation());
-                response = s3io.generateTemporaryS3UploadUrls(dataset.getGlobalId().asString(), storageIdentifier, fileSize);
+                response = s3io.generateTemporaryS3UploadUrls(dataset.getGlobalIdForFileStorage(), storageIdentifier, fileSize);
 
             } catch (IOException io) {
                 logger.warning(io.getMessage());
@@ -5047,7 +5047,7 @@ public class Datasets extends AbstractApiBean {
             }
             DataverseRequest req = createDataverseRequest(au);
             DatasetVersion dsv = getDatasetVersionOrDie(req, versionNumber, findDatasetOrDie(datasetId), uriInfo,
-                    headers, true);
+                    headers);
 
             if (dsv.getArchivalCopyLocation() == null) {
                 return error(Status.NOT_FOUND, "This dataset version has not been archived");
@@ -5089,7 +5089,7 @@ public class Datasets extends AbstractApiBean {
 
                     DataverseRequest req = createDataverseRequest(au);
                     DatasetVersion dsv = getDatasetVersionOrDie(req, versionNumber, findDatasetOrDie(datasetId),
-                            uriInfo, headers, true);
+                            uriInfo, headers);
 
                     if (dsv == null) {
                         return error(Status.NOT_FOUND, "Dataset version not found");
@@ -5136,7 +5136,7 @@ public class Datasets extends AbstractApiBean {
 
             DataverseRequest req = createDataverseRequest(au);
             DatasetVersion dsv = getDatasetVersionOrDie(req, versionNumber, findDatasetOrDie(datasetId), uriInfo,
-                    headers, true);
+                    headers);
             if (dsv == null) {
                 return error(Status.NOT_FOUND, "Dataset version not found");
             }
