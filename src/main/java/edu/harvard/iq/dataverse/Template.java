@@ -376,6 +376,7 @@ public class Template implements Serializable {
             termsOfAccess = source.getTermsOfAccess().copyTermsOfAccess();
         } else {
             termsOfAccess = new TermsOfAccess();
+            termsOfAccess.setFileAccessRequest(true);
         }
         termsOfAccess.setTemplate(newTemplate);
         newTemplate.setTermsOfAccess(termsOfAccess);
@@ -386,7 +387,6 @@ public class Template implements Serializable {
         } else {
             termsOfUseOrLicense = new TermsOfUseOrLicense();
            // terms.setLicense(TermsOfUseAndAccess.defaultLicense);
-            termsOfUseOrLicense.setFileAccessRequest(true);
         }
         termsOfUseOrLicense.setTemplate(newTemplate);
         newTemplate.setTermsOfUseOrLicense(termsOfUseOrLicense);

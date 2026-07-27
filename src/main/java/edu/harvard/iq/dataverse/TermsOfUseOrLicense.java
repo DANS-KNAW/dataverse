@@ -112,17 +112,6 @@ public class TermsOfUseOrLicense implements Serializable {
     @Column(columnDefinition="TEXT")
     private String disclaimer;
 
-
-    private boolean fileAccessRequest;
-
-    public boolean isFileAccessRequest() {
-        return fileAccessRequest;
-    }
-
-    public void setFileAccessRequest(boolean fileAccessRequest) {
-        this.fileAccessRequest = fileAccessRequest;
-    }
-
     public License getLicense() {
         return license;
     }
@@ -201,7 +190,6 @@ public class TermsOfUseOrLicense implements Serializable {
     public TermsOfUseOrLicense copyTermsOfUseOrLicense(){
 
         TermsOfUseOrLicense retVal = new TermsOfUseOrLicense();
-        retVal.setFileAccessRequest(this.isFileAccessRequest());
         retVal.setLicense(this.getLicense());
         if (license == null) {
             retVal.setTermsOfUse(this.getTermsOfUse());

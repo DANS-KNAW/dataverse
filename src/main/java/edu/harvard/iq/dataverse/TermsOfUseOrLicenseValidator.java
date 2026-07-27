@@ -41,7 +41,7 @@ public class TermsOfUseOrLicenseValidator implements ConstraintValidator<Validat
         /*If there are restricted files then the version
         must allow access requests or have terms of use filled in.
          */
-        boolean valid = value.isFileAccessRequest() == true || (value.getTermsOfUse() != null && !value.getTermsOfUse().isEmpty());
+        boolean valid = (value.getTermsOfUse() != null && !value.getTermsOfUse().isEmpty());
         if (!valid) {
             try {
                 if (context != null) {

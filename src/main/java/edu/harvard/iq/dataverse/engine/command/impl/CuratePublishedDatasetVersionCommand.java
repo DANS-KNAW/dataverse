@@ -105,7 +105,7 @@ public class CuratePublishedDatasetVersionCommand extends AbstractDatasetCommand
         validateOrDie(updateVersion, isValidateLenient());
         
         //Also set the fileaccessrequest boolean on the dataset to match the new terms
-        getDataset().setFileAccessRequest(updateVersion.getTermsOfUseOrLicense().isFileAccessRequest());
+        getDataset().setFileAccessRequest(updateVersion.getTermsOfAccess().isFileAccessRequest());
         List<WorkflowComment> newComments = newVersion.getWorkflowComments();
         if (newComments!=null && newComments.size() >0) {
             for(WorkflowComment wfc: newComments) {

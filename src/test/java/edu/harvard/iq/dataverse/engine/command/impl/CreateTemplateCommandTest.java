@@ -133,11 +133,15 @@ public class CreateTemplateCommandTest {
         assertEquals("citation", mdbCaptor.getValue().get(0).getName());
 
         // 3. Verify TermsOfUseAndAccess were created and set correctly
-        ArgumentCaptor<TermsOfUseOrLicense> termsCaptor = ArgumentCaptor.forClass(TermsOfUseOrLicense.class);
-        verify(templateSpy).setTermsOfUseOrLicense(termsCaptor.capture());
-        TermsOfUseOrLicense capturedTerms = termsCaptor.getValue();
-        assertTrue(capturedTerms.isFileAccessRequest());
-        assertEquals("CC0", capturedTerms.getLicense().getName());
+        ArgumentCaptor<TermsOfUseOrLicense> toualtCaptor = ArgumentCaptor.forClass(TermsOfUseOrLicense.class);
+        verify(templateSpy).setTermsOfUseOrLicense(toualtCaptor.capture());
+        TermsOfUseOrLicense capturedToual = toualtCaptor.getValue();
+        assertEquals("CC0", capturedToual.getLicense().getName());
+
+        ArgumentCaptor<TermsOfAccess> toaCaptor = ArgumentCaptor.forClass(TermsOfAccess.class);
+        verify(templateSpy).setTermsOfAccess(toaCaptor.capture());
+        TermsOfAccess capturedToa = toaCaptor.getValue();
+        assertTrue(capturedToa.isFileAccessRequest());
 
         // 4. Verify DatasetFieldInputLevels were checked
         verify(fieldTypeInputLevelServiceBeanMock).findByDataverseIdDatasetFieldTypeId(42L, 101L);

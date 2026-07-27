@@ -38,6 +38,7 @@ import edu.harvard.iq.dataverse.util.BundleUtil;
 import edu.harvard.iq.dataverse.util.DatasetFieldWalker;
 
 import static edu.harvard.iq.dataverse.util.json.FileVersionDifferenceJsonPrinter.jsonFileVersionDifference;
+import static edu.harvard.iq.dataverse.util.json.JsonLDTerm.termsOfAccess;
 import static edu.harvard.iq.dataverse.util.json.NullSafeJsonBuilder.jsonObjectBuilder;
 
 import edu.harvard.iq.dataverse.util.MailUtil;
@@ -570,7 +571,7 @@ public class JsonPrinter {
                 .add("contactForAccess", dsv.getTermsOfAccess().getContactForAccess())
                 .add("sizeOfCollection", dsv.getTermsOfAccess().getSizeOfCollection())
                 .add("studyCompletion", dsv.getTermsOfAccess().getStudyCompletion())
-            .add("fileAccessRequest", dsv.getTermsOfUseOrLicense().isFileAccessRequest());
+            .add("fileAccessRequest", dsv.getTermsOfAccess().isFileAccessRequest());
 
         bld.add("metadataBlocks", (anonymizedFieldTypeNamesList != null) ?
                 jsonByBlocks(dsv.getDatasetFields(), anonymizedFieldTypeNamesList)
@@ -1642,8 +1643,7 @@ public class JsonPrinter {
                 .add("citationRequirements", termsOfUseOrLicense.getCitationRequirements())
                 .add("depositorRequirements", termsOfUseOrLicense.getDepositorRequirements())
                 .add("conditions", termsOfUseOrLicense.getConditions())
-                .add("disclaimer", termsOfUseOrLicense.getDisclaimer())
-                .add("fileAccessRequest", termsOfUseOrLicense.isFileAccessRequest());
+                .add("disclaimer", termsOfUseOrLicense.getDisclaimer());
     }
 
     public static JsonObjectBuilder jsonTermsOfAccess(TermsOfAccess termsOfAccess) {
@@ -1655,7 +1655,8 @@ public class JsonPrinter {
                 .add("availabilityStatus", termsOfAccess.getAvailabilityStatus())
                 .add("sizeOfCollection", termsOfAccess.getSizeOfCollection())
                 .add("studyCompletion", termsOfAccess.getStudyCompletion())
-                .add("contactForAccess", termsOfAccess.getContactForAccess());
+                .add("contactForAccess", termsOfAccess.getContactForAccess())
+                .add("fileAccessRequest", termsOfAccess.isFileAccessRequest());
     }
 
     public static JsonArrayBuilder jsonTemplateInstructions(Map<String, String> templateInstructions) {

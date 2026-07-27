@@ -43,19 +43,12 @@ public class UpdateDatasetTermsOfAccessCommand  extends AbstractDatasetCommand<D
     public Dataset execute(CommandContext ctxt) throws CommandException {
         DatasetVersion datasetVersion = dataset.getOrCreateEditVersion();
    
-        datasetVersion.setTermsOfUseOrLicense(merge(datasetVersion, termsOfUseOrLicense));
         datasetVersion.setTermsOfAccess(merge(datasetVersion, termsOfAccess));
 
         datasetVersion.setVersionState(DatasetVersion.VersionState.DRAFT);
         return ctxt.engine().submit(updateDatasetVersionCommand == null ? new UpdateDatasetVersionCommand(this.dataset, getRequest()) : updateDatasetVersionCommand);
     }
     
-    private TermsOfUseOrLicense merge(DatasetVersion editVersion, TermsOfUseOrLicense incoming) {
-        //only update the access parts
-        TermsOfUseOrLicense termsToUpdate = editVersion.getTermsOfUseOrLicense();
-        termsToUpdate.setFileAccessRequest(incoming.isFileAccessRequest());
-        return termsToUpdate;
-    }
 
     private TermsOfAccess merge(DatasetVersion editVersion, TermsOfAccess incoming) {
         TermsOfAccess termsToUpdate = editVersion.getTermsOfAccess();
@@ -66,6 +59,7 @@ public class UpdateDatasetTermsOfAccessCommand  extends AbstractDatasetCommand<D
         termsToUpdate.setContactForAccess(incoming.getContactForAccess());
         termsToUpdate.setSizeOfCollection(incoming.getSizeOfCollection());
         termsToUpdate.setStudyCompletion(incoming.getStudyCompletion());
+        termsToUpdate.setFileAccessRequest(incoming.isFileAccessRequest());
         return termsToUpdate;
     }
 }

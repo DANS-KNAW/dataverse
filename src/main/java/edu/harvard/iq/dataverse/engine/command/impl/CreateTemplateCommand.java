@@ -63,15 +63,16 @@ public class CreateTemplateCommand extends AbstractCommand<Template> {
     }
 
     private static void updateTermsOfUseOrLicense(CommandContext ctxt, Template template) {
-        TermsOfUseOrLicense terms = new TermsOfUseOrLicense();
-        terms.setFileAccessRequest(true);
-        terms.setTemplate(template);
-        terms.setLicense(ctxt.licenses().getDefault());
-        template.setTermsOfUseOrLicense(terms);
+        TermsOfUseOrLicense touol = new TermsOfUseOrLicense();
+        touol.setTemplate(template);
+        touol.setLicense(ctxt.licenses().getDefault());
+        template.setTermsOfUseOrLicense(touol);
     }
 
     private static void updateTermsOfAccess(CommandContext ctxt, Template template) {
-        template.setTermsOfAccess(new TermsOfAccess());
+        var toa = new TermsOfAccess();
+        toa.setFileAccessRequest(true);
+        template.setTermsOfAccess(toa);
     }
 
     private void updateDatasetFieldInputLevels(Template template, CommandContext ctxt) {

@@ -444,6 +444,7 @@ public class Dataset extends DvObjectContainer {
             } else {
                 TermsOfAccess terms = new TermsOfAccess();
                 terms.setDatasetVersion(dsv);
+                terms.setFileAccessRequest(true);
                 dsv.setTermsOfAccess(terms);
             }
 
@@ -455,7 +456,6 @@ public class Dataset extends DvObjectContainer {
                 TermsOfUseOrLicense terms = new TermsOfUseOrLicense();
                 terms.setDatasetVersion(dsv);
                 terms.setLicense(null);
-                terms.setFileAccessRequest(true);
                 dsv.setTermsOfUseOrLicense(terms);
             }
         }

@@ -788,7 +788,7 @@ public class DatasetVersion implements Serializable {
         termsOfAccess.setDatasetVersion(this);
         termsOfUseOrLicense.setDatasetVersion(this);
         termsOfUseOrLicense.setLicense(license);
-        termsOfUseOrLicense.setFileAccessRequest(true);
+        termsOfAccess.setFileAccessRequest(true);
         this.setTermsOfAccess(termsOfAccess);
         this.setTermsOfUseOrLicense(termsOfUseOrLicense);
 

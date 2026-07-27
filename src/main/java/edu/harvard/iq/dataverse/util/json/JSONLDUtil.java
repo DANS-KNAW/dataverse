@@ -717,7 +717,7 @@ public class JSONLDUtil {
         case "https://dataverse.org/schema/core#termsOfAccess":
             return !StringUtils.isBlank(termsOfAccess.getTermsOfAccess());
         case "https://dataverse.org/schema/core#fileRequestAccess":
-            return !termsOfUseOrLicense.isFileAccessRequest();
+            return !termsOfAccess.isFileAccessRequest();
         case "https://dataverse.org/schema/core#dataAccessPlace":
             return !StringUtils.isBlank(termsOfAccess.getDataAccessPlace());
         case "https://dataverse.org/schema/core#originalArchive":
@@ -769,7 +769,7 @@ public class JSONLDUtil {
             termsOfAccess.setTermsOfAccess((String) value);
             break;
         case "https://dataverse.org/schema/core#fileRequestAccess":
-            termsOfUseOrLicense.setFileAccessRequest((boolean) value);
+            termsOfAccess.setFileAccessRequest((boolean) value);
             break;
         case "https://dataverse.org/schema/core#dataAccessPlace":
             termsOfAccess.setDataAccessPlace((String) value);
@@ -858,8 +858,8 @@ public class JSONLDUtil {
             }
             break;
         case "https://dataverse.org/schema/core#fileRequestAccess":
-            if(termsOfUseOrLicense.isFileAccessRequest() && (jsonValue.equals(JsonValue.TRUE))) {
-                termsOfUseOrLicense.setFileAccessRequest(false);
+            if(termsOfAcces.isFileAccessRequest() && (jsonValue.equals(JsonValue.TRUE))) {
+                termsOfAcces.setFileAccessRequest(false);
                 foundTerm=true;
             }
             break;

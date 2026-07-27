@@ -1167,7 +1167,7 @@ public class Datasets extends AbstractApiBean {
             TermsOfAccess toa = jsonParser().parseTermsOfAccess(json);
             TermsOfUseOrLicense toual = jsonParser().parseTermsOfUseAndLicesne(json);
 
-            if (publicInstall && (toual.isFileAccessRequest() || !toa.getTermsOfAccess().isEmpty())){
+            if (publicInstall && (toa.isFileAccessRequest() || !toa.getTermsOfAccess().isEmpty())){
                 return error(BAD_REQUEST, "Setting File Access Request or Terms of Access is not permitted on a public installation.");
             }
 

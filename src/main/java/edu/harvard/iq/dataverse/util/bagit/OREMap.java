@@ -171,7 +171,7 @@ public class OREMap {
         // Add fileTermsofAccess as an object since it is compound
         JsonObjectBuilder fAccess = Json.createObjectBuilder();
         addIfNotNull(fAccess, JsonLDTerm.termsOfAccess, termsOfAccess.getTermsOfAccess());
-        addIfNotNull(fAccess, JsonLDTerm.fileRequestAccess, termsOfUseOrLicense.isFileAccessRequest());
+        addIfNotNull(fAccess, JsonLDTerm.fileRequestAccess, termsOfAccess.isFileAccessRequest());
         addIfNotNull(fAccess, JsonLDTerm.dataAccessPlace, termsOfAccess.getDataAccessPlace());
         addIfNotNull(fAccess, JsonLDTerm.originalArchive, termsOfAccess.getOriginalArchive());
         addIfNotNull(fAccess, JsonLDTerm.availabilityStatus, termsOfAccess.getAvailabilityStatus());

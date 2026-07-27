@@ -16,6 +16,7 @@ import edu.harvard.iq.dataverse.Dataverse;
 import edu.harvard.iq.dataverse.DataverseServiceBean;
 import edu.harvard.iq.dataverse.GlobalId;
 import edu.harvard.iq.dataverse.MetadataBlock;
+import edu.harvard.iq.dataverse.TermsOfAccess;
 import edu.harvard.iq.dataverse.TermsOfUseOrLicense;
 import edu.harvard.iq.dataverse.branding.BrandingUtil;
 import edu.harvard.iq.dataverse.dataset.DatasetType;
@@ -154,6 +155,9 @@ public class XmlMetadataTemplateTest {
         TermsOfUseOrLicense toa = new TermsOfUseOrLicense();
         toa.setTermsOfUse("Some terms");
         dv.setTermsOfUseOrLicense(toa);
+        var termsOfAccess = new TermsOfAccess();
+        termsOfAccess.setFileAccessRequest(true);
+        dv.setTermsOfAccess(termsOfAccess);
         dv.setDataset(d);
         DatasetFieldType primitiveDSFType = new DatasetFieldType(DatasetFieldConstant.title,
                 DatasetFieldType.FieldType.TEXT, false);
@@ -231,6 +235,9 @@ public class XmlMetadataTemplateTest {
         TermsOfUseOrLicense toa = new TermsOfUseOrLicense();
         toa.setTermsOfUse("Some terms");
         dv.setTermsOfUseOrLicense(toa);
+        var termsOfAccess = new TermsOfAccess();
+        termsOfAccess.setFileAccessRequest(true);
+        dv.setTermsOfAccess(termsOfAccess);
         dv.setDataset(d);
         DatasetFieldType primitiveDSFType = new DatasetFieldType(DatasetFieldConstant.title,
                 DatasetFieldType.FieldType.TEXT, false);
@@ -287,6 +294,9 @@ public class XmlMetadataTemplateTest {
         TermsOfUseOrLicense toa = new TermsOfUseOrLicense();
         toa.setTermsOfUse("Some terms");
         dv.setTermsOfUseOrLicense(toa);
+        var termsOfAccess = new TermsOfAccess();
+        termsOfAccess.setFileAccessRequest(true);
+        dv.setTermsOfAccess(termsOfAccess);
         dv.setDataset(d);
         DatasetFieldType primitiveDSFType = new DatasetFieldType(DatasetFieldConstant.title,
                 DatasetFieldType.FieldType.TEXT, false);

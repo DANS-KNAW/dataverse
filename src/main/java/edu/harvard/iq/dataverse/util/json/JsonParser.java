@@ -391,7 +391,6 @@ public class JsonParser {
         toal.setConditions(terms.getString("conditions", null));
         toal.setDisclaimer(terms.getString("disclaimer", null));
         // TODO functionally different
-        toal.setFileAccessRequest(terms.getBoolean("fileAccessRequest", false));
         toal.setConfidentialityDeclaration(terms.getString("confidentialityDeclaration", null));
 
         return toal;
@@ -559,7 +558,7 @@ public class JsonParser {
             termsOfAccess.setContactForAccess(obj.getString("contactForAccess", null));
             termsOfAccess.setSizeOfCollection(obj.getString("sizeOfCollection", null));
             termsOfAccess.setStudyCompletion(obj.getString("studyCompletion", null));
-            termsOfUseOrLicense.setFileAccessRequest(obj.getBoolean("fileAccessRequest", false));
+            termsOfAccess.setFileAccessRequest(obj.getBoolean("fileAccessRequest", false));
             dsv.setTermsOfAccess(termsOfAccess);
             termsOfAccess.setDatasetVersion(dsv);
             JsonObject metadataBlocks = obj.getJsonObject("metadataBlocks");

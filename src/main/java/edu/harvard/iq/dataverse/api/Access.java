@@ -1376,7 +1376,7 @@ public class Access extends AbstractApiBean {
 
         dataverseRequest = createDataverseRequest(getRequestUser(crc));
 
-        dataset.getOrCreateEditVersion().getTermsOfUseOrLicense().setFileAccessRequest(allowRequest);
+        dataset.getOrCreateEditVersion().getTermsOfAccess().setFileAccessRequest(allowRequest);
 
         try {
             engineSvc.submit(new UpdateDatasetVersionCommand(dataset, dataverseRequest));

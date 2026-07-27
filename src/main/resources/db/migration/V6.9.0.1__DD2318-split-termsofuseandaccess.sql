@@ -21,7 +21,6 @@ BEGIN
                                      CONFIDENTIALITYDECLARATION TEXT,
                                      DEPOSITORREQUIREMENTS TEXT,
                                      DISCLAIMER TEXT,
-                                     FILEACCESSREQUEST BOOLEAN,
                                      LICENSE_ID BIGINT REFERENCES LICENSE(ID),
                                      RESTRICTIONS TEXT,
                                      SPECIALPERMISSIONS TEXT,

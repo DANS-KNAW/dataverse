@@ -502,7 +502,7 @@ public class FilePage implements java.io.Serializable {
         editDataset = this.file.getOwner();
         if (restricted) { // get values from access popup
             editDataset.getOrCreateEditVersion().getTermsOfAccess().setTermsOfAccess(termsOfAccess);
-            editDataset.getOrCreateEditVersion().getTermsOfUseOrLicense().setFileAccessRequest(fileAccessRequest);
+            editDataset.getOrCreateEditVersion().getTermsOfAccess().setFileAccessRequest(fileAccessRequest);
         }
         //using this method to update the terms for datasets that are out of compliance 
         // with Terms of Access requirement - may get her with a file that is already restricted
