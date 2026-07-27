@@ -34,8 +34,8 @@ $$;
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM termsofuseorlicense) THEN
-        INSERT INTO termsofuseorlicense (id, citationrequirements, conditions, confidentialitydeclaration, depositorrequirements, disclaimer, fileaccessrequest, license_id, restrictions, specialpermissions, termsofuse)
-        SELECT id, citationrequirements, conditions, confidentialitydeclaration, depositorrequirements, disclaimer, fileaccessrequest, license_id, restrictions, specialpermissions, termsofuse
+        INSERT INTO termsofuseorlicense (id, citationrequirements, conditions, confidentialitydeclaration, depositorrequirements, disclaimer, license_id, restrictions, specialpermissions, termsofuse)
+        SELECT id, citationrequirements, conditions, confidentialitydeclaration, depositorrequirements, disclaimer, license_id, restrictions, specialpermissions, termsofuse
         FROM termsofuseandaccess;
 
         INSERT INTO termsofaccess (id, availabilitystatus, contactforaccess, dataaccessplace, originalarchive, sizeofcollection, studycompletion, termsofaccess, fileaccessrequest)
