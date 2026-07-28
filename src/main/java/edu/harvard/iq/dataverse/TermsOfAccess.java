@@ -12,6 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
 /**
@@ -20,6 +21,7 @@ import jakarta.persistence.Transient;
  * @author skraffmi
  */
 @Entity
+@Table(name = "TERMSOFACCESS")
 @ValidateTermsOfUseAndAccess
 public class TermsOfAccess implements Serializable {
 
@@ -58,27 +60,28 @@ public class TermsOfAccess implements Serializable {
     }
     
 
-    @Column(columnDefinition="TEXT") 
+    @Column(name = "TERMSOFACCESS", columnDefinition = "TEXT")
     private String termsOfAccess;
     
-    @Column(columnDefinition="TEXT")
+    @Column(name = "DATAACCESSPLACE", columnDefinition = "TEXT")
     private String dataAccessPlace;
     
-    @Column(columnDefinition="TEXT") 
+    @Column(name = "ORIGINALARCHIVE", columnDefinition = "TEXT")
     private String originalArchive;
     
-    @Column(columnDefinition="TEXT") 
+    @Column(name = "AVAILABILITYSTATUS", columnDefinition = "TEXT")
     private String availabilityStatus;
     
-    @Column(columnDefinition="TEXT") 
+    @Column(name = "CONTACTFORACCESS", columnDefinition = "TEXT")
     private String contactForAccess;
     
-    @Column(columnDefinition="TEXT") 
+    @Column(name = "SIZEOFCOLLECTION", columnDefinition = "TEXT")
     private String sizeOfCollection;
     
-    @Column(columnDefinition="TEXT") 
+    @Column(name = "STUDYCOMPLETION", columnDefinition = "TEXT")
     private String studyCompletion;
 
+    @Column(name = "FILEACCESSREQUEST")
     private boolean fileAccessRequest;
 
     public boolean isFileAccessRequest() {
