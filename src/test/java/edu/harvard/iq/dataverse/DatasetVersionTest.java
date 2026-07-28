@@ -21,6 +21,7 @@ import jakarta.json.JsonReader;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -108,9 +109,11 @@ public class DatasetVersionTest {
         Dataverse dataverse = new Dataverse();
         dataverse.setName("LibraScholar");
         dataset.setOwner(dataverse);
-        TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
-        terms.setLicense(license);
-        datasetVersion.setTermsOfUseAndAccess(terms);
+        TermsOfAccess termsOfAccess = new TermsOfAccess();
+        datasetVersion.setTermsOfAccess(termsOfAccess);
+        TermsOfUseOrLicense termsOfUseOrLicense = new TermsOfUseOrLicense();
+        termsOfUseOrLicense.setLicense(license);
+        datasetVersion.setTermsOfUseOrLicense(termsOfUseOrLicense);
         String jsonLd = datasetVersion.getJsonLd();
         logger.fine("jsonLd: " + JsonUtil.prettyPrint(jsonLd));
         JsonReader jsonReader = Json.createReader(new StringReader(jsonLd));
@@ -160,10 +163,11 @@ public class DatasetVersionTest {
         dataverse.setName("LibraScholar");
         dataset.setOwner(dataverse);
 
-        TermsOfUseAndAccess terms = new TermsOfUseAndAccess();
-        terms.setLicense(null);
-        terms.setTermsOfUse("Call me maybe");
-        datasetVersion.setTermsOfUseAndAccess(terms);
+        TermsOfUseOrLicense termsOfUseOrLicense = new TermsOfUseOrLicense();
+        termsOfUseOrLicense.setLicense(null);
+        termsOfUseOrLicense.setTermsOfUse("Call me maybe");
+        datasetVersion.setTermsOfUseOrLicense(termsOfUseOrLicense);
+        datasetVersion.setTermsOfAccess(new TermsOfAccess());
 
         String jsonLd = datasetVersion.getJsonLd();
         logger.fine("jsonLd: " + JsonUtil.prettyPrint(jsonLd));

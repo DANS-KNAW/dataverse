@@ -74,11 +74,11 @@ public class RestrictFileCommand extends AbstractVoidCommand {
             Dataset dataset = file.getOwner();
             DatasetVersion workingVersion = dataset.getOrCreateEditVersion();
             if (restrict && fileAccessRequest != null) {
-                if (workingVersion.getTermsOfUseAndAccess() == null) {
-                    workingVersion.setTermsOfUseAndAccess(new TermsOfUseAndAccess());
+                if (workingVersion.getTermsOfUseOrLicense() == null) {
+                    workingVersion.setTermsOfUseOrLicense(new TermsOfUseOrLicense());
                 }
-                workingVersion.getTermsOfUseAndAccess().setFileAccessRequest(fileAccessRequest);
-                workingVersion.getTermsOfUseAndAccess().setTermsOfAccess(termsOfAccess);
+                workingVersion.getTermsOfAccess().setFileAccessRequest(fileAccessRequest);
+                workingVersion.getTermsOfAccess().setTermsOfAccess(termsOfAccess);
             }
             // We need the FileMetadata for the file in the draft dataset version and the
             // file we have may still reference the fmd from the prior released version

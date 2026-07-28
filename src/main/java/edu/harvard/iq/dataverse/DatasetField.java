@@ -106,7 +106,15 @@ public class DatasetField implements Serializable {
             MetadataBlock metadataBlock = f.getDatasetFieldType().getMetadataBlock();
             List<DatasetField> lst = retVal.get(metadataBlock);
             if (lst == null) {
-                retVal.put(metadataBlock, new LinkedList<>(Collections.singleton(f)));
+                if (metadataBlock!= null) {
+                    retVal.put(metadataBlock, new LinkedList<>(Collections.singleton(f)));
+                }
+                else {
+                    // TODO log something not expected,
+                    //  how can splitting TermsOfAccessAndUse into TermsOfAccess and TermsOfUseOrLicense
+                    //  cause (or reveal) trouble with the title field?
+                    //  See JsonPrinterTest.testDatasetWithNondefaultType
+                }
             } else {
                 lst.add(f);
             }
