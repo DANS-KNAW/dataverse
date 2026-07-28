@@ -71,12 +71,13 @@ public class DatasetVersionDifferenceTest {
         datasetVersion.setVersionNumber(1L);
         datasetVersion.setTermsOfAccess(new TermsOfAccess());
         datasetVersion.setTermsOfUseOrLicense(new TermsOfUseOrLicense());
-        datasetVersion.getTermsOfUseAndAccess().setLicense(license);
+        datasetVersion.getTermsOfUseOrLicense().setLicense(license);
         DatasetVersion datasetVersion2 = new DatasetVersion();
         datasetVersion2.setDataset(dataset);
         datasetVersion2.setVersionState(DatasetVersion.VersionState.DRAFT);
-        datasetVersion2.setTermsOfUseAndAccess(new TermsOfUseAndAccess());
-        datasetVersion2.getTermsOfUseAndAccess().setLicense(license);
+        datasetVersion2.setTermsOfAccess(new TermsOfAccess());
+        datasetVersion2.setTermsOfUseOrLicense(new TermsOfUseOrLicense());
+        datasetVersion2.getTermsOfUseOrLicense().setLicense(license);
         datasetVersion.setFileMetadatas(new ArrayList<>());
         
         // Published version's two files
@@ -170,7 +171,7 @@ public class DatasetVersionDifferenceTest {
         // Set the published version's TermsOfUseAndAccess to a non-null value
         datasetVersion.setTermsOfAccess(new TermsOfAccess());
         datasetVersion.setTermsOfUseOrLicense(new TermsOfUseOrLicense());
-        datasetVersion.getTermsOfUseAndAccess().setLicense(license);
+        datasetVersion.getTermsOfUseOrLicense().setLicense(license);
 
         compareResults(datasetVersion, datasetVersion2, expectedAddedFiles, expectedRemovedFiles,
                 expectedChangedFileMetadata, expectedChangedVariableMetadata, expectedReplacedFiles, changedTerms);
@@ -179,7 +180,7 @@ public class DatasetVersionDifferenceTest {
 
         datasetVersion2.setTermsOfAccess(new TermsOfAccess());
         datasetVersion2.setTermsOfUseOrLicense(new TermsOfUseOrLicense());
-        datasetVersion2.getTermsOfUseAndAccess().setLicense(license);
+        datasetVersion2.getTermsOfUseOrLicense().setLicense(license);
 
         compareResults(datasetVersion, datasetVersion2, expectedAddedFiles, expectedRemovedFiles,
                 expectedChangedFileMetadata, expectedChangedVariableMetadata, expectedReplacedFiles, changedTerms);
@@ -207,9 +208,9 @@ public class DatasetVersionDifferenceTest {
         
         // Change License in Draft version
 
-        datasetVersion2.getTermsOfUseAndAccess().setLicense(license2);
-        datasetVersion2.getTermsOfUseAndAccess().setTermsOfUse("");
-        datasetVersion.getTermsOfUseAndAccess().setDisclaimer("");
+        datasetVersion2.getTermsOfUseOrLicense().setLicense(license2);
+        datasetVersion2.getTermsOfUseOrLicense().setTermsOfUse("");
+        datasetVersion.getTermsOfUseOrLicense().setDisclaimer("");
         
         String[] termField3 = new String[] {
                 BundleUtil.getStringFromBundle("file.dataFilesTab.terms.list.license"),
