@@ -140,11 +140,11 @@ public class DatasetVersion implements Serializable {
     private List<FileMetadata> fileMetadatas = new ArrayList();
     
     @OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval=true)
-    @JoinColumn(name = "termsOfAccess_id")
+    @JoinColumn(name = "termsofaccess_id")
     private TermsOfAccess termsOfAccess;
     
     @OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval=true)
-    @JoinColumn(name = "default_termsOfUseOrLicense_id")
+    @JoinColumn(name = "default_termsofuseorlicense_id")
     private TermsOfUseOrLicense termsOfUseOrLicense;
 
     @OneToMany(mappedBy = "datasetVersion", orphanRemoval = true, cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST})

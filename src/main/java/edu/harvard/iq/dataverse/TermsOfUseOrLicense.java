@@ -46,7 +46,7 @@ import jakarta.persistence.NamedQuery;
  * @author skraffmi
  */
 @Entity
-@Table(name = "TERMSOFUSEORLICENSE")
+@Table(name = "termsofuseorlicense")
 @ValidateTermsOfUseAndAccess
 public class TermsOfUseOrLicense implements Serializable {
     public static final String DEFAULT_NOTERMS = "This dataset is made available without information on how it can be used. You should communicate with the Contact(s) specified before use.";
@@ -86,31 +86,31 @@ public class TermsOfUseOrLicense implements Serializable {
     }
 
     @ManyToOne
-    @JoinColumn(name = "LICENSE_ID")
+    @JoinColumn(name = "license_id")
     private License license;
 
-    @Column(name = "TERMSOFUSE", columnDefinition = "TEXT")
+    @Column(name = "termsofuse", columnDefinition = "TEXT")
     private String termsOfUse;
 
-    @Column(name = "CONFIDENTIALITYDECLARATION", columnDefinition = "TEXT")
+    @Column(name = "confidentialitydeclaration", columnDefinition = "TEXT")
     private String confidentialityDeclaration;
 
-    @Column(name = "SPECIALPERMISSIONS", columnDefinition = "TEXT")
+    @Column(name = "specialpermissions", columnDefinition = "TEXT")
     private String specialPermissions;
 
-    @Column(name = "RESTRICTIONS", columnDefinition = "TEXT")
+    @Column(name = "restrictions", columnDefinition = "TEXT")
     private String restrictions;
 
-    @Column(name = "CITATIONREQUIREMENTS", columnDefinition = "TEXT")
+    @Column(name = "citationrequirements", columnDefinition = "TEXT")
     private String citationRequirements;
 
-    @Column(name = "DEPOSITORREQUIREMENTS", columnDefinition = "TEXT")
+    @Column(name = "depositorrequirements", columnDefinition = "TEXT")
     private String depositorRequirements;
 
-    @Column(name = "CONDITIONS", columnDefinition = "TEXT")
+    @Column(name = "conditions", columnDefinition = "TEXT")
     private String conditions;
 
-    @Column(name = "DISCLAIMER", columnDefinition = "TEXT")
+    @Column(name = "disclaimer", columnDefinition = "TEXT")
     private String disclaimer;
 
     public License getLicense() {

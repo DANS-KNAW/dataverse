@@ -1,31 +1,31 @@
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='termsofaccess') THEN
-        CREATE TABLE TERMSOFACCESS (
-                               ID  SERIAL NOT NULL,
-                               AVAILABILITYSTATUS TEXT,
-                               CONTACTFORACCESS TEXT,
-                               DATAACCESSPLACE TEXT,
-                               ORIGINALARCHIVE TEXT,
-                               SIZEOFCOLLECTION TEXT,
-                               STUDYCOMPLETION TEXT,
-                               TERMSOFACCESS TEXT,
-                               FILEACCESSREQUEST BOOLEAN,
-                               PRIMARY KEY (ID)
+        CREATE TABLE termsofaccess (
+                               id  SERIAL NOT NULL,
+                               availabilitystatus TEXT,
+                               contactforaccess TEXT,
+                               dataaccessplace TEXT,
+                               originalarchive TEXT,
+                               sizeofcollection TEXT,
+                               studycompletion TEXT,
+                               termsofaccess TEXT,
+                               fileaccessrequest BOOLEAN,
+                               PRIMARY KEY (id)
         );
 
-        CREATE TABLE TERMSOFUSEORLICENSE (
-                                     ID  SERIAL NOT NULL,
-                                     CITATIONREQUIREMENTS TEXT,
-                                     CONDITIONS TEXT,
-                                     CONFIDENTIALITYDECLARATION TEXT,
-                                     DEPOSITORREQUIREMENTS TEXT,
-                                     DISCLAIMER TEXT,
-                                     LICENSE_ID BIGINT REFERENCES LICENSE(ID),
-                                     RESTRICTIONS TEXT,
-                                     SPECIALPERMISSIONS TEXT,
-                                     TERMSOFUSE TEXT,
-                                     PRIMARY KEY (ID)
+        CREATE TABLE termsofuseorlicense (
+                                     id  SERIAL NOT NULL,
+                                     citationrequirements TEXT,
+                                     conditions TEXT,
+                                     confidentialitydeclaration TEXT,
+                                     depositorrequirements TEXT,
+                                     disclaimer TEXT,
+                                     license_id BIGINT REFERENCES license(id),
+                                     restrictions TEXT,
+                                     specialpermissions TEXT,
+                                     termsofuse TEXT,
+                                     PRIMARY KEY (id)
         );
     END IF;
 END

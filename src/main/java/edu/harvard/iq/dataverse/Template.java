@@ -113,7 +113,7 @@ public class Template implements Serializable {
     }
     
     @OneToOne(cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval=true)
-    @JoinColumn(name = "termsOfAccess_id")
+    @JoinColumn(name = "termsofaccess_id")
     private TermsOfAccess termsOfAccess;
 
     public TermsOfAccess getTermsOfAccess() {
@@ -125,7 +125,7 @@ public class Template implements Serializable {
     }
 
     @OneToOne(cascade = {CascadeType.REMOVE, CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval=true)
-    @JoinColumn(name = "termsOfUseOrLicense_id")
+    @JoinColumn(name = "termsofuseorlicense_id")
     private TermsOfUseOrLicense termsOfUseOrLicense;
 
     public TermsOfUseOrLicense getTermsOfUseOrLicense() {
