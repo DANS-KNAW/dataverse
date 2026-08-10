@@ -143,7 +143,7 @@ public class FileMetadata implements Serializable {
     private DataFile dataFile;
 
     @OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval=true)
-    @JoinColumn(name = "termsOfUseOrLicense_id")
+    @JoinColumn(name = "termsofuseorlicense_id")
     private TermsOfUseOrLicense termsOfUseOrLicense;
 
     /**
