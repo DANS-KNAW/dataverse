@@ -22,7 +22,7 @@ import jakarta.persistence.Transient;
  */
 @Entity
 @Table(name = "termsofaccess")
-@ValidateTermsOfUseAndAccess
+@ValidateTermsOfAccess
 public class TermsOfAccess implements Serializable {
 
     @Id

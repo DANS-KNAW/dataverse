@@ -473,7 +473,7 @@ public class DatasetPage implements java.io.Serializable {
                hasValidTermsOfAccess = true;
                return hasValidTermsOfAccess;
             } else {
-                hasValidTermsOfAccess = TermsOfUseAndAccessValidator.isTOUAValid(dataset.getLatestVersion().getTermsOfAccess(), null);
+                hasValidTermsOfAccess = TermsOfAccessValidator.isTOUAValid(dataset.getLatestVersion().getTermsOfAccess(), null);
                 return hasValidTermsOfAccess;
             }
         }    

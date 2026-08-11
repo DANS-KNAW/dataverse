@@ -47,7 +47,6 @@ import jakarta.persistence.NamedQuery;
  */
 @Entity
 @Table(name = "termsofuseorlicense")
-@ValidateTermsOfUseAndAccess
 public class TermsOfUseOrLicense implements Serializable {
     public static final String DEFAULT_NOTERMS = "This dataset is made available without information on how it can be used. You should communicate with the Contact(s) specified before use.";
 

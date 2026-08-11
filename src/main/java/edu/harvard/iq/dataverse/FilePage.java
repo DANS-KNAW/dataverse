@@ -904,7 +904,7 @@ public class FilePage implements java.io.Serializable {
                hasValidTermsOfAccess = true;
                return hasValidTermsOfAccess;
             } else {
-                hasValidTermsOfAccess = TermsOfUseAndAccessValidator.isTOUAValid(fileMetadata.getDatasetVersion().getTermsOfAccess(), null);
+                hasValidTermsOfAccess = TermsOfAccessValidator.isTOUAValid(fileMetadata.getDatasetVersion().getTermsOfAccess(), null);
                 return hasValidTermsOfAccess;
             }
         }    

@@ -13,10 +13,10 @@ import jakarta.validation.ConstraintValidatorContext;
  *
  * @author skraffmi
  */
-public class TermsOfAccessValidator implements ConstraintValidator<ValidateTermsOfUseAndAccess, TermsOfAccess> {
+public class TermsOfAccessValidator implements ConstraintValidator<ValidateTermsOfAccess, TermsOfAccess> {
 
     @Override
-    public void initialize(ValidateTermsOfUseAndAccess constraintAnnotation) {
+    public void initialize(ValidateTermsOfAccess constraintAnnotation) {
 
     }
 
