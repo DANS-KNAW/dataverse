@@ -299,8 +299,8 @@
                                    <h:outputText value="#{bundle['file.dataFilesTab.terms.list.termsOfAccess.requestAccess.notRequest']}" rendered="#{!DatasetPage.dataset.fileAccessRequest}"/>
                                </p>
                                <p jsf:rendered="#{(datasetPage == true and DatasetPage.workingVersion.draft) or managePage==true}">
-                                   <h:outputText value="#{bundle['file.dataFilesTab.terms.list.termsOfAccess.requestAccess.request']}" rendered="#{termsOfUseOrLicense.fileAccessRequest}"/>
-                                   <h:outputText value="#{bundle['file.dataFilesTab.terms.list.termsOfAccess.requestAccess.notRequest']}" rendered="#{!termsOfUseOrLicense.fileAccessRequest}"/>
+                                   <h:outputText value="#{bundle['file.dataFilesTab.terms.list.termsOfAccess.requestAccess.request']}" rendered="#{termsOfAccess.fileAccessRequest}"/>
+                                   <h:outputText value="#{bundle['file.dataFilesTab.terms.list.termsOfAccess.requestAccess.notRequest']}" rendered="#{!termsOfAccess.fileAccessRequest}"/>
                                </p>
                            </div>
                        </div>
@@ -326,13 +326,13 @@
                            </label>
                            <div class="col-sm-9">
                                 <p:selectBooleanCheckbox id="requestAccess" itemLabel="#{bundle['file.dataFilesTab.terms.list.termsOfAccess.requestAccess.enableBtn']}" 
-                                                        value="#{termsOfUseOrLicense.fileAccessRequest}" disabled="#{datasetPage == true and !DatasetPage.hasRestrictedFiles}">
+                                                        value="#{termsOfAccess.fileAccessRequest}" disabled="#{datasetPage == true and !DatasetPage.hasRestrictedFiles}">
                                    <p:ajax event="change" update="termsOfAccessHelp" />
                                </p:selectBooleanCheckbox>                                                          
                            </div>
                        </div>
                        <p:fragment id="toaValidation">
-                           <div  class="ui-message ui-message-error ui-widget ui-corner-all" aria-live="polite" jsf:rendered="#{datasetPage == true and DatasetPage.hasRestrictedFiles and empty termsOfAccess.termsOfAccess  and !termsOfUseOrLicense.fileAccessRequest}">
+                           <div  class="ui-message ui-message-error ui-widget ui-corner-all" aria-live="polite" jsf:rendered="#{datasetPage == true and DatasetPage.hasRestrictedFiles and empty termsOfAccess.termsOfAccess  and !termsOfAccess.fileAccessRequest}">
                                <span class="ui-message-error-detail">#{bundle['file.dataFilesTab.terms.list.termsOfAccess.requestAccess.warning.outofcompliance']}</span>          
                            </div>
                        </p:fragment>
@@ -351,7 +351,7 @@
                     <p:fragment>
                         <p:autoUpdate/>
                         <o:inputHidden id="termsofAccessHiddenLT" value="#{termsOfAccess.termsOfAccess}" />
-                        <o:inputHidden id="fileAccessRequestHiddenLT" value="#{termsOfUseOrLicense.fileAccessRequest}" />
+                        <o:inputHidden id="fileAccessRequestHiddenLT" value="#{termsOfAccess.fileAccessRequest}" />
                      </p:fragment>
 
                    </ui:fragment>
