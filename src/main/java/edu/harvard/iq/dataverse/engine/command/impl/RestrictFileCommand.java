@@ -73,10 +73,13 @@ public class RestrictFileCommand extends AbstractVoidCommand {
         else {
             Dataset dataset = file.getOwner();
             DatasetVersion workingVersion = dataset.getOrCreateEditVersion();
+            if (workingVersion.getTermsOfAccess() == null) {
+                workingVersion.setTermsOfAccess(new TermsOfAccess());
+            }
+            if (workingVersion.getTermsOfUseOrLicense() == null) {
+                workingVersion.setTermsOfUseOrLicense(new TermsOfUseOrLicense());
+            }
             if (restrict && fileAccessRequest != null) {
-                if (workingVersion.getTermsOfUseOrLicense() == null) {
-                    workingVersion.setTermsOfUseOrLicense(new TermsOfUseOrLicense());
-                }
                 workingVersion.getTermsOfAccess().setFileAccessRequest(fileAccessRequest);
                 workingVersion.getTermsOfAccess().setTermsOfAccess(termsOfAccess);
             }
