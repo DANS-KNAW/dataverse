@@ -22,20 +22,18 @@ public class UpdateDatasetTermsOfAccessCommand  extends AbstractDatasetCommand<D
     
     private final Dataset dataset;
     private final TermsOfAccess termsOfAccess;
-    private final TermsOfUseOrLicense termsOfUseOrLicense;
     private final UpdateDatasetVersionCommand updateDatasetVersionCommand;
     
-    public UpdateDatasetTermsOfAccessCommand(Dataset dataset, TermsOfAccess termsOfAccess,  DataverseRequest request, TermsOfUseOrLicense termsOfUseOrLicense) {
-        this(dataset, termsOfAccess, termsOfUseOrLicense,  request, null);
+    public UpdateDatasetTermsOfAccessCommand(Dataset dataset, TermsOfAccess termsOfAccess,  DataverseRequest request) {
+        this(dataset, termsOfAccess, request, null);
     }
 
     //Command included for testing purposes
-    public UpdateDatasetTermsOfAccessCommand( Dataset dataset, TermsOfAccess termsOfAccess, TermsOfUseOrLicense termsOfUseOrLicense,
+    public UpdateDatasetTermsOfAccessCommand( Dataset dataset, TermsOfAccess termsOfAccess,
         DataverseRequest aRequest, UpdateDatasetVersionCommand updateDatasetVersionCommand) {
         super(aRequest, dataset);
         this.dataset = dataset;
         this.termsOfAccess = termsOfAccess;
-        this.termsOfUseOrLicense = termsOfUseOrLicense;
         this.updateDatasetVersionCommand = updateDatasetVersionCommand;
     }
 

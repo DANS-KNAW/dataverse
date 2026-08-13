@@ -59,20 +59,19 @@ public class UpdateDatasetTermsOfAccessCommandTest {
         when(commandContextMock.engine()).thenReturn(dataverseEngineMock);
         when(datasetMock.getOrCreateEditVersion()).thenReturn(datasetVersionMock);
         when(datasetVersionMock.getTermsOfAccess()).thenReturn(termsOfAccessMock);
-        when(datasetVersionMock.getTermsOfUseOrLicense()).thenReturn(termsOUAL.copyTermsOfUseOrLicense());
         dataset = new Dataset();
         dataset.getOrCreateEditVersion().setTermsOfAccess(new TermsOfAccess());
         dataset.getOrCreateEditVersion().setTermsOfUseOrLicense(new TermsOfUseOrLicense());
         termsOA = new TermsOfAccess();
         termsOUAL = new TermsOfUseOrLicense();
 
-        command = new UpdateDatasetTermsOfAccessCommand(datasetMock, termsOA, termsOUAL, request, updateDatasetVersionCommand);
+        command = new UpdateDatasetTermsOfAccessCommand(datasetMock, termsOA, request, updateDatasetVersionCommand);
     }
     
     @Test
     public void execute_shouldUpdateRequestAndSetVersionStateToDraft() throws CommandException {
         // Arrange
-        UpdateDatasetTermsOfAccessCommand sut = new UpdateDatasetTermsOfAccessCommand(datasetMock, termsOA, termsOUAL, request, updateDatasetVersionCommand);
+        UpdateDatasetTermsOfAccessCommand sut = new UpdateDatasetTermsOfAccessCommand(datasetMock, termsOA, request, updateDatasetVersionCommand);
 
         // Act
         sut.execute(commandContextMock);

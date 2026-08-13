@@ -72,6 +72,7 @@ public class CreateTemplateCommand extends AbstractCommand<Template> {
     private static void updateTermsOfAccess(CommandContext ctxt, Template template) {
         var toa = new TermsOfAccess();
         toa.setFileAccessRequest(true);
+        toa.setTemplate(template);
         template.setTermsOfAccess(toa);
     }
 
