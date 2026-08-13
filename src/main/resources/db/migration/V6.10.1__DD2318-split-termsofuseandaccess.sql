@@ -44,33 +44,23 @@ BEGIN
         FROM termsofuseandaccess
         ON CONFLICT (id) DO NOTHING;
 
-        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='datasetversion' AND column_name='termsofuseandaccess_id') THEN
-            UPDATE datasetversion
-            SET termsofaccess_id = termsofuseandaccess_id,
-                default_termsofuseorlicense_id = termsofuseandaccess_id
-            WHERE termsofaccess_id IS NULL OR default_termsofuseorlicense_id IS NULL;
-        END IF;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='datasetversion' AND column_name='termsofuseandaccess_id') THEN
+        UPDATE datasetversion
+        SET termsofaccess_id = termsofuseandaccess_id,
+            default_termsofuseorlicense_id = termsofuseandaccess_id
+        WHERE termsofaccess_id IS NULL OR default_termsofuseorlicense_id IS NULL;
+    END IF;
 
-        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='template' AND column_name='termsofuseandaccess_id') THEN
-            UPDATE template
-            SET termsofaccess_id = termsofuseandaccess_id,
-                termsofuseorlicense_id = termsofuseandaccess_id
-            WHERE termsofaccess_id IS NULL OR termsofuseorlicense_id IS NULL;
-        END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='template' AND column_name='termsofuseandaccess_id') THEN
+        UPDATE template
+        SET termsofaccess_id = termsofuseandaccess_id,
+            termsofuseorlicense_id = termsofuseandaccess_id
+        WHERE termsofaccess_id IS NULL OR termsofuseorlicense_id IS NULL;
     END IF;
 
     ALTER TABLE datasetversion DROP COLUMN IF EXISTS termsofuseandaccess_id;
     ALTER TABLE template DROP COLUMN IF EXISTS termsofuseandaccess_id;
-
-    IF NOT EXISTS (SELECT 1 FROM datasetversion WHERE termsofaccess_id IS NULL OR default_termsofuseorlicense_id IS NULL) THEN
-        ALTER TABLE datasetversion ALTER COLUMN termsofaccess_id SET NOT NULL;
-        ALTER TABLE datasetversion ALTER COLUMN default_termsofuseorlicense_id SET NOT NULL;
-    END IF;
-
-    IF NOT EXISTS (SELECT 1 FROM template WHERE termsofaccess_id IS NULL OR termsofuseorlicense_id IS NULL) THEN
-        ALTER TABLE template ALTER COLUMN termsofaccess_id SET NOT NULL;
-        ALTER TABLE template ALTER COLUMN termsofuseorlicense_id SET NOT NULL;
-    END IF;
 
     DROP TABLE IF EXISTS termsofuseandaccess;
 
