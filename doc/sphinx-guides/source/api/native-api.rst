@@ -2679,7 +2679,6 @@ To define custom terms of access, provide a JSON body with the following propert
 
 .. code-block:: json
 
-  [
     {
       "customTermsOfAccess": {
         "fileAccessRequest": true,
@@ -2692,7 +2691,6 @@ To define custom terms of access, provide a JSON body with the following propert
         "studyCompletion": "Your study completion"
       }
     }
-  ]
 
 .. code-block:: bash
 
