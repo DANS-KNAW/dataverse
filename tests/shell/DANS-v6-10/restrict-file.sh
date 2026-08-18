@@ -2,7 +2,7 @@ set -ex
 
 cd ~/git/dans-core-systems/
 
-#grep dev_lifesciences config.yml
+grep dev_lifesciences config.yml
 start-preprovisioned-box.py -s dev_vocabs dev_dataversenl
 # to be able to check migration:
 # manually add restrictions and all terms fields with a custom license
@@ -21,11 +21,12 @@ deploy.py -e shared_dataverse_payara_dir=payara7 --dataverse-war external/datave
 ## show how we deployed the flyway script
 #grep create-tables external/dataverse/src/main/resources/META-INF/persistence.xml
 
-# the key is only for a dataverse VM which is not publicly accessible, so it is safe to share it here
-export API_TOKEN=c87eb8fc-b4e0-4543-a57b-5533834c4b58
-
+grep dev_dataversenl config.yml
+echo "curl commands use hardcoded values for dev_dataversenl_v6.10-PATCH-7_2026-07-19"
+: "${API_TOKEN:?Set API_TOKEN to the API token of dataverseAdmin on dev_dataversenl_v6.10-PATCH-7_2026-07-19}"
 # files     10 8 6
 # datasets   9 7 5
+# dataverses 1(root) 2(dans) 3(general) 4(testv610)
 
 # &sourceLastUpdateTime=2026-07-19T13:48:15Z
 # is the lastUpdateTime from the exported metadata but causes timestamp outdated error
@@ -44,8 +45,6 @@ curl -H "X-Dataverse-key: $API_TOKEN" -X POST "https://dev.dataverse.nl/api/data
 curl -X PUT "https://dev.dataverse.nl/api/datasets/5/license" -H "X-Dataverse-key: $API_TOKEN" -H "Content-Type: application/json" -d '{ "name": "CC BY 4.0" }'
 curl -X PUT "https://dev.dataverse.nl/api/datasets/5/license" -H "X-Dataverse-key: $API_TOKEN" -H "Content-Type: application/json" \
      -d '{ "customTerms": { "termsOfUse": "Your terms of use", "restrictions": "Your restrictions" } }'
-
-# dataverses 1(root) 2(dans) 3(general) 4(testv610)
 
 curl -X POST "https://dev.dataverse.nl/api/dataverses/4/templates" -H "X-Dataverse-key: $API_TOKEN" -H "Content-Type: application/json" \
 --upload-file external/dataverse/tests/shell/DANS-v6-10/template-CCBY.json
