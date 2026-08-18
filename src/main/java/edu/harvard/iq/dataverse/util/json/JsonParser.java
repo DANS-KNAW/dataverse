@@ -385,6 +385,7 @@ public class JsonParser {
             toaa = touaIn;
         }
 
+        toaa.setFileAccessRequest(terms.getBoolean("fileAccessRequest", false));
         toaa.setTermsOfAccess(terms.getString("termsOfAccess", null));
         toaa.setDataAccessPlace(terms.getString("dataAccessPlace", null));
         toaa.setOriginalArchive(terms.getString("originalArchive", null));
@@ -530,8 +531,13 @@ public class JsonParser {
             termsOfAccess.setSizeOfCollection(obj.getString("sizeOfCollection", null));
             termsOfAccess.setStudyCompletion(obj.getString("studyCompletion", null));
             termsOfAccess.setFileAccessRequest(obj.getBoolean("fileAccessRequest", false));
+
             dsv.setTermsOfAccess(termsOfAccess);
             termsOfAccess.setDatasetVersion(dsv);
+
+            dsv.setTermsOfUseOrLicense(termsOfUseOrLicense);
+            termsOfUseOrLicense.setDatasetVersion(dsv);
+
             JsonObject metadataBlocks = obj.getJsonObject("metadataBlocks");
             if (metadataBlocks == null){
                 throw new JsonParseException(BundleUtil.getStringFromBundle("jsonparser.error.metadatablocks.not.found"));

@@ -37,6 +37,7 @@ curl -H "X-Dataverse-key:$API_TOKEN" -X PUT "https://dev.dataverse.nl/api/files/
      -d '{"restrict": true, "enableAccessRequest":true, "termsOfAccess": "Reason for the restricted access"}'
 curl -H "X-Dataverse-key: $API_TOKEN" -X POST "https://dev.dataverse.nl/api/datasets/9/actions/:publish?type=minor"
 
+# the follwing works when interactively copy-pasting the following three lines on the terminal, but not when running the script
 curl -H "X-Dataverse-key:$API_TOKEN" -X PUT "https://dev.dataverse.nl/api/datasets/9/access" -H "Content-Type: application/json" \
      -d '{ "customTermsOfAccess": { "fileAccessRequest": true, "termsOfAccess": "Your changed terms of access for restricted files" } }'
 sleep 5

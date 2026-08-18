@@ -849,6 +849,8 @@ public class Datasets extends AbstractApiBean {
                 final DatasetVersion editVersion = ds.getOrCreateEditVersion();
                 editVersion.setDatasetFields(incomingVersion.getDatasetFields());
                 editVersion.setTermsOfAccess(incomingVersion.getTermsOfAccess());
+                editVersion.getTermsOfAccess().setDatasetVersion(editVersion);
+                editVersion.setTermsOfUseOrLicense(incomingVersion.getTermsOfUseOrLicense());
                 editVersion.getTermsOfUseOrLicense().setDatasetVersion(editVersion);
                 boolean hasValidTerms = TermsOfAccessValidator.isTOUAValid(editVersion.getTermsOfAccess(), null);
                 if (!hasValidTerms) {

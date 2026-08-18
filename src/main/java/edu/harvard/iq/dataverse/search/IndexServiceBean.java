@@ -2020,8 +2020,8 @@ public class IndexServiceBean {
     }
 
     private void addLicenseToSolrDoc(SolrInputDocument solrInputDocument, DatasetVersion datasetVersion) {
-        if (datasetVersion != null && datasetVersion.getTermsOfAccess() != null) {
-            //test to see if the terms of use are the default set in 5.10 - if so and there's no license then don't add license to solr doc.   
+        if (datasetVersion != null && datasetVersion.getTermsOfUseOrLicense() != null) {
+            //test to see if the terms of use are the default set in 5.10 - if so and there's no license then don't add license to solr doc.
             //fixes 10513
             if(TermsOfUseOrLicense.DEFAULT_NOTERMS.equals(datasetVersion.getTermsOfUseOrLicense().getTermsOfUse())) {
                 return; 
