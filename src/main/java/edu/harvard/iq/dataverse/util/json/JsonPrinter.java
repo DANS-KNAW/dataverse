@@ -622,7 +622,6 @@ public class JsonPrinter {
                     .add("disclaimer", dsv.getTermsOfUseOrLicense().getDisclaimer());
         }
         bld.add("termsOfAccess", dsv.getTermsOfAccess().getTermsOfAccess())
-                .add("termsOfAccess", dsv.getTermsOfAccess().getTermsOfAccess())
                 .add("dataAccessPlace", dsv.getTermsOfAccess().getDataAccessPlace())
                 .add("originalArchive", dsv.getTermsOfAccess().getOriginalArchive())
                 .add("availabilityStatus", dsv.getTermsOfAccess().getAvailabilityStatus())
