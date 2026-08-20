@@ -361,9 +361,6 @@ public class JsonParser {
         toal.setDepositorRequirements(terms.getString("depositorRequirements", null));
         toal.setConditions(terms.getString("conditions", null));
         toal.setDisclaimer(terms.getString("disclaimer", null));
-        // TODO functionally different
-        toal.setConfidentialityDeclaration(terms.getString("confidentialityDeclaration", null));
-
         return toal;
     }
 
