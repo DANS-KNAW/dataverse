@@ -722,7 +722,7 @@ public class DatasetVersion implements Serializable {
             } else {
                 TermsOfUseOrLicense terms = new TermsOfUseOrLicense();
                 terms.setDatasetVersion(dsv);
-                // terms.setLicense(License.CC0); TODO get from some licenseServiceBean?
+                // terms.setLicense(License.CC0);
                 dsv.setTermsOfUseOrLicense(terms);
             }
 
