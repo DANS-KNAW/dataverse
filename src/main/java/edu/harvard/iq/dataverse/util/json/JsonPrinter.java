@@ -630,10 +630,16 @@ public class JsonPrinter {
                 .add("studyCompletion", dsv.getTermsOfAccess().getStudyCompletion())
             .add("fileAccessRequest", dsv.getTermsOfAccess().isFileAccessRequest());
 
+        if(includeMetadataBlocks) {
             bld.add("metadataBlocks",
                 jsonByBlocks(dsv.getDatasetFields(), anonymizedFieldTypeNamesList, ignoreSettingExcludeEmailFromExport));
-        bld.add("files", jsonFileMetadatas(dsv.getFileMetadatas()));
-
+        }
+        if(returnOwners){
+            bld.add("isPartOf", getOwnersFromDvObject(dataset));
+        }
+        if (includeFiles) {
+            bld.add("files", jsonFileMetadatas(dsv.getFileMetadatas()));
+        }
         return bld;
     }
 
