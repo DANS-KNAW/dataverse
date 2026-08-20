@@ -2,7 +2,6 @@ package edu.harvard.iq.dataverse.engine.command.impl;
 
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetVersion;
-import edu.harvard.iq.dataverse.TermsOfAccess;
 import edu.harvard.iq.dataverse.TermsOfUseOrLicense;
 import edu.harvard.iq.dataverse.engine.DataverseEngine;
 import edu.harvard.iq.dataverse.engine.command.CommandContext;
@@ -41,10 +40,6 @@ public class UpdateDatasetLicenseCommandTest {
     private TermsOfUseOrLicense termsOfUseOrLicenseSpy = new TermsOfUseOrLicense();
     @Mock
     private TermsOfUseOrLicense customTermsOfUseOrLicenseMock;
-    @Spy
-    private TermsOfUseOrLicense termsOfAccessSpy = new TermsOfUseOrLicense();
-    @Mock
-    private TermsOfAccess customTermsOfAccessMock;
     @Mock
     private DataverseEngine dataverseEngineMock;
     @Mock
@@ -118,7 +113,7 @@ public class UpdateDatasetLicenseCommandTest {
         when(customTermsOfUseOrLicenseMock.getDisclaimer()).thenReturn(disclaimer);
 
         termsOfUseOrLicenseSpy.setLicense(activeLicense);
-        UpdateDatasetLicenseCommand sut = new UpdateDatasetLicenseCommand(dataverseRequestStub, datasetMock, customTermsOfAccessMock, customTermsOfUseOrLicenseMock);
+        UpdateDatasetLicenseCommand sut = new UpdateDatasetLicenseCommand(dataverseRequestStub, datasetMock, customTermsOfUseOrLicenseMock);
 
         // Act
         sut.execute(commandContextMock);
@@ -146,7 +141,7 @@ public class UpdateDatasetLicenseCommandTest {
     public void execute_shouldThrowException_whenCustomTermsOfUseAreNullOrBlank(String invalidTerms) {
         // Arrange
         when(customTermsOfUseOrLicenseMock.getTermsOfUse()).thenReturn(invalidTerms);
-        UpdateDatasetLicenseCommand sut = new UpdateDatasetLicenseCommand(dataverseRequestStub, datasetMock, customTermsOfAccessMock, customTermsOfUseOrLicenseMock);
+        UpdateDatasetLicenseCommand sut = new UpdateDatasetLicenseCommand(dataverseRequestStub, datasetMock, customTermsOfUseOrLicenseMock);
         String expectedMessage = BundleUtil.getStringFromBundle("updateDatasetLicenseCommand.errors.customTermsOfUseNotProvided");
 
         // Act & Assert

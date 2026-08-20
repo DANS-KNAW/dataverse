@@ -2,7 +2,6 @@ package edu.harvard.iq.dataverse.engine.command.impl;
 
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetVersion;
-import edu.harvard.iq.dataverse.TermsOfAccess;
 import edu.harvard.iq.dataverse.TermsOfUseOrLicense;
 import edu.harvard.iq.dataverse.authorization.Permission;
 import edu.harvard.iq.dataverse.engine.command.*;
@@ -16,7 +15,6 @@ import java.util.List;
 @RequiredPermissions(Permission.EditDataset)
 public class UpdateDatasetLicenseCommand extends AbstractDatasetCommand<Dataset> {
     private License license = null;
-    private TermsOfAccess customTermsOfAccess = null;
     private TermsOfUseOrLicense customTermsOfUseOrLicense = null;
 
     public UpdateDatasetLicenseCommand(DataverseRequest aRequest, Dataset dataset, License license) {
@@ -24,9 +22,8 @@ public class UpdateDatasetLicenseCommand extends AbstractDatasetCommand<Dataset>
         this.license = license;
     }
 
-    public UpdateDatasetLicenseCommand(DataverseRequest aRequest, Dataset dataset, TermsOfAccess customTermsOfAccess, TermsOfUseOrLicense customTermsOfUseOrLicense) {
+    public UpdateDatasetLicenseCommand(DataverseRequest aRequest, Dataset dataset, TermsOfUseOrLicense customTermsOfUseOrLicense) {
         super(aRequest, dataset);
-        this.customTermsOfAccess = customTermsOfAccess;
         this.customTermsOfUseOrLicense = customTermsOfUseOrLicense;
     }
 
@@ -45,15 +42,8 @@ public class UpdateDatasetLicenseCommand extends AbstractDatasetCommand<Dataset>
             termsOfUseOrLicense.setLicense(license);
 
             savedDataset = ctxt.engine().submit(new UpdateDatasetVersionCommand(getDataset(), getRequest()));
-        } else {
-            // TODO check changed logic
-            boolean blankTermsOfUse = customTermsOfUseOrLicense != null
-                                      && (customTermsOfUseOrLicense.getTermsOfUse() == null
-                                          || customTermsOfUseOrLicense.getTermsOfUse().isBlank());
-            boolean blankTermsOfAcess = customTermsOfAccess != null
-                                      && (customTermsOfAccess.getTermsOfAccess() == null
-                                          || customTermsOfAccess.getTermsOfAccess().isBlank());
-            if (blankTermsOfUse && blankTermsOfAcess) {
+        } else if (customTermsOfUseOrLicense != null) {
+            if (customTermsOfUseOrLicense.getTermsOfUse() == null || customTermsOfUseOrLicense.getTermsOfUse().isBlank()) {
                 throw new InvalidCommandArgumentsException(BundleUtil.getStringFromBundle("updateDatasetLicenseCommand.errors.customTermsOfUseNotProvided"), this);
             }
             TermsOfUseOrLicense termsToUpdate = datasetVersion.getTermsOfUseOrLicense();

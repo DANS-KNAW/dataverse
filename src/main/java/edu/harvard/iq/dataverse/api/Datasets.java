@@ -6255,7 +6255,7 @@ public Response getDatasetExternalToolUrl(@Context ContainerRequestContext crc, 
             } else if (requestBody.getCustomTerms() != null) {
                 CustomTermsDTO customTerms = requestBody.getCustomTerms();
                 // TODO or null for new TermsOfAccess()?
-                execCommand(new UpdateDatasetLicenseCommand(req, dataset, new TermsOfAccess(), customTerms.toTermsOfUseOrLicense()));
+                execCommand(new UpdateDatasetLicenseCommand(req, dataset, customTerms.toTermsOfUseOrLicense()));
                 return ok(BundleUtil.getStringFromBundle("datasets.api.updateLicense.success"));
             } else {
                 return badRequest(BundleUtil.getStringFromBundle("datasets.api.updateLicense.licenseNameIsEmpty"));
