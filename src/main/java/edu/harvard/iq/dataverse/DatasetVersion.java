@@ -1837,22 +1837,23 @@ public class DatasetVersion implements Serializable {
         }
         
         TermsOfAccess toa = this.termsOfAccess;
-        TermsOfUseOrLicense toual= this.termsOfUseOrLicense;
         //Only need to test Terms of Use and Access if there are restricted files
         if (toa != null && this.isHasRestrictedFile()) {
             Set<ConstraintViolation<TermsOfAccess>> accessViolations = validator.validate(toa);
             if (accessViolations.size() > 0) {
                 ConstraintViolation<TermsOfAccess> violation = accessViolations.iterator().next();
-                String message = BundleUtil.getStringFromBundle("dataset.message.toua.invalid");
-                logger.info(message);
-                this.termsOfAccess.setValidationMessage(message);
+                logger.info(violation.getMessage());
                 returnSet.add(violation);
             }
-            // TODO only the next needed?
-            Set<ConstraintViolation<TermsOfUseOrLicense>> ualViolations = validator.validate(toual);
-            if (ualViolations.size() > 0) {
-                ConstraintViolation<TermsOfUseOrLicense> violation = ualViolations.iterator().next();
-                String message = BundleUtil.getStringFromBundle("dataset.message.toua.invalid");
+        }
+        TermsOfUseOrLicense touol= this.termsOfUseOrLicense;
+        if (touol != null && this.isHasRestrictedFile()) {
+            Set<ConstraintViolation<TermsOfUseOrLicense>> uolViolations = validator.validate(touol);
+            if (uolViolations.size() > 0) {
+                ConstraintViolation<TermsOfUseOrLicense> violation = uolViolations.iterator().next();
+                String message = "Constraint violation found in TermsOfUseOrLicense. "
+                                 + violation.getMessage() + " "
+                                 + "The invalid value is \"" + violation.getInvalidValue().toString() + "\".";
                 logger.info(message);
                 this.termsOfUseOrLicense.setValidationMessage(message);
                 returnSet.add(violation);
@@ -1861,7 +1862,7 @@ public class DatasetVersion implements Serializable {
         
         return returnSet;
     }
-    
+
     public List<WorkflowComment> getWorkflowComments() {
         return workflowComments;
     }

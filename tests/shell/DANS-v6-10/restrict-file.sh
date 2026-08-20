@@ -13,11 +13,12 @@ deploy.py -e shared_dataverse_payara_dir=payara7 --dataverse-war external/datave
 
 ## show potential problems caused by the flyway
 #vagrant ssh dev_dataversenl -c 'journalctl -u payara | grep ERR | tail -10'
-#
+#vagrant ssh dev_dataversenl -c 'journalctl -u payara --no-pager' | grep PER01000 | grep -v 'already exists'
+
 ## show the flyway script applied the changes
 #vagrant ssh dev_dataversenl -c "sudo -u postgres psql dvndb -c \"select * from termsofaccess;select * from termsofuseorlicense;select * from datasetversion;select * from template;select * from filemetadata;\""
 #vagrant ssh dev_dataversenl -c "sudo -u postgres psql dvndb -c \"select * from flyway_schema_history;\"" < /dev/null | egrep '(DD|version)'
-#
+
 ## show how we deployed the flyway script
 #grep create-tables external/dataverse/src/main/resources/META-INF/persistence.xml
 
