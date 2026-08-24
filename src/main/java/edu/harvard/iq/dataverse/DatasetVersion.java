@@ -25,9 +25,12 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  *
@@ -1835,32 +1838,32 @@ public class DatasetVersion implements Serializable {
                 }
             }
         }
-        
-        TermsOfAccess toa = this.termsOfAccess;
-        //Only need to test Terms of Use and Access if there are restricted files
-        if (toa != null && this.isHasRestrictedFile()) {
-            Set<ConstraintViolation<TermsOfAccess>> accessViolations = validator.validate(toa);
-            if (accessViolations.size() > 0) {
-                ConstraintViolation<TermsOfAccess> violation = accessViolations.iterator().next();
-                logger.info(violation.getMessage());
-                returnSet.add(violation);
+
+        if (this.termsOfAccess != null) {
+            var violations = validator.validate(this.termsOfAccess);
+            if (violations.size() > 0) {
+                returnSet.add(getViolation(violations, this.termsOfAccess.getValidationMessage()));
             }
         }
-        TermsOfUseOrLicense touol= this.termsOfUseOrLicense;
-        if (touol != null && this.isHasRestrictedFile()) {
-            Set<ConstraintViolation<TermsOfUseOrLicense>> uolViolations = validator.validate(touol);
-            if (uolViolations.size() > 0) {
-                ConstraintViolation<TermsOfUseOrLicense> violation = uolViolations.iterator().next();
-                String message = "Constraint violation found in TermsOfUseOrLicense. "
-                                 + violation.getMessage() + " "
-                                 + "The invalid value is \"" + violation.getInvalidValue().toString() + "\".";
-                logger.info(message);
-                this.termsOfUseOrLicense.setValidationMessage(message);
-                returnSet.add(violation);
+        if (this.termsOfUseOrLicense != null) {
+            var violations = validator.validate(this.termsOfUseOrLicense);
+            if (violations.size() > 0) {
+                returnSet.add(getViolation(violations, this.termsOfUseOrLicense.getValidationMessage()));
             }
         }
         
         return returnSet;
+    }
+
+    private <T> ConstraintViolation<T> getViolation(Set<ConstraintViolation<T>> violations, String msg) {
+        String validationMessage = violations.stream()
+            .map(cv -> cv.getMessage() + " (Invalid value:" + cv.getInvalidValue() + ")")
+            .collect(joining(", ", "Validation Failed: ", "."));
+        logger.info(validationMessage);
+        return violations.stream()
+            .filter(v -> Objects.equals(v.getMessage(), msg))
+            .findFirst()
+            .orElseGet(() -> violations.iterator().next());
     }
 
     public List<WorkflowComment> getWorkflowComments() {

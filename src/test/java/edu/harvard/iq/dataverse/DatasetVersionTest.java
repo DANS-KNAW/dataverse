@@ -247,12 +247,13 @@ public class DatasetVersionTest {
         var violations = datasetVersion.validate();
 
         var expectedMessge = BundleUtil.getStringFromBundle("dataset.message.toua.invalid");
+        assertThat(termsOfAccess.getValidationMessage()).isEqualTo(expectedMessge);
         assertEquals(1, violations.size());
         assertThat(violations.iterator().next().getMessage()).isEqualTo(expectedMessge);
     }
 
     @Test
-    @Disabled("implemented in webUI  and  datasets/{id}/license")
+    @Disabled("implemented explicitly in webUI  and  datasets/{id}/license")
     public void testInValidLicense() {
         var datasetVersion = new DatasetVersion();
 
