@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS termsofaccess (
-                       id  SERIAL NOT NULL,
+                       id  BIGSERIAL NOT NULL,
                        availabilitystatus TEXT,
                        contactforaccess TEXT,
                        dataaccessplace TEXT,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS termsofaccess (
 );
 
 CREATE TABLE IF NOT EXISTS termsofuseorlicense (
-                             id  SERIAL NOT NULL,
+                             id  BIGSERIAL NOT NULL,
                              citationrequirements TEXT,
                              conditions TEXT,
                              confidentialitydeclaration TEXT,
