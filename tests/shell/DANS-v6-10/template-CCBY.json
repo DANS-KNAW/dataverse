@@ -1,6 +1,5 @@
 {
   "name": "CC BY 4.0 with mandatory fields",
-  "isDefault": true,
   "fields": [
     {"typeName": "title", "multiple": false, "typeClass": "primitive", "value": "test"},
     {
@@ -21,15 +20,6 @@
       "value": [{"dsDescriptionValue": {"typeName": "dsDescriptionValue", "multiple": false, "typeClass": "primitive", "value": "t"}}]
     },
     {"typeName": "subject", "multiple": true, "typeClass": "controlledVocabulary", "value": ["Arts and Humanities"]}
-  ],
-  "license": {
-    "name": "CC BY 4.0",
-    "uri": "http://creativecommons.org/licenses/by/4.0",
-    "iconUri": "https://licensebuttons.net/l/by/4.0/88x31.png",
-    "rightsIdentifier": "CC-BY-4.0",
-    "rightsIdentifierScheme": "SPDX",
-    "schemeUri": "https://spdx.org/licenses/",
-    "languageCode": "en"
-  }
+  ]
 }
 
