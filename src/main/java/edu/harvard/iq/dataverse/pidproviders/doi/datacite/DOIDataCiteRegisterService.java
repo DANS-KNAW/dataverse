@@ -147,12 +147,12 @@ public class DOIDataCiteRegisterService {
         return retString;
     }
 
-        public static String getMetadataFromDvObject(String identifier, Map<String, String> metadata, DvObject dvObject) {
+    public static String getMetadataFromDvObject(String identifier, Map<String, String> metadata, DvObject dvObject) {
         return getMetadataFromDvObject(identifier, metadata, dvObject, DatafileInfoMode.EXPANDED);
     }
 
-        public static String getMetadataFromDvObject(String identifier, Map<String, String> metadata, DvObject dvObject,
-                DatafileInfoMode datafileInfoMode) {
+    public static String getMetadataFromDvObject(String identifier, Map<String, String> metadata, DvObject dvObject,
+            DatafileInfoMode datafileInfoMode) {
 
         Dataset dataset = null;
 
@@ -217,8 +217,6 @@ public class DOIDataCiteRegisterService {
         doiMetadata.setDescription(AbstractPidProvider.UNAVAILABLE);
 
         String title =metadata.get("datacite.title");
-
-        System.out.print("Map metadata title: "+ metadata.get("datacite.title"));
 
         doiMetadata.setAuthors(null);
 

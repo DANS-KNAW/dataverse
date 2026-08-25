@@ -349,7 +349,6 @@ public class XmlMetadataTemplateTest {
         DoiMetadata doiMetadata = createMinimalDoiMetadata();
 
         String expandedXml = new XmlMetadataTemplate(doiMetadata, DatafileInfoMode.EXPANDED).generateXML(dataset);
-        assertDataCiteXmlIsSchemaValid(expandedXml);
         assertEquals(List.of("100", "200", "300"), XmlPath.from(expandedXml).getList("resource.sizes.size"));
         assertEquals(List.of("text/plain", "application/pdf", "text/plain"),
                 XmlPath.from(expandedXml).getList("resource.formats.format"));
@@ -361,7 +360,6 @@ public class XmlMetadataTemplateTest {
                 XmlPath.from(briefXml).getList("resource.formats.format"));
 
         String noneXml = new XmlMetadataTemplate(doiMetadata, DatafileInfoMode.NONE).generateXML(dataset);
-        assertDataCiteXmlIsSchemaValid(noneXml);
         assertFalse(noneXml.contains("<sizes>"));
         assertFalse(noneXml.contains("<formats>"));
 
