@@ -2,6 +2,7 @@ package edu.harvard.iq.dataverse.pidproviders.doi.datacite;
 
 import edu.harvard.iq.dataverse.ControlledVocabularyValue;
 import edu.harvard.iq.dataverse.DataCitation;
+import edu.harvard.iq.dataverse.DataFile;
 import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DatasetAuthor;
 import edu.harvard.iq.dataverse.DatasetField;
@@ -22,6 +23,7 @@ import edu.harvard.iq.dataverse.dataset.DatasetType;
 import edu.harvard.iq.dataverse.pidproviders.PidProviderFactoryBean;
 import edu.harvard.iq.dataverse.pidproviders.doi.DoiMetadata;
 import edu.harvard.iq.dataverse.pidproviders.doi.XmlMetadataTemplate;
+import edu.harvard.iq.dataverse.pidproviders.doi.XmlMetadataTemplate.DatafileInfoMode;
 import edu.harvard.iq.dataverse.settings.JvmSettings;
 import edu.harvard.iq.dataverse.settings.SettingsServiceBean;
 import edu.harvard.iq.dataverse.util.json.CompoundVocabularyException;
@@ -271,7 +273,7 @@ public class XmlMetadataTemplateTest {
         }
 
     }
-    
+
     /**
      * This tests a more complete example based off of the dataset-all-defaults
      * file, again checking for conformance of the result with the DataCite XML v4.5
@@ -307,16 +309,16 @@ public class XmlMetadataTemplateTest {
         List<DatasetField> fields = assertDoesNotThrow(() -> XmlMetadataTemplateTest
                 .parseMetadataBlocks(datasetJson.getJsonObject("datasetVersion").getJsonObject("metadataBlocks")));
         dv.setDatasetFields(fields);
-        
+
         JsonValue jsonValueFields = datasetJson.getJsonObject("datasetVersion").getJsonObject("metadataBlocks").getJsonObject("citation").get("fields");
-        
+
         for(JsonValue jsonValue : jsonValueFields.asJsonArray()) {
             JsonObject jsonObject = jsonValue.asJsonObject();
             if (jsonObject.getString("typeName").equals("productionPlace")) {
                 assertEquals(jsonObject.get("value").asJsonArray().size(),2);
             }
         }
-        
+
         ArrayList<DatasetVersion> dsvs = new ArrayList<>();
         dsvs.add(0, dv);
         d.setVersions(dsvs);
@@ -335,6 +337,86 @@ public class XmlMetadataTemplateTest {
             System.out.println("Invalid schema: " + e.getMessage());
         }
 
+    }
+
+    @Test
+    public void testDataCiteXMLDatafileInfoModes() throws Exception {
+        Dataset dataset = createDatasetWithFiles(
+                createDataFile(100L, "text/plain"),
+                createDataFile(200L, "application/pdf"),
+                createDataFile(300L, "text/plain"),
+                createDataFile(-1L, null));
+        DoiMetadata doiMetadata = createMinimalDoiMetadata();
+
+        String expandedXml = new XmlMetadataTemplate(doiMetadata, DatafileInfoMode.EXPANDED).generateXML(dataset);
+        assertDataCiteXmlIsSchemaValid(expandedXml);
+        assertEquals(List.of("100", "200", "300"), XmlPath.from(expandedXml).getList("resource.sizes.size"));
+        assertEquals(List.of("text/plain", "application/pdf", "text/plain"),
+                XmlPath.from(expandedXml).getList("resource.formats.format"));
+
+        String briefXml = new XmlMetadataTemplate(doiMetadata, DatafileInfoMode.BRIEF).generateXML(dataset);
+        assertDataCiteXmlIsSchemaValid(briefXml);
+        assertEquals(List.of("600"), XmlPath.from(briefXml).getList("resource.sizes.size"));
+        assertEquals(List.of("text/plain", "application/pdf"),
+                XmlPath.from(briefXml).getList("resource.formats.format"));
+
+        String noneXml = new XmlMetadataTemplate(doiMetadata, DatafileInfoMode.NONE).generateXML(dataset);
+        assertDataCiteXmlIsSchemaValid(noneXml);
+        assertFalse(noneXml.contains("<sizes>"));
+        assertFalse(noneXml.contains("<formats>"));
+
+        String defaultXml = new XmlMetadataTemplate(doiMetadata).generateXML(dataset);
+        assertEquals(XmlPath.from(expandedXml).getList("resource.sizes.size"),
+                XmlPath.from(defaultXml).getList("resource.sizes.size"));
+        assertEquals(XmlPath.from(expandedXml).getList("resource.formats.format"),
+                XmlPath.from(defaultXml).getList("resource.formats.format"));
+    }
+
+    private void assertDataCiteXmlIsSchemaValid(String xml) throws Exception {
+        StreamSource source = new StreamSource(new StringReader(xml));
+        source.setSystemId("DataCite XML for test dataset");
+        assertTrue(XmlValidator.validateXmlSchema(source,
+                new URL("https://schema.datacite.org/meta/kernel-4/metadata.xsd")));
+    }
+
+    private DoiMetadata createMinimalDoiMetadata() {
+        DoiMetadata doiMetadata = new DoiMetadata();
+        doiMetadata.setTitle("A Title");
+        doiMetadata.setPublisher("Dataverse");
+        doiMetadata.setAuthors(new ArrayList<>());
+        return doiMetadata;
+    }
+
+    private Dataset createDatasetWithFiles(DataFile... dataFiles) {
+        Dataset dataset = new Dataset();
+        dataset.setGlobalId(new GlobalId("doi", "10.5072", "FK2/FILES", null, null, null));
+        dataset.setFiles(List.of(dataFiles));
+
+        DatasetVersion datasetVersion = new DatasetVersion();
+        datasetVersion.setVersionState(VersionState.DRAFT);
+        datasetVersion.setDataset(dataset);
+        datasetVersion.setTermsOfUseAndAccess(new TermsOfUseAndAccess());
+
+        DatasetFieldType titleFieldType = new DatasetFieldType(DatasetFieldConstant.title,
+                DatasetFieldType.FieldType.TEXT, false);
+        DatasetField titleField = new DatasetField();
+        titleField.setDatasetVersion(datasetVersion);
+        titleField.setDatasetFieldType(titleFieldType);
+        titleField.setSingleValue("First Title");
+        datasetVersion.setDatasetFields(List.of(titleField));
+
+        dataset.setVersions(new ArrayList<>(List.of(datasetVersion)));
+        DatasetType datasetType = new DatasetType();
+        datasetType.setName(DatasetType.DATASET_TYPE_DATASET);
+        dataset.setDatasetType(datasetType);
+        return dataset;
+    }
+
+    private DataFile createDataFile(long filesize, String contentType) {
+        DataFile dataFile = new DataFile();
+        dataFile.setFilesize(filesize);
+        dataFile.setContentType(contentType);
+        return dataFile;
     }
 
     /**

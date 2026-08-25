@@ -54,7 +54,7 @@ Nginx Configuration Rule:
         deny all;
         return 403;
     }
- 
+
 If you are using a load balancer or a reverse proxy, there are some additional considerations. If no additional configurations are made and the upstream is configured to redirect to localhost, the API will be accessible from the outside, as your installation will register as origin the localhost for any requests to the endpoints "admin" and "builtin-users". To prevent this, you have two options:
 
 - If your upstream is configured to redirect to localhost, you will need to set the :ref:`JVM option <useripaddresssourceheader>` to one of the following values ``%client.name% %datetime% %request% %status% %response.length% %header.referer% %header.x-forwarded-for%`` and configure from the load balancer side the chosen header to populate with the client IP address.
@@ -77,20 +77,20 @@ To avoid having your users send credentials in the clear, it's strongly recommen
 Recording User IP Addresses
 +++++++++++++++++++++++++++
 
-By default, the Dataverse installation captures the IP address from which requests originate. This is used for multiple purposes including controlling access to the admin API, IP-based user groups and Make Data Count reporting. When the Dataverse installation is configured behind a proxy such as a load balancer, this default setup may not capture the correct IP address. In this case all the incoming requests will be logged in the access logs, MDC logs etc., as if they are all coming from the IP address(es) of the load balancer itself. Proxies usually save the original address in an added HTTP header, from which it can be extracted. For example, AWS LB records the "true" original address in the standard ``X-Forwarded-For`` header. If your Dataverse installation is running behind an IP-masking proxy, but you would like to use IP groups, or record the true geographical location of the incoming requests with Make Data Count, you may enable the IP address lookup from the proxy header using the JVM option  ``dataverse.useripaddresssourceheader``, described further below. 
+By default, the Dataverse installation captures the IP address from which requests originate. This is used for multiple purposes including controlling access to the admin API, IP-based user groups and Make Data Count reporting. When the Dataverse installation is configured behind a proxy such as a load balancer, this default setup may not capture the correct IP address. In this case all the incoming requests will be logged in the access logs, MDC logs etc., as if they are all coming from the IP address(es) of the load balancer itself. Proxies usually save the original address in an added HTTP header, from which it can be extracted. For example, AWS LB records the "true" original address in the standard ``X-Forwarded-For`` header. If your Dataverse installation is running behind an IP-masking proxy, but you would like to use IP groups, or record the true geographical location of the incoming requests with Make Data Count, you may enable the IP address lookup from the proxy header using the JVM option  ``dataverse.useripaddresssourceheader``, described further below.
 
 Before doing so however, you must absolutely **consider the security risks involved**! This option must be enabled **only** on a Dataverse installation that is in fact fully behind a proxy that properly, and consistently, adds the ``X-Forwarded-For`` (or a similar) header to every request it forwards. Consider the implications of activating this option on a Dataverse installation that is not running behind a proxy, *or running behind one, but still accessible from the insecure locations bypassing the proxy*: Anyone can now add the header above to an incoming request, supplying an arbitrary IP address that the Dataverse installation will trust as the true origin of  the call. Thus giving an attacker an easy way to, for example, get in a privileged IP group. The implications could be even more severe if an attacker were able to pretend to be coming from ``localhost``, if a Dataverse installation is configured to trust localhost connections for unrestricted access to the admin API! We have addressed this by making it so that Dataverse installation should never accept ``localhost``, ``127.0.0.1``, ``0:0:0:0:0:0:0:1`` etc. when supplied in such a header. But if you have reasons to still find this risk unacceptable, you may want to consider turning open localhost access to the API off (See :ref:`Securing Your Installation <securing-your-installation>` for more information.)
 
-This is how to verify that your proxy or load balancer, etc. is handling the originating address headers properly and securely: Make sure access logging is enabled in your application server (Payara) configuration. (``<http-service access-logging-enabled="true">`` in the ``domain.xml``). Add the address header to the access log format. For example, on a system behind AWS ELB, you may want to use something like ``%client.name% %datetime% %request% %status% %response.length% %header.referer% %header.x-forwarded-for%``. Once enabled, access the Dataverse installation from outside the LB. You should now see the real IP address of your remote client in the access log. For example, something like: 
-``"1.2.3.4" "01/Jun/2020:12:00:00 -0500" "GET /dataverse.xhtml HTTP/1.1" 200 81082  "NULL-REFERER" "128.64.32.16"`` 
+This is how to verify that your proxy or load balancer, etc. is handling the originating address headers properly and securely: Make sure access logging is enabled in your application server (Payara) configuration. (``<http-service access-logging-enabled="true">`` in the ``domain.xml``). Add the address header to the access log format. For example, on a system behind AWS ELB, you may want to use something like ``%client.name% %datetime% %request% %status% %response.length% %header.referer% %header.x-forwarded-for%``. Once enabled, access the Dataverse installation from outside the LB. You should now see the real IP address of your remote client in the access log. For example, something like:
+``"1.2.3.4" "01/Jun/2020:12:00:00 -0500" "GET /dataverse.xhtml HTTP/1.1" 200 81082  "NULL-REFERER" "128.64.32.16"``
 
-In this example, ``128.64.32.16`` is your remote address (that you should verify), and ``1.2.3.4`` is the address of your LB. If you're not seeing your remote address in the log, do not activate the JVM option! Also, verify that all the entries in the log have this header populated. The only entries in the access log that you should be seeing without this header (logged as ``"NULL-HEADER-X-FORWARDED-FOR"``) are local requests, made from localhost, etc. In this case, since the request is not coming through the proxy, the local IP address should be logged as the primary one (as the first value in the log entry, ``%client.name%``). If you see any requests coming in from remote, insecure subnets without this header - do not use the JVM option! 
+In this example, ``128.64.32.16`` is your remote address (that you should verify), and ``1.2.3.4`` is the address of your LB. If you're not seeing your remote address in the log, do not activate the JVM option! Also, verify that all the entries in the log have this header populated. The only entries in the access log that you should be seeing without this header (logged as ``"NULL-HEADER-X-FORWARDED-FOR"``) are local requests, made from localhost, etc. In this case, since the request is not coming through the proxy, the local IP address should be logged as the primary one (as the first value in the log entry, ``%client.name%``). If you see any requests coming in from remote, insecure subnets without this header - do not use the JVM option!
 
 Once you are ready, enable the :ref:`JVM option <useripaddresssourceheader>`. Verify that the remote locations are properly tracked in your MDC metrics, and/or your IP groups are working. As a final test, if your Dataverse installation is allowing unrestricted localhost access to the admin API, imitate an attack in which a malicious request is pretending to be coming from ``127.0.0.1``. Try the following from a remote, insecure location:
 
 ``curl https://your.dataverse.edu/api/admin/settings --header "X-FORWARDED-FOR: 127.0.0.1"``
 
-First of all, confirm that access is denied! If you are in fact able to access the settings api from a location outside the proxy, **something is seriously wrong**, so please let us know, and stop using the JVM option.  Otherwise check the access log entry for the header value. What you should see is something like ``"127.0.0.1, 128.64.32.16"``. Where the second address should be the real IP of your remote client. The fact that the "fake" ``127.0.0.1`` you sent over is present in the header is perfectly ok. This is the proper proxy behavior - it preserves any incoming values in the ``X-Forwarded-Header``, if supplied, and adds the detected incoming address to it, *on the right*. It is only this rightmost comma-separated value that Dataverse installation should ever be using. 
+First of all, confirm that access is denied! If you are in fact able to access the settings api from a location outside the proxy, **something is seriously wrong**, so please let us know, and stop using the JVM option.  Otherwise check the access log entry for the header value. What you should see is something like ``"127.0.0.1, 128.64.32.16"``. Where the second address should be the real IP of your remote client. The fact that the "fake" ``127.0.0.1`` you sent over is present in the header is perfectly ok. This is the proper proxy behavior - it preserves any incoming values in the ``X-Forwarded-Header``, if supplied, and adds the detected incoming address to it, *on the right*. It is only this rightmost comma-separated value that Dataverse installation should ever be using.
 
 Still feel like activating this option in your configuration? - Have fun and be safe!
 
@@ -100,9 +100,9 @@ Using X-Forwarded-Proto for Signed URLs
 +++++++++++++++++++++++++++++++++++++++
 
 If you use a proxy such as Apache or Nginx, or have a firewall such as Anubis, and they are configured to forward traffic to Dataverse over HTTP
-(i.e. your proxy receives user calls over HTTPS but forwards locally to Dataverse over HTTP), signed URLs, used by external tools and 
+(i.e. your proxy receives user calls over HTTPS but forwards locally to Dataverse over HTTP), signed URLs, used by external tools and
 upload apps (such as DVWebloader), are likely to fail unless you configure your proxy to send an X-Forwarded-Proto HTTP Header.
-This allows Dataverse to recognize that the communication from the user was over HTTPS and that validation of signed URLs should assume 
+This allows Dataverse to recognize that the communication from the user was over HTTPS and that validation of signed URLs should assume
 they started with https:// (rather than http:// as received from the proxy).
 
 .. _PrivacyConsiderations:
@@ -297,9 +297,9 @@ identifiers using any of several PID types. The most appropriate PIDs for public
 DataCite or EZID) and Handles. Dataverse also supports PermaLinks which could be useful for intranet or catalog use
 cases. A DOI provider called "FAKE" is recommended only for testing and development purposes.
 
-Dataverse can be configured with one or more PID providers, each of which can mint and manage PIDs with a given protocol 
-(e.g., doi, handle, permalink) using a specific service provider/account (e.g. with DataCite, EZId, or HandleNet) 
-to manage an authority/shoulder combination, aka a "prefix" (PermaLinks also support custom separator characters as part of the prefix), 
+Dataverse can be configured with one or more PID providers, each of which can mint and manage PIDs with a given protocol
+(e.g., doi, handle, permalink) using a specific service provider/account (e.g. with DataCite, EZId, or HandleNet)
+to manage an authority/shoulder combination, aka a "prefix" (PermaLinks also support custom separator characters as part of the prefix),
 along with an optional list of individual PIDs (with different authority/shoulders) than can be managed with that account.
 
 Dataverse automatically manages assigning PIDs and making them findable when datasets are published. There are also :ref:`API calls that
@@ -307,25 +307,25 @@ allow updating the PID target URLs and metadata of already-published datasets ma
 moved to a new URL or when the software is updated to generate additional metadata or address schema changes at the PID service.
 
 Note that while some forms of PIDs (Handles, PermaLinks) are technically case sensitive, common practice is to avoid creating PIDs that differ only by case.
-Dataverse treats PIDs of all types as case-insensitive (as DOIs are by definition). This means that Dataverse will find datasets (in search, to display dataset pages, etc.) 
+Dataverse treats PIDs of all types as case-insensitive (as DOIs are by definition). This means that Dataverse will find datasets (in search, to display dataset pages, etc.)
 when the PIDs entered do not match the case of the original but will have a problem if two PIDs that differ only by case exist in one instance.
 
 Testing PID Providers
 +++++++++++++++++++++
 
 By default, the installer configures the Fake DOI provider as the registration provider. Unlike other DOI Providers, the Fake Provider does not involve any
-external resolution service and is not appropriate for use beyond development and testing. You may wish instead to test with 
+external resolution service and is not appropriate for use beyond development and testing. You may wish instead to test with
 PermaLinks or with a DataCite test account (which uses DataCite's test infrastructure and will help assure your Dataverse instance can make network connections to DataCite.
 DataCite requires that you register for a test account, which will have a username, password and your own prefix (please contact support@datacite.org for a test account.
 You may wish to `contact the GDCC <https://www.gdcc.io/about.html>`_ instead - GDCC is able to provide DataCite accounts with a group discount and can also provide test accounts.).
 
 Once you receive the login name, password, and prefix for the account,
-configure the credentials as described below. 
+configure the credentials as described below.
 
-Alternately, you may wish to configure other providers for testing: 
+Alternately, you may wish to configure other providers for testing:
 
 - EZID is available to University of California scholars and researchers. Testing can be done using the authority 10.5072 and shoulder FK2 with the "apitest" account (contact EZID for credentials) or an institutional account. Configuration in Dataverse is then analogous to using DataCite.
-   
+
 - The PermaLink provider, like the FAKE DOI provider, does not involve an external account.
   Unlike the Fake DOI provider, the PermaLink provider creates PIDs that begin with "perma:", making it clearer that they are not DOIs,
   and that do resolve to the local dataset/file page in Dataverse, making them useful for some production use cases. See :ref:`permalinks` and (for the FAKE DOI provider) the :doc:`/developers/dev-environment` section of the Developer Guide.
@@ -335,7 +335,7 @@ Provider-specific configuration is described below.
 Once all is configured, you will be able to publish datasets and files, but **the persistent identifiers will not be citable**
 as they, with the exception of PermaLinks, will not redirect to your dataset page in Dataverse.
 
-Note that any datasets or files created using a test configuration cannot be directly migrated to a production PID provider 
+Note that any datasets or files created using a test configuration cannot be directly migrated to a production PID provider
 and would need to be created again once a valid PID Provider(s) are configured.
 
 One you are done testing, to properly configure persistent identifiers for a production installation, an account and associated namespace (e.g. authority/shoulder) must be
@@ -349,12 +349,12 @@ https://www.cdlib.org/cdlinfo/2017/08/04/ezid-doi-service-is-evolving/ .
 Once you have your DOI or Handle account credentials and a prefix, configure your Dataverse installation
 using the settings below.
 
- 
+
 Configuring PID Providers
 +++++++++++++++++++++++++
 
 There are two required global settings to configure PID providers - the list of ids of providers and which one of those should be the default.
-Per-provider settings are also required - some that are common to all types and some type specific. All of these settings are defined 
+Per-provider settings are also required - some that are common to all types and some type specific. All of these settings are defined
 to be compatible with the MicroProfile specification which means that
 
 1. Any of these settings can be set via system properties (see :ref:`jvm-options` for how to do this), environment variables, or other
@@ -373,7 +373,7 @@ to be compatible with the MicroProfile specification which means that
 
 3. Environment variables follow the key, replacing any dot, colon, dash, etc. into an underscore "_" and all uppercase
    letters. Example: ``dataverse.pid.default-provider`` -> ``DATAVERSE_PID_DEFAULT_PROVIDER``
-   
+
 Global Settings
 ^^^^^^^^^^^^^^^
 
@@ -385,7 +385,7 @@ dataverse.pid.providers
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 A comma-separated list of the ids of the PID providers to use. IDs should be simple unique text strings, e.g. datacite1, perma1, etc.
-IDs are used to scope the provider-specific settings but are not directly visible to users. 
+IDs are used to scope the provider-specific settings but are not directly visible to users.
 
 .. _dataverse.pid.default-provider:
 
@@ -413,7 +413,7 @@ Each Provider listed by id in the dataverse.pid.providers setting must be config
 dataverse.pid.*.type
 ^^^^^^^^^^^^^^^^^^^^
 
-The Provider type, currently one of ``datacite``, ``ezid``, ``FAKE``, ``hdl``, or ``perma``. The type defines which protocol a service supports (DOI, Handle, or PermaLink) and, for DOI Providers, which 
+The Provider type, currently one of ``datacite``, ``ezid``, ``FAKE``, ``hdl``, or ``perma``. The type defines which protocol a service supports (DOI, Handle, or PermaLink) and, for DOI Providers, which
 DOI service is used.
 
 .. _dataverse.pid.*.label:
@@ -436,7 +436,7 @@ dataverse.pid.*.shoulder
 In general, PIDs are of the form ``<protocol>:<authority>/<shoulder>*`` where ``*`` is the portion unique to an individual PID. PID Providers must define
 the authority and shoulder (with the protocol defined by the ``dataverse.pid.*.type`` setting) that defines the set of existing PIDs they can manage and the prefix they can use when minting new PIDs.
 (Often an account with a PID service provider will be limited to using a single authority/shoulder. If your PID service provider account allows more than one combination that you wish to use in Dataverse, configure multiple PID Provider, one for each combination.)
- 
+
 .. _dataverse.pid.*.identifier-generation-style:
 
 dataverse.pid.*.identifier-generation-style
@@ -566,6 +566,8 @@ dataverse.pid.*.datacite.username
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 dataverse.pid.*.datacite.password
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+dataverse.pid.*.datacite.xml.datafile-info
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 dataverse.feature.only-update-datacite-when-needed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -583,9 +585,17 @@ for `Fabrica <https://doi.datacite.org/>`_ and their APIs. You need to provide
 the same credentials (``username``, ``password``) to Dataverse software to mint and manage DOIs for you.
 As noted above, you should use one of the more secure options for setting the password.
 
+``dataverse.pid.*.datacite.xml.datafile-info`` controls how DataCite XML for datasets represents
+datafile sizes and formats. The default value, ``expanded``, preserves the current behavior and emits
+one ``size`` and one ``format`` element per datafile. Set the value to ``brief`` to emit a single
+``size`` element with the sum of all known datafile sizes and one ``format`` element per distinct
+datafile format. Set the value to ``none`` to omit datafile ``size`` and ``format`` elements entirely.
+The setting only affects newly generated DataCite metadata, such as metadata sent when publishing a new
+dataset version or when explicitly updating PID-provider metadata for a published dataset.
+
 The `only-update-datacite-when-needed feature` flag is a global option that causes Dataverse to GET the latest metadata from DataCite
 for a DOI and compare it with the current metadata in Dataverse and only sending a following POST request if needed. This potentially
-substitutes a read for an unnecessary write at DataCite, but would result in extra reads when all metadata in Dataverse is new. 
+substitutes a read for an unnecessary write at DataCite, but would result in extra reads when all metadata in Dataverse is new.
 Setting the flag to "true" is recommended when using DataCite file DOIs.
 
 CrossRef-specific Settings
@@ -637,7 +647,7 @@ dataverse.pid.*.ezid.password
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Note that use of `EZId <https://ezid.cdlib.org/>`_ is limited primarily to University of California institutions. If you have an EZId account,
-you will need to configure the ``api-url`` and your account ``username`` and ``password``. As above, you should use one of the more secure 
+you will need to configure the ``api-url`` and your account ``username`` and ``password``. As above, you should use one of the more secure
 options for setting the password.
 
 .. _dataverse.pid.*.permalink:
@@ -687,7 +697,7 @@ dataverse.pid.*.handlenet.passphrase
 Note: If you are **minting your own handles** and plan to set up your own handle service, please refer to `Handle.Net documentation <https://handle.net/hnr_documentation.html>`_.
 
 Configure your Handle.net ``index`` to be used registering new persistent
-identifiers. Defaults to ``300``. 
+identifiers. Defaults to ``300``.
 
 Indices are used to separate concerns within the Handle system. To add data to
 an index, authentication is mandatory. See also chapter 1.4 "Authentication" of
@@ -695,7 +705,7 @@ the `Handle.Net Technical Documentation <http://www.handle.net/tech_manual/HN_Te
 
 Handle.Net servers use a public key authentication method where the public key
 is stored in a handle itself and the matching private key is provided from this
-file. Typically, the absolute path ends like ``handle/svr_1/admpriv.bin``. 
+file. Typically, the absolute path ends like ``handle/svr_1/admpriv.bin``.
 The key file may (and should) be encrypted with a passphrase (used for
 encryption with AES-128). See
 also chapter 1.4 "Authentication" of the `Handle.Net Technical Documentation
@@ -720,7 +730,7 @@ Backward-compatibility for Single PID Provider Installations
 
 While using the PID Provider configuration settings described above is recommended, Dataverse installations
 only using a single PID Provider can use the settings below instead. In general, these legacy settings mirror
-those above except for not including a PID Provider id. 
+those above except for not including a PID Provider id.
 
 Configuring Your Dataverse Installation for a Single DOI Provider
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1004,7 +1014,7 @@ Database Connection Recovery
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Consider the following scenario: if there is no advanced configuration for the database connection and the Dataverse server loses that connection, for example if the database host is down, the server will be "dead" even after the database server is back to normal.
-The only solution to recover Dataverse would be to restart the service. To avoid this situation, the following settings can be used to configure validation of the database connection. 
+The only solution to recover Dataverse would be to restart the service. To avoid this situation, the following settings can be used to configure validation of the database connection.
 This way, the database connection can be automatically recovered after a failure, improving the server availability. For a Docker installation, it is suggested to create an init.d script so that if the container needs to be recreated, these settings will always be configured.
 
 .. code-block:: bash
@@ -1334,7 +1344,7 @@ By default, your store will use the [default] profile in you .aws configuration 
 
 ``./asadmin create-jvm-options "-Ddataverse.files.<id>.profile=<profilename>"``
 
-Larger installations may want to increase the number of open S3 connections allowed (default is 256): For example, 
+Larger installations may want to increase the number of open S3 connections allowed (default is 256): For example,
 
 ``./asadmin create-jvm-options "-Ddataverse.files.<id>.connection-pool-size=4096"``
 
@@ -1445,21 +1455,21 @@ Reported Working S3-Compatible Storage
   Set ``dataverse.files.<id>.chunked-encoding=false`` and ``dataverse.files.<id>.path-style-request=true`` to use Surf Object
   Store. You will need the Swift client (documented at <http://doc.swift.surfsara.nl/en/latest/Pages/Clients/s3cred.html>) to create the access key and secret key for the S3 interface.
 
-Note that the ``dataverse.files.<id>.proxy-url`` setting can be used in installations where the object store is proxied, but it should be considered an advanced option that will require significant expertise to properly configure. 
+Note that the ``dataverse.files.<id>.proxy-url`` setting can be used in installations where the object store is proxied, but it should be considered an advanced option that will require significant expertise to properly configure.
 For direct uploads and downloads, Dataverse redirects to the proxy-url but presigns the urls based on the ``dataverse.files.<id>.custom-endpoint-url``.
 Additional configuration (appropriate CORS settings, proxy caching/timeout configuration, and proxy settings to pass headers to/from S3 and to avoid adding additional headers) will also be needed to enable use of a proxy with direct upload and download.
 For Amazon AWS, see comments in the edu.harvard.iq.dataverse.dataaccess.S3AccessIO class about support for AWS's bucket-specific DNS names.
- 
+
 `SeaweedFS <https://github.com/chrislusf/seaweedfs>`_
   SeaweedFS is a distributed storage system that has S3 compatibility. Set the S3 storage options as explained above. Make sure to set ``dataverse.files.<id>.path-style-access`` to ``true``. You will need to create the bucket beforehand. You can do this with the filer API using curl commands. For example, to create an empty bucket called ``dataverse``:
-  
+
 .. code-block:: bash
 
   curl -X POST "http://localhost:8888/buckets/"
   curl -X POST "http://localhost:8888/buckets/dataverse/"
-  
+
 You will also need to set an access and secret key. One way to do this is via a `static file <https://github.com/chrislusf/seaweedfs/wiki/Amazon-S3-API#static-configuration>`_. As an example, your ``config.json`` might look like this if you're using a bucket called ``dataverse``:
-  
+
 .. code-block:: json
 
   {
@@ -1483,13 +1493,13 @@ You will also need to set an access and secret key. One way to do this is via a 
   }
 
 And lastly, to start up the SeaweedFS server and various components you could use a command like this:
-  
+
 .. code-block:: bash
 
   weed server -s3 -metricsPort=9327 -dir=/data -s3.config=/config.json
 
 `VAST DataStore <https://www.vastdata.com/platform/datastore>`_
-  VAST DataStore must be configured with an S3 gateway. A Dataverse bucket must be created. 
+  VAST DataStore must be configured with an S3 gateway. A Dataverse bucket must be created.
   Follow `VAST DataStore documentation <https://support.vastdata.com/s/document-item?bundleId=vast-cluster-administrator-s-guide4.7&topicId=managing-access-protocols/s3-object-storage-protocol.html&_LANG=enus>`_ to configure the S3 gateway.
   Set ``dataverse.files.<id>.path-style-access=true`` since VAST DataStore uses path style access.
 
@@ -1539,7 +1549,7 @@ Once you have configured a trusted remote store, you can point your users to the
     dataverse.files.<id>.remote-store-name                   <?>                 A short name used in the UI to indicate where a file is located. Optional.  (none)
     dataverse.files.<id>.remote-store-url                    <?>                 A URL to an info page about the remote store used in the UI. Optional.      (none)
     dataverse.files.<id>.files-not-accessible-by-dataverse   ``true``/``false``  True if the file is at the URL provided, false if that is a landing page    ``false``
-    
+
     =======================================================  ==================  ==========================================================================  ===================
 
 .. _globus-storage:
@@ -1559,7 +1569,7 @@ There are two types of Globus stores:
 - remote - where Dataverse references files that remain on trusted remote Globus endpoints
 
 A managed Globus store connects to standard/file-based Globus endpoint. It is also possible to configure an S3 store as a managed store, if the managed endpoint uses an underlying S3 store via the Globus S3 Connector.
-With the former, Dataverse has no direct access to the file contents and functionality related to ingest, fixity hash validation, etc. are not available. With the latter, Dataverse can access files internally via S3 and the functionality supported is similar to that when using S3 direct upload. 
+With the former, Dataverse has no direct access to the file contents and functionality related to ingest, fixity hash validation, etc. are not available. With the latter, Dataverse can access files internally via S3 and the functionality supported is similar to that when using S3 direct upload.
 
 Once you have configured a globus store, or configured an S3 store for Globus access, it is recommended that you install the `dataverse-globus app <https://github.com/scholarsportal/dataverse-globus>`_ to allow transfers in/out of Dataverse to be initated via the Dataverse user interface. Alternately, you can point your users to the :doc:`/developers/globus-api` for information about API support.
 
@@ -1576,14 +1586,14 @@ Once you have configured a globus store, or configured an S3 store for Globus ac
     dataverse.files.<id>.remote-store-url                    <?>                 A url to an info page about the remote store used in the UI. Optional.      (none)
     dataverse.files.<id>.managed                             ``true``/``false``  Whether dataverse manages an associated Globus endpoint                     ``false``
     dataverse.files.<id>.transfer-endpoint-with-basepath     <?>                 The *managed* Globus endpoint id and associated base path for file storage  (none)
-    dataverse.files.<id>.globus-token                        <?>                 A Globus token (base64 endcoded <Globus user id>:<Credential> 
+    dataverse.files.<id>.globus-token                        <?>                 A Globus token (base64 endcoded <Globus user id>:<Credential>
                                                                                  for a managed store) - using a microprofile alias is recommended            (none)
     dataverse.files.<id>.reference-endpoints-with-basepaths  <?>                 A comma separated list of *remote* trusted Globus endpoint id/<basePath>s   (none)
     dataverse.files.<id>.files-not-accessible-by-dataverse   ``true``/``false``  Should be false for S3 Connector-based *managed* stores, true for others    ``false``
     dataverse.files.<id>.public                              ``true``/``false``  True can be used to disable users ability restrict/embargo files            ``false``
-    
+
     =======================================================  ==================  ==========================================================================  ===================
-    
+
 .. _temporary-file-storage:
 
 Temporary Upload File Storage
@@ -2259,19 +2269,19 @@ These archival Bags include all of the files and metadata in a given dataset ver
 
 The Dataverse Software offers an internal archive workflow which may be configured as a PostPublication workflow via an admin API call to manually submit previously published Datasets and prior versions to a configured archive such as Chronopolis. The workflow creates a `JSON-LD <http://www.openarchives.org/ore/0.9/jsonld>`_ serialized `OAI-ORE <https://www.openarchives.org/ore/>`_ map file, which is also available as a metadata export format in the Dataverse Software web interface.
 
-The size of the zipped archival Bag can be limited, and files that don't fit within that limit can either be transferred separately (placed so that they are correctly positioned according to the BagIt specification when the zipped bag in unzipped in place) or just referenced for later download (using the BagIt concept of a 'holey' bag with a list of files in a ``fetch.txt`` file) can now be configured for all archivers. These settings allow for managing large datasets by excluding files over a certain size or total data size, which can be useful for archivers with size limitations or to reduce transfer times. See the :ref:`dataverse.bagit.zip.max-file-size`, :ref:`dataverse.bagit.zip.max-data-size`, and :ref:`dataverse.bagit.zip.holey` JVM options for more details.  
+The size of the zipped archival Bag can be limited, and files that don't fit within that limit can either be transferred separately (placed so that they are correctly positioned according to the BagIt specification when the zipped bag in unzipped in place) or just referenced for later download (using the BagIt concept of a 'holey' bag with a list of files in a ``fetch.txt`` file) can now be configured for all archivers. These settings allow for managing large datasets by excluding files over a certain size or total data size, which can be useful for archivers with size limitations or to reduce transfer times. See the :ref:`dataverse.bagit.zip.max-file-size`, :ref:`dataverse.bagit.zip.max-data-size`, and :ref:`dataverse.bagit.zip.holey` JVM options for more details.
 
-At present, archiving classes include the DuraCloudSubmitToArchiveCommand, LocalSubmitToArchiveCommand, GoogleCloudSubmitToArchive, and S3SubmitToArchiveCommand , which all extend the AbstractSubmitToArchiveCommand and use the configurable mechanisms discussed below. (A DRSSubmitToArchiveCommand, which works with Harvard's DRS also exists and, while specific to DRS, is a useful example of how Archivers can support single-version-only semantics and support archiving only from specified collections (with collection specific parameters)). 
+At present, archiving classes include the DuraCloudSubmitToArchiveCommand, LocalSubmitToArchiveCommand, GoogleCloudSubmitToArchive, and S3SubmitToArchiveCommand , which all extend the AbstractSubmitToArchiveCommand and use the configurable mechanisms discussed below. (A DRSSubmitToArchiveCommand, which works with Harvard's DRS also exists and, while specific to DRS, is a useful example of how Archivers can support single-version-only semantics and support archiving only from specified collections (with collection specific parameters)).
 
 All current options support the :ref:`Archival Status API` calls and the same status is available in the dataset page version table (for contributors/those who could view the unpublished dataset, with more detail available to superusers).
 
 Two settings that can be used with all current Archivers are:
 
 - \:BagGeneratorThreads - the number of threads to use when adding data files to the zipped bag. The default is 2. Values of 4 or more may increase performance on larger machines but may cause problems if file access is throttled
-- \:ArchiveOnlyIfEarlierVersionsAreArchived - when true, requires dataset versions to be archived in order by confirming that all prior versions have been successfully archived before allowing a new version to be archived. Default is false 
+- \:ArchiveOnlyIfEarlierVersionsAreArchived - when true, requires dataset versions to be archived in order by confirming that all prior versions have been successfully archived before allowing a new version to be archived. Default is false
 
 These must be included in the \:ArchiverSettings for the Archiver to work
- 
+
 Archival Bags are created per dataset version. By default, if a version is republished (via the superuser-only 'Update Current Version' publication option in the UI/API), a new archival bag is not created for the version.
 If the archiver used is capable of deleting existing bags (Google, S3, and File Archivers) superusers can trigger a manual update of the archival bag, and, if the :ref:`dataverse.bagit.archive-on-version-update` flag is set to true, this will be done automatically when 'Update Current Version' is used.
 
@@ -2336,7 +2346,7 @@ ArchiverClassName - the fully qualified class to be used for archiving. For exam
 Google Cloud Configuration
 ++++++++++++++++++++++++++
 
-The Google Cloud Archiver can send Dataverse Archival Bags to a bucket in Google's cloud, including those in the 'Coldline' storage class (cheaper, with slower access) 
+The Google Cloud Archiver can send Dataverse Archival Bags to a bucket in Google's cloud, including those in the 'Coldline' storage class (cheaper, with slower access)
 
 ``curl http://localhost:8080/api/admin/settings/:ArchiverClassName -X PUT -d "edu.harvard.iq.dataverse.engine.command.impl.GoogleCloudSubmitToArchiveCommand"``
 
@@ -2365,7 +2375,7 @@ For example:
 S3 Configuration
 ++++++++++++++++
 
-The S3 Archiver can send Dataverse Archival Bag to a bucket at any S3 endpoint. The configuration for the S3 Archiver is independent of any S3 store that may be configured in Dataverse and may, for example, leverage colder (cheaper, slower access) storage. 
+The S3 Archiver can send Dataverse Archival Bag to a bucket at any S3 endpoint. The configuration for the S3 Archiver is independent of any S3 store that may be configured in Dataverse and may, for example, leverage colder (cheaper, slower access) storage.
 
 ``curl http://localhost:8080/api/admin/settings/:ArchiverClassName -X PUT -d "edu.harvard.iq.dataverse.engine.command.impl.S3SubmitToArchiveCommand"``
 
@@ -2415,7 +2425,7 @@ A batch version of this admin API call is also available:
 The archiveAllUnarchivedDatasetVersions call takes 3 optional configuration parameters.
 
 * listonly=true will cause the API to list dataset versions that would be archived but will not take any action.
-* limit=<n> will limit the number of dataset versions archived in one API call to ``<=`` <n>. 
+* limit=<n> will limit the number of dataset versions archived in one API call to ``<=`` <n>.
 * latestonly=true will limit archiving to only the latest published versions of datasets instead of archiving all unarchived versions.
 
 Note that because archiving is done asynchronously, the calls above will return OK even if the user does not have the *PublishDataset* permission on the dataset(s) involved. Failures are indicated in the log and the archivalStatus calls in the native API can be used to check the status as well.
@@ -2874,7 +2884,7 @@ Specifies when to use a smaller datafile proxy object for the purposes of datase
 and improve performance when reindexing large datasets (e.g. those with hundreds or thousands of files). (Creating the proxy may slightly slow indexing datasets with only a few files.)
 
 This setting represents a number of files for which the datafile procy should be used. By default, this is set to Interger.MAX which disables using the proxy.
-A recommended value would be ~1000 but the optimal value may vary depending on details of your installation.  
+A recommended value would be ~1000 but the optimal value may vary depending on details of your installation.
 
 Can also be set via *MicroProfile Config API* sources, e.g. the environment variable ``DATAVERSE_SOLR_MIN_FILES_TO_USE_PROXY``.
 
@@ -2993,7 +3003,7 @@ Without setting an option, always defaults to testing API endpoint.
 
 **Notes:**
 
-- See also these related database settings below: :ref:`:DoiProvider`, 
+- See also these related database settings below: :ref:`:DoiProvider`,
   :ref:`:Protocol`, :ref:`:Authority`, :ref:`:Shoulder`.
 - Can also be set via *MicroProfile Config API* sources, e.g. the environment
   variable ``DATAVERSE_PID_DATACITE_MDS_API_URL``.
@@ -3049,7 +3059,7 @@ Once you have a username from DataCite, you can enter it like this:
 
 **Notes:**
 
-- Used in conjuction with :ref:`dataverse.pid.datacite.mds-api-url`, 
+- Used in conjuction with :ref:`dataverse.pid.datacite.mds-api-url`,
   :ref:`dataverse.pid.datacite.rest-api-url` and :ref:`dataverse.pid.datacite.password`.
 - Can also be set via *MicroProfile Config API* sources, e.g. the environment
   variable ``DATAVERSE_PID_DATACITE_USERNAME``.
@@ -3065,7 +3075,7 @@ Once you have a password from your provider, you should create a password alias 
 
 **Notes:**
 
-- Used in conjuction with :ref:`dataverse.pid.datacite.mds-api-url`, 
+- Used in conjuction with :ref:`dataverse.pid.datacite.mds-api-url`,
   :ref:`dataverse.pid.datacite.rest-api-url` and :ref:`dataverse.pid.datacite.username`.
 - Can also be set via *MicroProfile Config API* sources, e.g. the environment
   variable ``DATAVERSE_PID_DATACITE_PASSWORD`` (although you shouldn't use
@@ -3128,7 +3138,7 @@ Legacy Single PID Provider: dataverse.pid.handlenet.index
 Related to :ref:`Handle.Net PID provider usage <pids-handle-configuration>`.
 
 Configure your *Handle.Net Index* to be used registering new persistent
-identifiers. Defaults to ``300``. 
+identifiers. Defaults to ``300``.
 
 Indices are used to separate concerns within the Handle system. To add data to
 an index, authentication is mandatory. See also chapter 1.4 "Authentication" of
@@ -3167,7 +3177,7 @@ Legacy Single PID Provider: dataverse.pid.ezid.api-url
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 The EZID DOI provider is likely not an option if you are `not associated with
-California Digital Library (CDL) or Purdue University 
+California Digital Library (CDL) or Purdue University
 <https://www.cdlib.org/cdlinfo/2017/08/04/ezid-doi-service-is-evolving/>`_.
 
 Defaults to ``https://ezid.cdlib.org``.
@@ -3182,7 +3192,7 @@ Legacy Single PID Provider: dataverse.pid.ezid.username
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 The EZID DOI provider is likely not an option if you are `not associated with
-California Digital Library (CDL) or Purdue University 
+California Digital Library (CDL) or Purdue University
 <https://www.cdlib.org/cdlinfo/2017/08/04/ezid-doi-service-is-evolving/>`_.
 
 Works the same way as :ref:`dataverse.pid.datacite.username`, but for the EZID DOI
@@ -3200,7 +3210,7 @@ Legacy Single PID Provider: dataverse.pid.ezid.password
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 The EZID DOI provider is likely not an option if you are `not associated with
-California Digital Library (CDL) or Purdue University 
+California Digital Library (CDL) or Purdue University
 <https://www.cdlib.org/cdlinfo/2017/08/04/ezid-doi-service-is-evolving/>`_.
 
 Works the same way as :ref:`dataverse.pid.datacite.password`, but for the EZID DOI
@@ -3208,7 +3218,7 @@ provider.
 
 Can also be set via *MicroProfile Config API* sources, e.g. the environment
 variable ``DATAVERSE_PID_EZID_PASSWORD`` (although you shouldn't use
-environment variables for passwords). 
+environment variables for passwords).
 
 This setting was formerly known as ``doi.password`` and has been renamed. You
 should delete the old JVM option and the wrapped password alias, then recreate
@@ -3254,14 +3264,14 @@ For more on Schema.org JSON-LD, see the :doc:`/admin/metadataexport` section of 
 dataverse.useripaddresssourceheader
 +++++++++++++++++++++++++++++++++++
 
-**Make sure** to read the section about the :ref:`Security Implications 
+**Make sure** to read the section about the :ref:`Security Implications
 <user-ip-addresses-proxy-security>` of using this option earlier in the guide!
 
 If set, specifies an HTTP Header such as X-Forwarded-For to use to retrieve the user's IP address. For example:
 
 ``./asadmin create-jvm-options '-Ddataverse.useripaddresssourceheader=X-Forwarded-For'``
 
-This setting is useful in cases such as running your Dataverse installation behind load balancers where the default option of getting the Remote Address from the servlet isn't correct (e.g. it would be the load balancer IP address). Note that unless your installation always sets the header you configure here, this could be used as a way to spoof the user's address. Allowed values are: 
+This setting is useful in cases such as running your Dataverse installation behind load balancers where the default option of getting the Remote Address from the servlet isn't correct (e.g. it would be the load balancer IP address). Note that unless your installation always sets the header you configure here, this could be used as a way to spoof the user's address. Allowed values are:
 
 .. code::
 
@@ -3276,7 +3286,7 @@ This setting is useful in cases such as running your Dataverse installation behi
 	"HTTP_FORWARDED",
 	"HTTP_VIA",
 	"REMOTE_ADDR"
-	
+
 .. _dataverse.person-or-org.assume-comma-in-person-name:
 
 dataverse.person-or-org.assume-comma-in-person-name
@@ -3316,11 +3326,11 @@ dataverse.api.signature-secret
 Context: Dataverse has the ability to create "Signed URLs" for it's API calls. Using a signed URLs is more secure than
 providing API tokens, which are long-lived and give the holder all of the permissions of the user. In contrast, signed URLs
 are time limited and only allow the action of the API call in the URL. See :ref:`api-exttools-auth` and
-:ref:`api-native-signed-url` for more details. 
+:ref:`api-native-signed-url` for more details.
 
 The key used to sign a URL is created from the API token of the creating user plus a signature-secret provided by an administrator.
-**Using a signature-secret is highly recommended.** This setting defaults to an empty string. Using a non-empty 
-signature-secret makes it impossible for someone who knows an API token from forging signed URLs and provides extra security by 
+**Using a signature-secret is highly recommended.** This setting defaults to an empty string. Using a non-empty
+signature-secret makes it impossible for someone who knows an API token from forging signed URLs and provides extra security by
 making the overall signing key longer.
 
 **WARNING**:
@@ -3681,7 +3691,7 @@ See also :ref:`s3-direct-upload-features-disabled`.
 dataverse.storageuse.disable-storageuse-increments
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
-This setting serves the role of an emergency "kill switch" that will disable maintaining the real time record of storage use for all the datasets and collections in the database. Because of the experimental nature of this feature (see :doc:`/admin/collectionquotas`) that hasn't been used in production setting as of this release, v6.1 this setting is provided in case these updates start causing database race conditions and conflicts on a busy server. 
+This setting serves the role of an emergency "kill switch" that will disable maintaining the real time record of storage use for all the datasets and collections in the database. Because of the experimental nature of this feature (see :doc:`/admin/collectionquotas`) that hasn't been used in production setting as of this release, v6.1 this setting is provided in case these updates start causing database race conditions and conflicts on a busy server.
 
 dataverse.auth.oidc.*
 +++++++++++++++++++++
@@ -3740,7 +3750,7 @@ i.e via the Update-Current-Version publication option. Setting the flag true onl
 dataverse.files.globus-monitoring-server
 ++++++++++++++++++++++++++++++++++++++++
 
-This setting is required in conjunction with the :ref:`dataverse.feature.globus-use-experimental-async-framework` feature flag. Setting it to true designates the Dataverse instance to serve as the dedicated polling server. It is needed so that the new framework can be used in a multi-node installation. 
+This setting is required in conjunction with the :ref:`dataverse.feature.globus-use-experimental-async-framework` feature flag. Setting it to true designates the Dataverse instance to serve as the dedicated polling server. It is needed so that the new framework can be used in a multi-node installation.
 
 .. _dataverse.csl.common-styles:
 
@@ -3749,7 +3759,7 @@ dataverse.csl.common-styles
 
 This setting allows admins to highlight a few of the 1000+ CSL citation styles available from the dataset page. The value should be a comma-separated list of styles.
 These will be listed above the alphabetical list of all styles in the "View Styled Citations" pop-up.
-The default value when not set is "chicago-author-date, ieee". 
+The default value when not set is "chicago-author-date, ieee".
 
 .. _localcontexts:
 
@@ -4179,7 +4189,7 @@ Below is an example of setting ``localhost-only``.
 +++++++++++++++++++++++++++++++++
 
 .. note::
-   This setting is deprecated. Please use the JvmSetting :ref:`dataverse.api.blocked.endpoints` instead. This legacy setting will only be used if the newer JvmSettings are not set. 
+   This setting is deprecated. Please use the JvmSetting :ref:`dataverse.api.blocked.endpoints` instead. This legacy setting will only be used if the newer JvmSettings are not set.
 
 A comma-separated list of API endpoints to be blocked. For a standard production installation, the installer blocks both "admin" and "builtin-users" by default per the security section above:
 
@@ -4430,7 +4440,7 @@ timestamps.
 
 Toggles publishing of file-level PIDs for the entire installation. By default this setting is absent and Dataverse Software assumes it to be false. If enabled, the registration will be performed asynchronously (in the background) during publishing of a dataset.
 
-It is possible to override the installation-wide setting for specific collections, see :ref:`:AllowEnablingFilePIDsPerCollection <:AllowEnablingFilePIDsPerCollection>`. For example, registration of PIDs for files can be enabled in a specific collection when it is disabled instance-wide. Or it can be disabled in specific collections where it is enabled by default. See :ref:`collection-attributes-api` for details. 
+It is possible to override the installation-wide setting for specific collections, see :ref:`:AllowEnablingFilePIDsPerCollection <:AllowEnablingFilePIDsPerCollection>`. For example, registration of PIDs for files can be enabled in a specific collection when it is disabled instance-wide. Or it can be disabled in specific collections where it is enabled by default. See :ref:`collection-attributes-api` for details.
 
 To enable file-level PIDs for the entire installation::
 
@@ -4448,7 +4458,7 @@ If you don't want to register file-based PIDs for your entire installation::
 
 Toggles whether superusers can change the File PIDs policy per collection. By default this setting is absent and Dataverse Software assumes it to be false.
 
-For example, if this setting is true, registration of PIDs for files can be enabled in a specific collection when it is disabled instance-wide. Or it can be disabled in specific collections where it is enabled by default. See :ref:`collection-attributes-api` for details. 
+For example, if this setting is true, registration of PIDs for files can be enabled in a specific collection when it is disabled instance-wide. Or it can be disabled in specific collections where it is enabled by default. See :ref:`collection-attributes-api` for details.
 
 To enable setting file-level PIDs per collection::
 
@@ -4483,7 +4493,7 @@ For this handle the prefix is '21.T12996' and the suffix is 'USER01'. The comman
 :FileValidationOnPublishEnabled
 +++++++++++++++++++++++++++++++
 
-Toggles validation of the physical files in the dataset when it's published, by recalculating the checksums and comparing against the values stored in the DataFile table. By default this setting is absent and the Dataverse Software assumes it to be true. If enabled, the validation will be performed asynchronously, similarly to how we handle assigning persistent identifiers to datafiles, with the dataset locked for the duration of the publishing process. 
+Toggles validation of the physical files in the dataset when it's published, by recalculating the checksums and comparing against the values stored in the DataFile table. By default this setting is absent and the Dataverse Software assumes it to be true. If enabled, the validation will be performed asynchronously, similarly to how we handle assigning persistent identifiers to datafiles, with the dataset locked for the duration of the publishing process.
 
 If you don't want the datafiles to be validated on publish, set:
 
@@ -4646,7 +4656,7 @@ For performance reasons, your Dataverse installation will only allow creation of
 
 ``curl -X PUT -d 1000000000 http://localhost:8080/api/admin/settings/:ZipDownloadLimit``
 
-In the UI, users trying to download a zip file larger than the Dataverse installation's :ZipDownloadLimit will receive messaging that the zip file is too large, and the user will be presented with alternate access options. 
+In the UI, users trying to download a zip file larger than the Dataverse installation's :ZipDownloadLimit will receive messaging that the zip file is too large, and the user will be presented with alternate access options.
 
 .. _:TabularIngestSizeLimit:
 
@@ -4725,7 +4735,7 @@ In the following example, the harvester is instructed to sleep for 900 milliseco
 
 ``curl -X PUT -d "{\"harvarddv\": 0.9, \"default\": 0}" "http://localhost:8080/api/admin/settings/:HarvestingClientCallRateLimit"``
 
-Please note that the default in the example above is there for illustrative purposes and is otherwise redundant, since no sleep interval is the default behavior anyway. 
+Please note that the default in the example above is there for illustrative purposes and is otherwise redundant, since no sleep interval is the default behavior anyway.
 
 .. _:ZipUploadFilesLimit:
 
@@ -4784,21 +4794,21 @@ To enable the setting::
 :DisableSolrFacetsForGuestUsers
 +++++++++++++++++++++++++++++++
 
-Similar to the above, but will disable the facets for Guest (unauthenticated) users only. 
+Similar to the above, but will disable the facets for Guest (unauthenticated) users only.
 
 .. _:DisableSolrFacetsWithoutJsession:
 
 :DisableSolrFacetsWithoutJsession
 +++++++++++++++++++++++++++++++++
 
-Same idea as with the 2 settings above. For the purposes of this setting, a request is considered "anonymous", if it came in without the JSESSION cookie supplied. A UI user who is browsing the holdings without logging in will have a valid JSESSION cookie, tied to a guest session. The main purpose of this setting is to hide the facets from bots, scripted crawlers and such (most of which - though not all - do not use cookies). Not letting the bots anywhere near the facets can serve a dual purpose on a busy instance experiencing problems with such abuse - some CPU cycles and resources can be saved by not having to generate the facets. And, even more importantly, it can prevent bots from attempting to crawl the facet trees, which has a potential for multiplying the service load. 
+Same idea as with the 2 settings above. For the purposes of this setting, a request is considered "anonymous", if it came in without the JSESSION cookie supplied. A UI user who is browsing the holdings without logging in will have a valid JSESSION cookie, tied to a guest session. The main purpose of this setting is to hide the facets from bots, scripted crawlers and such (most of which - though not all - do not use cookies). Not letting the bots anywhere near the facets can serve a dual purpose on a busy instance experiencing problems with such abuse - some CPU cycles and resources can be saved by not having to generate the facets. And, even more importantly, it can prevent bots from attempting to crawl the facet trees, which has a potential for multiplying the service load.
 
 .. _:DisableUncheckedTypesFacet:
 
 :DisableUncheckedTypesFacet
 +++++++++++++++++++++++++++
 
-Another option for reducing the load on solr on a busy instance. Rather than disabling all the search facets, this setting affects only one - the facet on the upper left of the collection page, where users can select the type of objects to search - Collections ("Dataverses"), Datasets and/or Files. With this option set to true, the numbers of results will only be shown for the types actually  selected (i.e. only for the search results currently shown to the user). This minor feature - being able to tell the user how many files (for example) they *would* find, *if* they chose to search for files, by clicking the Files facet - essentially doubles the expense of running the search. That may still be negligible on an instance with lighter holdings, but can make a significant difference for a large and heavily used archive.  
+Another option for reducing the load on solr on a busy instance. Rather than disabling all the search facets, this setting affects only one - the facet on the upper left of the collection page, where users can select the type of objects to search - Collections ("Dataverses"), Datasets and/or Files. With this option set to true, the numbers of results will only be shown for the types actually  selected (i.e. only for the search results currently shown to the user). This minor feature - being able to tell the user how many files (for example) they *would* find, *if* they chose to search for files, by clicking the Files facet - essentially doubles the expense of running the search. That may still be negligible on an instance with lighter holdings, but can make a significant difference for a large and heavily used archive.
 
 .. _:SignUpUrl:
 
@@ -5096,7 +5106,7 @@ To check the current value of ``:ShibAffiliationAttribute``:
 +++++++++++++++++++++++++++++++++++++++++++
 
 It seems that the application server (usually Glassfish or Payara) will interpret all Shibboleth attributes that come through AJP as ISO-8859-1, even if they where originally UTF-8.
-To circumvent that, we re-encode all received Shibboleth attributes manually as UTF-8 by default. 
+To circumvent that, we re-encode all received Shibboleth attributes manually as UTF-8 by default.
 In the case you get garbled characters in Shibboleth-supplied fields (e.g. given name, surname, affiliation), you can disable this behaviour by setting ShibAttributeCharacterSetConversionEnabled to false:
 
 ``curl -X PUT -d false http://localhost:8080/api/admin/settings/:ShibAttributeCharacterSetConversionEnabled``
@@ -5108,7 +5118,7 @@ If you managed to get correct accented characters from shibboleth while this set
 
 Will select the last or first value of an array in affiliation, the array separator can be set using ``:ShibAffiliationSeparator`` .
 
-To select the last value : 
+To select the last value :
 
 ``curl -X PUT -d "lastAffiliation" http://localhost:8080/api/admin/settings/:ShibAffiliationOrder``
 
@@ -5288,7 +5298,7 @@ or
 :ChronologicalDateFacets
 ++++++++++++++++++++++++
 
-Unlike other facets, those indexed by Date/Year are sorted chronologically by default, with the most recent value first. To have them sorted by number of hits, e.g. with the year with the most results first, set this to false 
+Unlike other facets, those indexed by Date/Year are sorted chronologically by default, with the most recent value first. To have them sorted by number of hits, e.g. with the year with the most results first, set this to false
 
 If you don’t want date facets to be sorted chronologically, set:
 
@@ -5304,11 +5314,11 @@ redirecing bulk/multi-file zip download requests to that location, instead of se
 See :ref:`zipdownloader` of the Advanced Installation guide for information on how to install the external zipper.
 (This is still an **experimental** feature, as of Dataverse Software 5.0).
 
-To enable redirects to the zipper installed on the same server as the main Dataverse Software application: 
+To enable redirects to the zipper installed on the same server as the main Dataverse Software application:
 
 ``curl -X PUT -d '/cgi-bin/zipdownload' http://localhost:8080/api/admin/settings/:CustomZipDownloadServiceUrl``
 
-To enable redirects to the zipper on a different server: 
+To enable redirects to the zipper on a different server:
 
 ``curl -X PUT -d 'https://zipper.example.edu/cgi-bin/zipdownload' http://localhost:8080/api/admin/settings/:CustomZipDownloadServiceUrl``
 
@@ -5412,25 +5422,25 @@ Your Dataverse installation can export archival "Bag" files to an extensible set
 This setting specifies which storage system to use by identifying the particular Java class that should be run. Current configuration options include DuraCloudSubmitToArchiveCommand, LocalSubmitToArchiveCommand, GoogleCloudSubmitToArchiveCommand, and S3SubmitToArchiveCommand.
 
 For examples, see the specific configuration above in :ref:`BagIt Export`.
- 
+
 :ArchiveOnlyIfEarlierVersionsAreArchived
 ++++++++++++++++++++++++++++++++++++++++
 
 This setting, if true, only allows creation of an archival Bag for a dataset version if all prior versions have been successfully archived. The default is false (any version can be archived independently as long as other settings allow it)
-         
+
 :ArchiverSettings
 +++++++++++++++++
 
 Each Archiver class may have its own custom settings. Along with setting which Archiver class to use, one must use this setting to identify which setting values should be sent to it when it is invoked. The value should be a comma-separated list of setting names.
 For example, the LocalSubmitToArchiveCommand only uses the :BagItLocalPath setting. To allow the class to use that setting, this setting must set as:
 
-``curl -X PUT -d ':BagItLocalPath' http://localhost:8080/api/admin/settings/:ArchiverSettings`` 
+``curl -X PUT -d ':BagItLocalPath' http://localhost:8080/api/admin/settings/:ArchiverSettings``
 
 :BagGeneratorThreads
 ++++++++++++++++++++
 
 An archiver setting shared by several implementations (e.g. DuraCloud, Google, and Local) that can make Bag generation use fewer or more threads in zipping datafiles that the default of 2
- 
+
 ``curl http://localhost:8080/api/admin/settings/:BagGeneratorThreads -X PUT -d '8'``
 
 :DuraCloudHost
@@ -5470,14 +5480,14 @@ As explained under :ref:`Branding Your Installation`, by default, the name of th
 :ExportInstallationAsDistributorOnlyWhenNotSet
 ++++++++++++++++++++++++++++++++++++++++++++++
 
-In the DDI metadata exports, the default behavior is to always add the repository (using its brandname - the root collection name or the value of :ref:`:InstallationName <:InstallationName>`) to the stdyDscr/distStmt/distrbtr element. If this setting is true, this will only be done when a Distributor is not already defined in the Dataset metadata. (Note that, since metadata export files are cached, they will have to be reexported (see :doc:`/admin/metadataexport`) before they incorporate a change in this setting.) 
+In the DDI metadata exports, the default behavior is to always add the repository (using its brandname - the root collection name or the value of :ref:`:InstallationName <:InstallationName>`) to the stdyDscr/distStmt/distrbtr element. If this setting is true, this will only be done when a Distributor is not already defined in the Dataset metadata. (Note that, since metadata export files are cached, they will have to be reexported (see :doc:`/admin/metadataexport`) before they incorporate a change in this setting.)
 
 .. _:AnonymizedFieldTypeNames:
 
 :AnonymizedFieldTypeNames
 +++++++++++++++++++++++++
 
-A comma-separated list of field type names that should be 'withheld' when dataset access occurs via a Private Url with Anonymized Access (e.g. to support anonymized review). 
+A comma-separated list of field type names that should be 'withheld' when dataset access occurs via a Private Url with Anonymized Access (e.g. to support anonymized review).
 A suggested minimum includes author, datasetContact, and contributor, but additional fields such as depositor, grantNumber, and publication might also need to be included.
 
 ``curl -X PUT -d 'author, datasetContact, contributor, depositor, grantNumber, publication' http://localhost:8080/api/admin/settings/:AnonymizedFieldTypeNames``
@@ -5520,7 +5530,7 @@ Also refer to the "Datafile Integrity" API  :ref:`datafile-integrity`
 ++++++++++++++++++++++++++++++++++
 
 A boolean setting that, if true, will send an email and notification to users when a Dataset is created. Messages go to those, other than the dataset creator, who have the ability/permission necessary to publish the dataset. The intent of this functionality is to simplify tracking activity and planning to follow-up contact.
-  
+
 ``curl -X PUT -d true http://localhost:8080/api/admin/settings/:SendNotificationOnDatasetCreation``
 
 .. _:CVocConf:
@@ -5628,7 +5638,7 @@ For example, once the following setting is created:
 
 Specifies a custom error message shown to the user when a Dataverse collection fails an external metadata validation (as specified in the setting above) during an attempt to publish. If not specified, the default message "This dataverse collection cannot be published because it has failed an external metadata validation test" will be used.
 
-For example: 
+For example:
 
 ``curl -X PUT -d "This content needs to go through an additional review by the Curation Team before it can be published." http://localhost:8080/api/admin/settings/:DataverseMetadataPublishValidationFailureMsg``
 
@@ -5655,7 +5665,7 @@ In some ways this duplicates a workflow mechanism, since it is possible to defin
 
 Specifies a custom error message shown to the user when a dataset fails an external metadata validation (as specified in the setting above) during an attempt to publish. If not specified, the default message "This dataset cannot be published because it has failed an external metadata validation test" will be used.
 
-For example: 
+For example:
 
 ``curl -X PUT -d "This content needs to go through an additional review by the Curation Team before it can be published." http://localhost:8080/api/admin/settings/:DatasetMetadataValidationFailureMsg``
 
@@ -5663,7 +5673,7 @@ For example:
 :ExternalValidationAdminOverride
 ++++++++++++++++++++++++++++++++
 
-When set to ``true``, this setting allows a superuser to publish and/or update Dataverse collections and datasets bypassing the external validation checks (specified by the settings above). In an event where an external script is reporting validation failures that appear to be in error, this option gives an admin with superuser privileges a quick way to publish the dataset or update a collection for the user. 
+When set to ``true``, this setting allows a superuser to publish and/or update Dataverse collections and datasets bypassing the external validation checks (specified by the settings above). In an event where an external script is reporting validation failures that appear to be in error, this option gives an admin with superuser privileges a quick way to publish the dataset or update a collection for the user.
 
 .. _:FileCategories:
 
@@ -5744,7 +5754,7 @@ The interval in seconds between Dataverse calls to Globus to check on upload pro
 :GlobusBatchLookupSize
 ++++++++++++++++++++++
 
-In the initial implementation, when files were added to the dataset upon completion of a Globus upload task, Dataverse would make a separate Globus API call to look up the size of every new file. This proved to be a significant bottleneck at Harvard Dataverse with users transferring batches of many thousands of files (this in turn was made possible by the Globus improvements in v6.4). An optimized lookup mechanism was added in response, where the Globus Service makes a listing API call on the entire remote folder, then populates the file sizes for all the new file entries before passing them to the Ingest service. This approach however may in fact slow things down in a scenario where there are already thousands of files in the Globus folder for the dataset, and only a small number of new files are being added. To address this, the number of files in a batch for which this method should be used was made configurable. If not set, it will default to 50 (a completely arbitrary number). Setting it to 0 will always use this method with Globus uploads. Setting it to some very large number will disable it completely. This was made a database setting, as opposed to a JVM option, in order to make it configurable in real time. 
+In the initial implementation, when files were added to the dataset upon completion of a Globus upload task, Dataverse would make a separate Globus API call to look up the size of every new file. This proved to be a significant bottleneck at Harvard Dataverse with users transferring batches of many thousands of files (this in turn was made possible by the Globus improvements in v6.4). An optimized lookup mechanism was added in response, where the Globus Service makes a listing API call on the entire remote folder, then populates the file sizes for all the new file entries before passing them to the Ingest service. This approach however may in fact slow things down in a scenario where there are already thousands of files in the Globus folder for the dataset, and only a small number of new files are being added. To address this, the number of files in a batch for which this method should be used was made configurable. If not set, it will default to 50 (a completely arbitrary number). Setting it to 0 will always use this method with Globus uploads. Setting it to some very large number will disable it completely. This was made a database setting, as opposed to a JVM option, in order to make it configurable in real time.
 
 :GlobusSingleFileTransfer
 +++++++++++++++++++++++++
@@ -5767,7 +5777,7 @@ To use the current GDCC version directly:
 :CategoryOrder
 ++++++++++++++
 
-A comma separated list of Category/Tag names defining the order in which files with those tags should be displayed. 
+A comma separated list of Category/Tag names defining the order in which files with those tags should be displayed.
 The setting can include custom tag names along with the pre-defined tags (Documentation, Data, and Code are the defaults but the :ref:`:FileCategories` setting can be used to use a different set of tags).
 The default is category ordering disabled.
 
@@ -5785,7 +5795,7 @@ A true(default)/false option determining whether datafiles listed on the dataset
 :AllowUserManagementOfOrder
 +++++++++++++++++++++++++++
 
-A true/false (default) option determining whether the dataset datafile table display includes checkboxes enabling users to turn folder ordering and/or category ordering (if an order is defined by :CategoryOrder) on and off dynamically. 
+A true/false (default) option determining whether the dataset datafile table display includes checkboxes enabling users to turn folder ordering and/or category ordering (if an order is defined by :CategoryOrder) on and off dynamically.
 
 ``curl -X PUT -d true http://localhost:8080/api/admin/settings/:AllowUserManagementOfOrder``
 
@@ -5809,7 +5819,7 @@ Access API will be able to take advantage of Direct Download for
 tab. files saved with these headers on S3 - since they no longer have
 to be generated and added to the streamed file on the fly.
 
-The setting is ``false`` by default, preserving the legacy behavior. 
+The setting is ``false`` by default, preserving the legacy behavior.
 
 :RateLimitingDefaultCapacityTiers
 +++++++++++++++++++++++++++++++++

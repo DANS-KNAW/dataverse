@@ -15,6 +15,7 @@ import edu.harvard.iq.dataverse.DvObject;
 import edu.harvard.iq.dataverse.FileMetadata;
 import edu.harvard.iq.dataverse.GlobalId;
 import edu.harvard.iq.dataverse.pidproviders.doi.AbstractDOIProvider;
+import edu.harvard.iq.dataverse.pidproviders.doi.XmlMetadataTemplate;
 import edu.harvard.iq.dataverse.settings.FeatureFlags;
 import edu.harvard.iq.dataverse.util.json.JsonUtil;
 import jakarta.json.JsonObject;
@@ -47,18 +48,20 @@ public class DataCiteDOIProvider extends AbstractDOIProvider {
     private String apiUrl;
     private String username;
     private String password;
-    
+    private XmlMetadataTemplate.DatafileInfoMode datafileInfoMode;
+
     private DOIDataCiteRegisterService doiDataCiteRegisterService;
 
     public DataCiteDOIProvider(String id, String label, String providerAuthority, String providerShoulder,
             String identifierGenerationStyle, String datafilePidFormat, String managedList, String excludedList,
-            String mdsUrl, String apiUrl, String username, String password) {
+            String mdsUrl, String apiUrl, String username, String password, String datafileInfoMode) {
         super(id, label, providerAuthority, providerShoulder, identifierGenerationStyle, datafilePidFormat, managedList,
                 excludedList);
         this.mdsUrl = mdsUrl;
         this.apiUrl = apiUrl;
         this.username = username;
         this.password = password;
+        this.datafileInfoMode = XmlMetadataTemplate.DatafileInfoMode.from(datafileInfoMode);
         doiDataCiteRegisterService = new DOIDataCiteRegisterService(mdsUrl, username, password);
     }
 
@@ -95,7 +98,7 @@ public class DataCiteDOIProvider extends AbstractDOIProvider {
         Map<String, String> metadata = getMetadataForCreateIndicator(dvObject);
         metadata.put("_status", DRAFT);
         try {
-            String retString = doiDataCiteRegisterService.reserveIdentifier(identifier, metadata, dvObject);
+            String retString = doiDataCiteRegisterService.reserveIdentifier(identifier, metadata, dvObject, datafileInfoMode);
             logger.log(Level.FINE, "create DOI identifier retString : " + retString);
             return retString;
         } catch (Exception e) {
@@ -120,7 +123,7 @@ public class DataCiteDOIProvider extends AbstractDOIProvider {
 
     /**
      * Modifies the DOI metadata for a Dataset
-     * 
+     *
      * @param dvObject the dvObject whose metadata needs to be modified
      * @return the Dataset identifier, or null if the modification failed
      * @throws java.lang.Exception
@@ -132,7 +135,7 @@ public class DataCiteDOIProvider extends AbstractDOIProvider {
         try {
             Map<String, String> metadata = getIdentifierMetadata(dvObject);
             metadata.put("_target", getTargetUrl(dvObject));
-            doiDataCiteRegisterService.modifyIdentifier(identifier, metadata, dvObject);
+            doiDataCiteRegisterService.modifyIdentifier(identifier, metadata, dvObject, datafileInfoMode);
         } catch (Exception e) {
             logger.log(Level.WARNING, "modifyMetadata failed", e);
             throw e;
@@ -184,11 +187,11 @@ public class DataCiteDOIProvider extends AbstractDOIProvider {
          */
         String doiUrl = getApiUrl() + "/dois/" + doi.getAuthority() + "/" + doi.getIdentifier();
         HttpDelete httpDelete = new HttpDelete(doiUrl);
-        
+
         String userpass = getUsername() + ":" + getPassword();
         String basicAuth = "Basic " + new String(Base64.getEncoder().encode(userpass.getBytes()));
         httpDelete.setHeader(HttpHeaders.AUTHORIZATION, basicAuth);
-        
+
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             httpClient.execute(httpDelete, response -> {
                 int status = response.getCode();
@@ -219,9 +222,9 @@ public class DataCiteDOIProvider extends AbstractDOIProvider {
         metadata.put("_target", getTargetUrl(dvObject));
         try {
             if (FeatureFlags.ONLY_UPDATE_DATACITE_WHEN_NEEDED.enabled()) {
-                doiDataCiteRegisterService.reRegisterIdentifier(identifier, metadata, dvObject);
+                doiDataCiteRegisterService.reRegisterIdentifier(identifier, metadata, dvObject, datafileInfoMode);
             } else {
-                doiDataCiteRegisterService.registerIdentifier(identifier, metadata, dvObject);
+                doiDataCiteRegisterService.registerIdentifier(identifier, metadata, dvObject, datafileInfoMode);
             }
             return true;
         } catch (Exception e) {
@@ -266,7 +269,7 @@ public class DataCiteDOIProvider extends AbstractDOIProvider {
      * separate DOIDataCiteRegisterCache. We could also try to get this info from
      * DataCite directly, but it appears to not be in the xml metadata return, so it
      * would require another/different api call (possible ToDo).
-     * 
+     *
      * @param dvObject - Dataset or DataFile
      * @return PID status - NONE, DRAFT, FINDABLE, or REGISTERED
      */
@@ -330,8 +333,8 @@ public class DataCiteDOIProvider extends AbstractDOIProvider {
         }
         return status;
     }
-    
-    
+
+
     @Override
     public boolean updateIdentifier(DvObject dvObject) {
         logger.log(Level.FINE,"updateIdentifierStatus");
@@ -360,21 +363,21 @@ public class DataCiteDOIProvider extends AbstractDOIProvider {
 
     /** Retrieve the CSL JSON - used in cases where this is not directly available from https://doi.org/
      * i.e. for test DOIs and non-findable DOIs.
-     *  
+     *
      */
     @Override
     public JsonObject getCSLJson(DatasetVersion dsv) {
         if (dsv.isLatestVersion() && dsv.isReleased()) {
             String doi = dsv.getDataset().getGlobalId().asRawIdentifier();
             String doiUrl = getApiUrl() + "/dois/" + doi;
-    
+
             HttpGet httpGet = new HttpGet(doiUrl);
-            
+
             String userpass = getUsername() + ":" + getPassword();
             String basicAuth = "Basic " + new String(Base64.getEncoder().encode(userpass.getBytes()));
             httpGet.setHeader(HttpHeaders.AUTHORIZATION, basicAuth);
             httpGet.setHeader(HttpHeaders.ACCEPT, "application/vnd.citationstyles.csl+json");
-            
+
             try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
                 return httpClient.execute(httpGet, response -> {
                     int status = response.getCode();
@@ -383,7 +386,7 @@ public class DataCiteDOIProvider extends AbstractDOIProvider {
                         throw new IOException("Status: " + status);
                     }
                     logger.fine("getCSLJson status for " + doi + ": " + status);
-                    
+
                     String cslString = EntityUtils.toString(response.getEntity());
                     logger.fine(cslString);
                     return JsonUtil.getJsonObject(cslString);

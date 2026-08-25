@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -71,13 +72,43 @@ public class XmlMetadataTemplate {
     public static final String XML_XSI = "http://www.w3.org/2001/XMLSchema-instance";
     public static final String XML_SCHEMA_VERSION = "4.5";
 
+    public enum DatafileInfoMode {
+        EXPANDED("expanded"),
+        BRIEF("brief"),
+        NONE("none");
+
+        private final String value;
+
+        DatafileInfoMode(String value) {
+            this.value = value;
+        }
+
+        public static DatafileInfoMode from(String value) {
+            if (value != null) {
+                for (DatafileInfoMode mode : values()) {
+                    if (mode.value.equalsIgnoreCase(value.trim())) {
+                        return mode;
+                    }
+                }
+                logger.warning("Unknown DataCite datafile info mode '" + value + "', using expanded");
+            }
+            return EXPANDED;
+        }
+    }
+
     private DoiMetadata doiMetadata;
+    private DatafileInfoMode datafileInfoMode = DatafileInfoMode.EXPANDED;
 
     public XmlMetadataTemplate() {
     }
 
     public XmlMetadataTemplate(DoiMetadata doiMetadata) {
+        this(doiMetadata, DatafileInfoMode.EXPANDED);
+    }
+
+    public XmlMetadataTemplate(DoiMetadata doiMetadata, DatafileInfoMode datafileInfoMode) {
         this.doiMetadata = doiMetadata;
+        this.datafileInfoMode = datafileInfoMode;
     }
 
     public String generateXML(DvObject dvObject) {
@@ -98,7 +129,7 @@ public class XmlMetadataTemplate {
         // Could/should use dataset metadata language for metadata from DvObject itself?
         String language = null; // machine locale? e.g. for Publisher which is global
         String metadataLanguage = null; // when set, otherwise = language?
-        
+
         XMLStreamWriter xmlw = XMLOutputFactory.newInstance().createXMLStreamWriter(outputStream);
         xmlw.writeStartElement("resource");
         boolean deaccessioned=false;
@@ -205,7 +236,7 @@ public class XmlMetadataTemplate {
      * from the OpenAire list (the last from PermaLinks) ToDo - If we add,e.g., an
      * ARK or PURL provider, this code has to change or we'll need to refactor so
      * that the identifiertype and id value can be sent via the JSON/ORE
-     * 
+     *
      * @param xmlw
      *            The Steam writer
      * @param dvObject
@@ -281,7 +312,7 @@ public class XmlMetadataTemplate {
                     writeEntityElements(xmlw, "creator", null, creatorObj, affiliation, nameIdentifier, nameIdentifierScheme);
                 }
 
-                
+
             }
         }
         if (nothingWritten) {
@@ -568,8 +599,8 @@ public class XmlMetadataTemplate {
     }
 
     //List from https://schema.datacite.org/meta/kernel-4/include/datacite-contributorType-v4.xsd
-    private Set<String> contributorTypes = new HashSet<>(Arrays.asList("ContactPerson", "DataCollector", "DataCurator", "DataManager", "Distributor", "Editor", 
-                "HostingInstitution", "Other", "Producer", "ProjectLeader", "ProjectManager", "ProjectMember", "RegistrationAgency", "RegistrationAuthority", 
+    private Set<String> contributorTypes = new HashSet<>(Arrays.asList("ContactPerson", "DataCollector", "DataCurator", "DataManager", "Distributor", "Editor",
+                "HostingInstitution", "Other", "Producer", "ProjectLeader", "ProjectManager", "ProjectMember", "RegistrationAgency", "RegistrationAuthority",
                 "RelatedPerson", "ResearchGroup", "RightsHolder", "Researcher", "Sponsor", "Supervisor", "WorkPackageLeader"));
 
     private String getCanonicalContributorType(String contributorType) {
@@ -624,7 +655,7 @@ public class XmlMetadataTemplate {
             if (externalIdentifier.isValidIdentifier(orgName)) {
                 isROR = true;
                 JsonObject jo = getExternalVocabularyValue(orgName);
-                // Some ext. cvv configs store a JsonArray of multiple objects/values. In such cases, we'll leave orgName blank 
+                // Some ext. cvv configs store a JsonArray of multiple objects/values. In such cases, we'll leave orgName blank
                 if (jo != null && jo.containsKey("termName")) {
                     JsonValue termName = jo.get("termName");
                     if (termName.getValueType() == ValueType.STRING) {
@@ -632,7 +663,7 @@ public class XmlMetadataTemplate {
                     }
                 }
             }
-          
+
             if (isROR) {
 
                 attributeMap.put("schemeURI", "https://ror.org");
@@ -1149,7 +1180,7 @@ public class XmlMetadataTemplate {
             // Add entry for Handle,Perma protocols so this can be used with GlobalId/getProtocol()
             relatedIdentifierTypeMap.put("hdl".toLowerCase(), "Handle");
             relatedIdentifierTypeMap.put("perma".toLowerCase(), "URL");
-            
+
         }
         return relatedIdentifierTypeMap.get(pubIdType);
     }
@@ -1157,17 +1188,34 @@ public class XmlMetadataTemplate {
     private void writeSize(XMLStreamWriter xmlw, DvObject dvObject) throws XMLStreamException {
         // sizes -> size
         boolean sizesWritten = false;
-        List<DataFile> dataFiles = new ArrayList<DataFile>();
+        List<DataFile> dataFiles = getDataFiles(dvObject);
 
-        if (dvObject instanceof Dataset dataset) {
-            dataFiles = dataset.getFiles();
-        } else if (dvObject instanceof DataFile df) {
-            dataFiles.add(df);
+        if (datafileInfoMode == DatafileInfoMode.NONE) {
+            return;
+        }
+        if (datafileInfoMode == DatafileInfoMode.BRIEF) {
+            long totalSize = 0L;
+            boolean hasKnownSize = false;
+            if (dataFiles != null && !dataFiles.isEmpty()) {
+                for (DataFile dataFile : dataFiles) {
+                    Long size = dataFile.getFilesize();
+                    if (size != null && size != -1) {
+                        totalSize += size;
+                        hasKnownSize = true;
+                    }
+                }
+            }
+            if (hasKnownSize) {
+                xmlw.writeStartElement("sizes");
+                XmlWriterUtil.writeFullElement(xmlw, "size", Long.toString(totalSize));
+                xmlw.writeEndElement();
+            }
+            return;
         }
         if (dataFiles != null && !dataFiles.isEmpty()) {
             for (DataFile dataFile : dataFiles) {
                 Long size = dataFile.getFilesize();
-                if (size != -1) {
+                if (size != null && size != -1) {
                     sizesWritten = XmlWriterUtil.writeOpenTagIfNeeded(xmlw, "sizes", sizesWritten);
                     XmlWriterUtil.writeFullElement(xmlw, "size", size.toString());
                 }
@@ -1182,12 +1230,29 @@ public class XmlMetadataTemplate {
     private void writeFormats(XMLStreamWriter xmlw, DvObject dvObject) throws XMLStreamException {
 
         boolean formatsWritten = false;
-        List<DataFile> dataFiles = new ArrayList<DataFile>();
+        List<DataFile> dataFiles = getDataFiles(dvObject);
 
-        if (dvObject instanceof Dataset dataset) {
-            dataFiles = dataset.getFiles();
-        } else if (dvObject instanceof DataFile df) {
-            dataFiles.add(df);
+        if (datafileInfoMode == DatafileInfoMode.NONE) {
+            return;
+        }
+        if (datafileInfoMode == DatafileInfoMode.BRIEF) {
+            Set<String> uniqueFormats = new LinkedHashSet<>();
+            if (dataFiles != null && !dataFiles.isEmpty()) {
+                for (DataFile dataFile : dataFiles) {
+                    String format = dataFile.getContentType();
+                    if (StringUtils.isNotBlank(format)) {
+                        uniqueFormats.add(format);
+                    }
+                }
+            }
+            if (!uniqueFormats.isEmpty()) {
+                xmlw.writeStartElement("formats");
+                for (String format : uniqueFormats) {
+                    XmlWriterUtil.writeFullElement(xmlw, "format", format);
+                }
+                xmlw.writeEndElement();
+            }
+            return;
         }
         if (dataFiles != null && !dataFiles.isEmpty()) {
             for (DataFile dataFile : dataFiles) {
@@ -1208,6 +1273,16 @@ public class XmlMetadataTemplate {
             xmlw.writeEndElement();
         }
 
+    }
+
+    private List<DataFile> getDataFiles(DvObject dvObject) {
+        List<DataFile> dataFiles = new ArrayList<>();
+        if (dvObject instanceof Dataset dataset) {
+            return dataset.getFiles();
+        } else if (dvObject instanceof DataFile df) {
+            dataFiles.add(df);
+        }
+        return dataFiles;
     }
 
     private void writeVersion(XMLStreamWriter xmlw, DvObject dvObject) throws XMLStreamException {
@@ -1256,7 +1331,7 @@ public class XmlMetadataTemplate {
         }
         xmlw.writeEndElement(); // </rights>
         xmlw.writeStartElement("rights"); // <rights>
-        
+
         if (license != null) {
             xmlw.writeAttribute("rightsURI", license.getUri().toString());
             String label = license.getShortDescription();
@@ -1264,7 +1339,7 @@ public class XmlMetadataTemplate {
                 //Use name as a backup in case the license has no short description
                 label = license.getName();
             }
-            
+
             if (license.getRightsIdentifier() != null) {
                 xmlw.writeAttribute("rightsIdentifier", license.getRightsIdentifier());
             }
@@ -1418,7 +1493,7 @@ public class XmlMetadataTemplate {
                 geoLocationsWritten = XmlWriterUtil.writeOpenTagIfNeeded(xmlw, "geoLocations", geoLocationsWritten);
                 for (String[] place : places) {
                     xmlw.writeStartElement("geoLocation"); // <geoLocation>
-                    
+
                     ArrayList<String> placeList = new ArrayList<String>();
                     for (String placePart : place) {
                         if (!StringUtils.isBlank(placePart)) {
@@ -1428,7 +1503,7 @@ public class XmlMetadataTemplate {
                     XmlWriterUtil.writeFullElement(xmlw, "geoLocationPlace", Strings.join(placeList, ", "));
                     xmlw.writeEndElement(); // </geoLocation>
                 }
-                
+
             }
             boolean boundingBoxFound = false;
             boolean productionPlaceFound = false;
@@ -1569,7 +1644,7 @@ public class XmlMetadataTemplate {
                                     funder = jo.getString("termName");
                                 }
                             }
-                          
+
                             xmlw.writeStartElement("fundingReference"); // <fundingReference>
                             XmlWriterUtil.writeFullElement(xmlw, "funderName", StringEscapeUtils.escapeXml10(funder));
                             if (isROR) {
