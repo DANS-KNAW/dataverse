@@ -13,10 +13,20 @@ start-preprovisioned-box.py -s dev_vocabs dev_dataversenl
 
 ############ show migration input
 vagrant ssh dev_dataversenl -c "sudo -u postgres psql dvndb -c \"select * from termsofuseandaccess;select * from datasetversion;select * from template;select * from filemetadata;\"" > before.txt
+vagrant ssh dev_dataversenl -c 'sudo -u postgres psql dvndb < /vagrant/external/dataverse/tests/shell/DANS-v6-10/constraints.sql' >> before.txt
 
 #git --git-dir external/dataverse/.git checkout DD-2318-spilt-termsOUAA
 mvn -f external/dataverse/pom.xml clean install -DskipTests
 deploy.py -e shared_dataverse_payara_dir=payara7 --dataverse-war external/dataverse/target/dataverse dev_dataversenl
+
+# execute the DB migration manually:
+#  vagrant ssh dev_dataversenl -c "sudo -u postgres psql dvndb <<'SQL'
+#  SET ROLE dvnuser;
+#  SELECT current_user, session_user;
+#  \\set ON_ERROR_STOP on
+#  \\i /vagrant/external/dataverse/src/main/resources/db/migration/V6.10.1__DD2318-split-termsofuseandaccess.sql
+#  RESET ROLE;
+#  SQL"
 
 ## show potential problems caused by the flyway
 vagrant ssh dev_dataversenl -c 'journalctl -u payara --no-pager' | grep PER01000 | grep -v 'already exists'
@@ -24,6 +34,7 @@ vagrant ssh dev_dataversenl -c 'journalctl -u payara --no-pager' | grep PER01000
 ############ show migration results
 vagrant ssh dev_dataversenl -c "sudo -u postgres psql dvndb -c \"select * from termsofaccess;select * from termsofuseorlicense;select * from datasetversion;select * from template;select * from filemetadata;\"" > after.txt
 vagrant ssh dev_dataversenl -c "sudo -u postgres psql dvndb -c \"select * from flyway_schema_history;\"" < /dev/null | egrep '(DD|version)'
+vagrant ssh dev_dataversenl -c 'sudo -u postgres psql dvndb < /vagrant/external/dataverse/tests/shell/DANS-v6-10/constraints.sql' >> after.txt
 
 grep dev_dataversenl config.yml
 echo "curl commands use hardcoded values for dev_dataversenl_v6.10-PATCH-7_2026-07-19"
