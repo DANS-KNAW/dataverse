@@ -23,6 +23,12 @@ class JvmSettingsTest {
     }
     
     @Test
+    @SystemProperty(key = "dataverse.datacite.xml.datafile-info", value = "brief")
+    void lookupDataciteDatafileInfoSetting() {
+        assertEquals("brief", JvmSettings.DATACITE_XML_DATAFILE_INFO.lookup());
+    }
+    
+    @Test
     @SystemProperty(key = "dataverse.ingest.rserve.port", value = "1234")
     void lookupSettingViaAliasWithDefaultInMPCFile() {
         assertEquals("1234", JvmSettings.RSERVE_PORT.lookup());
