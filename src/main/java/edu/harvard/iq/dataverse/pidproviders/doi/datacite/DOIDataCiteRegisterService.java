@@ -39,8 +39,8 @@ import org.xmlunit.diff.Difference;
 public class DOIDataCiteRegisterService {
 
     private static final Logger logger = Logger.getLogger(DOIDataCiteRegisterService.class.getCanonicalName());
-
-
+    
+        
     //A singleton since it, and the httpClient in it can be reused.
     private DataCiteRESTfullClient client=null;
 
@@ -69,7 +69,7 @@ public class DOIDataCiteRegisterService {
         String xmlMetadata = getMetadataFromDvObject(identifier, metadata, dvObject, datafileInfoMode);
 
         retString = client.postMetadata(xmlMetadata);
-
+        
         return retString;
     }
 
@@ -82,14 +82,14 @@ public class DOIDataCiteRegisterService {
         String retString = "";
         String xmlMetadata = getMetadataFromDvObject(identifier, metadata, dvObject, datafileInfoMode);
         String target = metadata.get("_target");
-
+        
         retString = client.postMetadata(xmlMetadata);
         client.postUrl(identifier.substring(identifier.indexOf(":") + 1), target);
 
         return retString;
     }
-
-
+    
+    
     public String reRegisterIdentifier(String identifier, Map<String, String> metadata, DvObject dvObject) throws IOException {
         return reRegisterIdentifier(identifier, metadata, dvObject, getConfiguredDatafileInfoMode());
     }
@@ -147,7 +147,7 @@ public class DOIDataCiteRegisterService {
 
         return retString;
     }
-
+    
     private static DatafileInfoMode getConfiguredDatafileInfoMode() {
         return DatafileInfoMode.from(JvmSettings.DATACITE_XML_DATAFILE_INFO.lookupOptional().orElse("expanded"));
     }
@@ -194,11 +194,11 @@ public class DOIDataCiteRegisterService {
             //Note file title is not currently escaped the way the dataset title is, so adding it here.
             title = StringEscapeUtils.escapeXml10(title);
         }
-
+        
         if (title.isEmpty() || title.equals(DatasetField.NA_VALUE)) {
             title = AbstractPidProvider.UNAVAILABLE;
         }
-
+        
         doiMetadata.setTitle(title);
         String producerString = BrandingUtil.getInstallationBrandName();
         if (producerString.isEmpty() || producerString.equals(DatasetField.NA_VALUE)) {
@@ -215,16 +215,16 @@ public class DOIDataCiteRegisterService {
     public static String getMetadataForDeactivateIdentifier(String identifier, Map<String, String> metadata, DvObject dvObject) {
 
         DoiMetadata doiMetadata = new DoiMetadata();
-
+        
         doiMetadata.setIdentifier(identifier.substring(identifier.indexOf(':') + 1));
         doiMetadata.setCreators(Arrays.asList(metadata.get("datacite.creator").split("; ")));
 
         doiMetadata.setDescription(AbstractPidProvider.UNAVAILABLE);
 
         String title =metadata.get("datacite.title");
-
+        
         doiMetadata.setAuthors(null);
-
+        
         doiMetadata.setTitle(title);
         String producerString = AbstractPidProvider.UNAVAILABLE;
 

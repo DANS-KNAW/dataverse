@@ -62,15 +62,15 @@ public class DataCiteProviderTest {
 
     /**
      * Useful for testing but requires DataCite credentials, etc.
-     *
+     * 
      * To run the test:
      * export DataCiteUsername=test2
      * export DataCitePassword=changeme2
      * export DataCiteAuthority=10.5072
      * export DataCiteShoulder=FK2
-     *
+     * 
      * then run mvn test -Dtest=DataCiteProviderTest
-     *
+     * 
      * For each run of the test, one test DOI will be created and will remain in the registered state, as visible on Fabrica at doi.test.datacite.org
      * (two DOIs are created, but one is deleted after being created in the draft state and never made findable.)
      */
@@ -146,7 +146,7 @@ public class DataCiteProviderTest {
         mdMap = provider.getIdentifierMetadata(d);
         // And verify the record is gone (no title, should be no entries at all)
         assertEquals(null, mdMap.get("datacite.title"));
-
+        
         //Now recreate and publicize in one step
         assertTrue(provider.publicizeIdentifier(d));
         d.getLatestVersion().setVersionState(VersionState.RELEASED);
@@ -156,7 +156,7 @@ public class DataCiteProviderTest {
         assertEquals("Second Title", mdMap.get("datacite.title"));
       //Check our local status
         assertEquals(DataCiteDOIProvider.FINDABLE, provider.getPidStatus(d));
-
+        
         //Verify that modify does update a published/findable record
         testDatasetField.setSingleValue("Third Title");
 
@@ -169,15 +169,15 @@ public class DataCiteProviderTest {
 
         mdMap = provider.getIdentifierMetadata(d);
         assertEquals("Third Title", mdMap.get("datacite.title"));
-
+        
         //Now delete the identifier . Once it's been findable, this should just flip the record to registered
         //Not sure that can be easily verified in the test, but it will be visible in Fabrica
         provider.deleteIdentifier(d);
         d.getLatestVersion().setVersionState(VersionState.DEACCESSIONED);
-
+        
         mdMap = provider.getIdentifierMetadata(d);
         assertEquals("This item has been removed from publication", mdMap.get("datacite.title"));
-
+        
         //Check our local status - just uses the version state
         assertEquals(DataCiteDOIProvider.REGISTERED, provider.getPidStatus(d));
 

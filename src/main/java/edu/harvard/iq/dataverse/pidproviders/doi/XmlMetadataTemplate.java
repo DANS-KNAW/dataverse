@@ -129,7 +129,7 @@ public class XmlMetadataTemplate {
         // Could/should use dataset metadata language for metadata from DvObject itself?
         String language = null; // machine locale? e.g. for Publisher which is global
         String metadataLanguage = null; // when set, otherwise = language?
-
+        
         XMLStreamWriter xmlw = XMLOutputFactory.newInstance().createXMLStreamWriter(outputStream);
         xmlw.writeStartElement("resource");
         boolean deaccessioned=false;
@@ -236,7 +236,7 @@ public class XmlMetadataTemplate {
      * from the OpenAire list (the last from PermaLinks) ToDo - If we add,e.g., an
      * ARK or PURL provider, this code has to change or we'll need to refactor so
      * that the identifiertype and id value can be sent via the JSON/ORE
-     *
+     * 
      * @param xmlw
      *            The Steam writer
      * @param dvObject
@@ -312,7 +312,7 @@ public class XmlMetadataTemplate {
                     writeEntityElements(xmlw, "creator", null, creatorObj, affiliation, nameIdentifier, nameIdentifierScheme);
                 }
 
-
+                
             }
         }
         if (nothingWritten) {
@@ -599,8 +599,8 @@ public class XmlMetadataTemplate {
     }
 
     //List from https://schema.datacite.org/meta/kernel-4/include/datacite-contributorType-v4.xsd
-    private Set<String> contributorTypes = new HashSet<>(Arrays.asList("ContactPerson", "DataCollector", "DataCurator", "DataManager", "Distributor", "Editor",
-                "HostingInstitution", "Other", "Producer", "ProjectLeader", "ProjectManager", "ProjectMember", "RegistrationAgency", "RegistrationAuthority",
+    private Set<String> contributorTypes = new HashSet<>(Arrays.asList("ContactPerson", "DataCollector", "DataCurator", "DataManager", "Distributor", "Editor", 
+                "HostingInstitution", "Other", "Producer", "ProjectLeader", "ProjectManager", "ProjectMember", "RegistrationAgency", "RegistrationAuthority", 
                 "RelatedPerson", "ResearchGroup", "RightsHolder", "Researcher", "Sponsor", "Supervisor", "WorkPackageLeader"));
 
     private String getCanonicalContributorType(String contributorType) {
@@ -655,7 +655,7 @@ public class XmlMetadataTemplate {
             if (externalIdentifier.isValidIdentifier(orgName)) {
                 isROR = true;
                 JsonObject jo = getExternalVocabularyValue(orgName);
-                // Some ext. cvv configs store a JsonArray of multiple objects/values. In such cases, we'll leave orgName blank
+                // Some ext. cvv configs store a JsonArray of multiple objects/values. In such cases, we'll leave orgName blank 
                 if (jo != null && jo.containsKey("termName")) {
                     JsonValue termName = jo.get("termName");
                     if (termName.getValueType() == ValueType.STRING) {
@@ -663,7 +663,7 @@ public class XmlMetadataTemplate {
                     }
                 }
             }
-
+          
             if (isROR) {
 
                 attributeMap.put("schemeURI", "https://ror.org");
@@ -1180,7 +1180,7 @@ public class XmlMetadataTemplate {
             // Add entry for Handle,Perma protocols so this can be used with GlobalId/getProtocol()
             relatedIdentifierTypeMap.put("hdl".toLowerCase(), "Handle");
             relatedIdentifierTypeMap.put("perma".toLowerCase(), "URL");
-
+            
         }
         return relatedIdentifierTypeMap.get(pubIdType);
     }
@@ -1329,7 +1329,7 @@ public class XmlMetadataTemplate {
         }
         xmlw.writeEndElement(); // </rights>
         xmlw.writeStartElement("rights"); // <rights>
-
+        
         if (license != null) {
             xmlw.writeAttribute("rightsURI", license.getUri().toString());
             String label = license.getShortDescription();
@@ -1337,7 +1337,7 @@ public class XmlMetadataTemplate {
                 //Use name as a backup in case the license has no short description
                 label = license.getName();
             }
-
+            
             if (license.getRightsIdentifier() != null) {
                 xmlw.writeAttribute("rightsIdentifier", license.getRightsIdentifier());
             }
@@ -1491,7 +1491,7 @@ public class XmlMetadataTemplate {
                 geoLocationsWritten = XmlWriterUtil.writeOpenTagIfNeeded(xmlw, "geoLocations", geoLocationsWritten);
                 for (String[] place : places) {
                     xmlw.writeStartElement("geoLocation"); // <geoLocation>
-
+                    
                     ArrayList<String> placeList = new ArrayList<String>();
                     for (String placePart : place) {
                         if (!StringUtils.isBlank(placePart)) {
@@ -1501,7 +1501,7 @@ public class XmlMetadataTemplate {
                     XmlWriterUtil.writeFullElement(xmlw, "geoLocationPlace", Strings.join(placeList, ", "));
                     xmlw.writeEndElement(); // </geoLocation>
                 }
-
+                
             }
             boolean boundingBoxFound = false;
             boolean productionPlaceFound = false;
@@ -1642,7 +1642,7 @@ public class XmlMetadataTemplate {
                                     funder = jo.getString("termName");
                                 }
                             }
-
+                          
                             xmlw.writeStartElement("fundingReference"); // <fundingReference>
                             XmlWriterUtil.writeFullElement(xmlw, "funderName", StringEscapeUtils.escapeXml10(funder));
                             if (isROR) {
