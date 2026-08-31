@@ -5,7 +5,7 @@
  */
 package edu.harvard.iq.dataverse;
 
-import edu.harvard.iq.dataverse.license.License;
+import java.io.Serializable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,7 +17,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
-import java.io.Serializable;
+import edu.harvard.iq.dataverse.license.License;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 @NamedQueries({
