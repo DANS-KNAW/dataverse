@@ -114,6 +114,10 @@ public enum JvmSettings {
     MDB_SYSTEM_METADATA_KEYS(SCOPE_METADATA, "block-system-metadata-keys"),
     MDB_SYSTEM_KEY_FOR(MDB_SYSTEM_METADATA_KEYS),
 
+    // DATACITE SETTINGS (applies to both DataCite PID provider and DataCite metadata export)
+    SCOPE_DATACITE(PREFIX, "datacite"),
+    DATACITE_XML_DATAFILE_INFO(SCOPE_DATACITE, "xml.datafile-info"),
+
     // PERSISTENT IDENTIFIER SETTINGS
     SCOPE_PID(PREFIX, "pid"),
     PID_PROVIDERS(SCOPE_PID, "providers"),
@@ -141,7 +145,6 @@ public enum JvmSettings {
     DATACITE_REST_API_URL(SCOPE_PID_DATACITE, "rest-api-url"),
     DATACITE_USERNAME(SCOPE_PID_DATACITE, "username"),
     DATACITE_PASSWORD(SCOPE_PID_DATACITE, "password"),
-    DATACITE_XML_DATAFILE_INFO(SCOPE_PID_DATACITE, "xml.datafile-info"),
 
     // PROVIDER CROSSREF
     SCOPE_PID_CROSSREF(SCOPE_PID_PROVIDER, "crossref"),

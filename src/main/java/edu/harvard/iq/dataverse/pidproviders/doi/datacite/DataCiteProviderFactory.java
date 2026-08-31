@@ -31,7 +31,7 @@ public class DataCiteProviderFactory implements PidProviderFactory {
         String apiUrl = JvmSettings.DATACITE_REST_API_URL.lookupOptional(providerId).orElse("https://api.test.datacite.org");
         String username = JvmSettings.DATACITE_USERNAME.lookup(providerId);
         String password = JvmSettings.DATACITE_PASSWORD.lookup(providerId);
-        String datafileInfoMode = JvmSettings.DATACITE_XML_DATAFILE_INFO.lookupOptional(providerId).orElse("expanded");
+        String datafileInfoMode = JvmSettings.DATACITE_XML_DATAFILE_INFO.lookupOptional().orElse("expanded");
 
         return new DataCiteDOIProvider(providerId, providerLabel, providerAuthority, providerShoulder, identifierGenerationStyle,
                 datafilePidFormat, managedList, excludedList, mdsUrl, apiUrl, username, password, datafileInfoMode);

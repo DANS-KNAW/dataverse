@@ -566,8 +566,6 @@ dataverse.pid.*.datacite.username
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 dataverse.pid.*.datacite.password
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-dataverse.pid.*.datacite.xml.datafile-info
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 dataverse.feature.only-update-datacite-when-needed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -584,14 +582,6 @@ DataCite uses `HTTP Basic authentication <https://en.wikipedia.org/wiki/Basic_ac
 for `Fabrica <https://doi.datacite.org/>`_ and their APIs. You need to provide
 the same credentials (``username``, ``password``) to Dataverse software to mint and manage DOIs for you.
 As noted above, you should use one of the more secure options for setting the password.
-
-``dataverse.pid.*.datacite.xml.datafile-info`` controls how DataCite XML for datasets represents
-datafile sizes and formats. The default value, ``expanded``, preserves the current behavior and emits
-one ``size`` and one ``format`` element per datafile. Set the value to ``brief`` to emit a single
-``size`` element with the sum of all known datafile sizes and one ``format`` element per distinct
-datafile format. Set the value to ``none`` to omit datafile ``size`` and ``format`` elements entirely.
-The setting only affects newly generated DataCite metadata, such as metadata sent when publishing a new
-dataset version or when explicitly updating PID-provider metadata for a published dataset.
 
 The `only-update-datacite-when-needed feature` flag is a global option that causes Dataverse to GET the latest metadata from DataCite
 for a DOI and compare it with the current metadata in Dataverse and only sending a following POST request if needed. This potentially
@@ -809,6 +799,25 @@ Here are the configuration options for PermaLinks:
 - :ref:`:FilePIDsEnabled <:FilePIDsEnabled>` (optional, defaults to false)
 
 You must restart Payara after making changes to these settings.
+
+.. _datacite-settings:
+
+DataCite Settings
+-----------------
+
+.. _dataverse.datacite.xml.datafile-info:
+
+dataverse.datacite.xml.datafile-info
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``dataverse.datacite.xml.datafile-info`` controls how DataCite XML for datasets represents
+datafile sizes and formats. The default value, ``expanded``, preserves the current behavior and emits
+one ``size`` and one ``format`` element per datafile. Set the value to ``brief`` to emit a single
+``size`` element with the sum of all known datafile sizes and one ``format`` element per distinct
+datafile format. Set the value to ``none`` to omit datafile ``size`` and ``format`` elements entirely.
+This setting applies to both the DataCite metadata export and to DataCite XML sent by the PID provider,
+such as when publishing a new dataset version or explicitly updating PID-provider metadata for a
+published dataset.
 
 .. _auth-modes:
 

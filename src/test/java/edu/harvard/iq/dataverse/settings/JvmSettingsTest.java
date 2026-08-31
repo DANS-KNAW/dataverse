@@ -23,9 +23,9 @@ class JvmSettingsTest {
     }
 
     @Test
-    @SystemProperty(key = "dataverse.pid.datacite.datacite.xml.datafile-info", value = "brief")
-    void lookupPidProviderDatafileInfoSetting() {
-        assertEquals("brief", JvmSettings.DATACITE_XML_DATAFILE_INFO.lookup("datacite"));
+    @SystemProperty(key = "dataverse.datacite.xml.datafile-info", value = "brief")
+    void lookupDataciteDatafileInfoSetting() {
+        assertEquals("brief", JvmSettings.DATACITE_XML_DATAFILE_INFO.lookup());
     }
 
     @Test

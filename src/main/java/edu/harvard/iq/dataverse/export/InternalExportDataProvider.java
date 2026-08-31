@@ -12,7 +12,9 @@ import edu.harvard.iq.dataverse.DataCitation;
 import edu.harvard.iq.dataverse.DataFile;
 import edu.harvard.iq.dataverse.DatasetVersion;
 import edu.harvard.iq.dataverse.FileMetadata;
+import edu.harvard.iq.dataverse.pidproviders.doi.XmlMetadataTemplate;
 import edu.harvard.iq.dataverse.pidproviders.doi.datacite.DOIDataCiteRegisterService;
+import edu.harvard.iq.dataverse.settings.JvmSettings;
 import io.gdcc.spi.export.ExportDataProvider;
 import edu.harvard.iq.dataverse.util.bagit.OREMap;
 import edu.harvard.iq.dataverse.util.json.JsonPrinter;
@@ -67,8 +69,10 @@ public class InternalExportDataProvider implements ExportDataProvider {
 
     @Override
     public String getDataCiteXml() {
+        String datafileInfoModeString = JvmSettings.DATACITE_XML_DATAFILE_INFO.lookupOptional().orElse("expanded");
+        XmlMetadataTemplate.DatafileInfoMode datafileInfoMode = XmlMetadataTemplate.DatafileInfoMode.from(datafileInfoModeString);
         return DOIDataCiteRegisterService.getMetadataFromDvObject(
-                dv.getDataset().getGlobalId().asString(), new DataCitation(dv).getDataCiteMetadata(), dv.getDataset());
+                dv.getDataset().getGlobalId().asString(), new DataCitation(dv).getDataCiteMetadata(), dv.getDataset(), datafileInfoMode);
     }
     
     @Override
