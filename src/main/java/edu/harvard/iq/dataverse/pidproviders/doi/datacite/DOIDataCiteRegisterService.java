@@ -24,6 +24,7 @@ import edu.harvard.iq.dataverse.pidproviders.AbstractPidProvider;
 import edu.harvard.iq.dataverse.pidproviders.doi.DoiMetadata;
 import edu.harvard.iq.dataverse.pidproviders.doi.XmlMetadataTemplate;
 import edu.harvard.iq.dataverse.pidproviders.doi.XmlMetadataTemplate.DatafileInfoMode;
+import edu.harvard.iq.dataverse.settings.JvmSettings;
 
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.builder.Input;
@@ -59,7 +60,7 @@ public class DOIDataCiteRegisterService {
      * https://support.datacite.org/docs/mds-api-guide#doi-states
      */
     public String reserveIdentifier(String identifier, Map<String, String> metadata, DvObject dvObject) throws IOException {
-        return reserveIdentifier(identifier, metadata, dvObject, DatafileInfoMode.EXPANDED);
+        return reserveIdentifier(identifier, metadata, dvObject, getConfiguredDatafileInfoMode());
     }
 
     public String reserveIdentifier(String identifier, Map<String, String> metadata, DvObject dvObject,
@@ -73,7 +74,7 @@ public class DOIDataCiteRegisterService {
     }
 
     public String registerIdentifier(String identifier, Map<String, String> metadata, DvObject dvObject) throws IOException {
-        return registerIdentifier(identifier, metadata, dvObject, DatafileInfoMode.EXPANDED);
+        return registerIdentifier(identifier, metadata, dvObject, getConfiguredDatafileInfoMode());
     }
 
     public String registerIdentifier(String identifier, Map<String, String> metadata, DvObject dvObject,
@@ -90,7 +91,7 @@ public class DOIDataCiteRegisterService {
 
 
     public String reRegisterIdentifier(String identifier, Map<String, String> metadata, DvObject dvObject) throws IOException {
-        return reRegisterIdentifier(identifier, metadata, dvObject, DatafileInfoMode.EXPANDED);
+        return reRegisterIdentifier(identifier, metadata, dvObject, getConfiguredDatafileInfoMode());
     }
 
     public String reRegisterIdentifier(String identifier, Map<String, String> metadata, DvObject dvObject,
@@ -147,8 +148,12 @@ public class DOIDataCiteRegisterService {
         return retString;
     }
 
+    private static DatafileInfoMode getConfiguredDatafileInfoMode() {
+        return DatafileInfoMode.from(JvmSettings.DATACITE_XML_DATAFILE_INFO.lookupOptional().orElse("expanded"));
+    }
+
     public static String getMetadataFromDvObject(String identifier, Map<String, String> metadata, DvObject dvObject) {
-        return getMetadataFromDvObject(identifier, metadata, dvObject, DatafileInfoMode.EXPANDED);
+        return getMetadataFromDvObject(identifier, metadata, dvObject, getConfiguredDatafileInfoMode());
     }
 
     public static String getMetadataFromDvObject(String identifier, Map<String, String> metadata, DvObject dvObject,
@@ -233,7 +238,7 @@ public class DOIDataCiteRegisterService {
 
     public String modifyIdentifier(String identifier, Map<String, String> metadata, DvObject dvObject)
             throws IOException {
-        return modifyIdentifier(identifier, metadata, dvObject, DatafileInfoMode.EXPANDED);
+        return modifyIdentifier(identifier, metadata, dvObject, getConfiguredDatafileInfoMode());
     }
 
     public String modifyIdentifier(String identifier, Map<String, String> metadata, DvObject dvObject,
