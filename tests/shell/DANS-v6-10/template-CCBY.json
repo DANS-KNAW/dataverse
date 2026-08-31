@@ -1,0 +1,25 @@
+{
+  "name": "CC BY 4.0 with mandatory fields",
+  "fields": [
+    {"typeName": "title", "multiple": false, "typeClass": "primitive", "value": "test"},
+    {
+      "typeName": "author",
+      "multiple": true,
+      "typeClass": "compound",
+      "value": [
+        {
+          "authorName": {"typeName": "authorName", "multiple": false, "typeClass": "primitive", "value": "Admin, Dataverse"},
+          "authorAffiliation": {"typeName": "authorAffiliation", "multiple": false, "typeClass": "primitive", "value": "Dataverse.org"}
+        }
+      ]
+    },
+    {
+      "typeName": "dsDescription",
+      "multiple": true,
+      "typeClass": "compound",
+      "value": [{"dsDescriptionValue": {"typeName": "dsDescriptionValue", "multiple": false, "typeClass": "primitive", "value": "t"}}]
+    },
+    {"typeName": "subject", "multiple": true, "typeClass": "controlledVocabulary", "value": ["Arts and Humanities"]}
+  ]
+}
+

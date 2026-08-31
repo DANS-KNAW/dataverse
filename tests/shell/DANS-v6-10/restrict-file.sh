@@ -1,0 +1,77 @@
+set -ex
+
+cd ~/git/dans-core-systems/
+
+grep dev_lifesciences config.yml
+start-preprovisioned-box.py -s dev_vocabs dev_dataversenl
+
+############ to be able to check migration:
+#
+# Manually create templates with:
+# default CC0 license, another license, a custom license (mandatory fields saves work in the next preparation step)
+# Create datasets from these templates. For the custom license: one with and one without restricted files, and publish them
+
+############ show migration input
+vagrant ssh dev_dataversenl -c "sudo -u postgres psql dvndb -c \"select * from termsofuseandaccess;select * from datasetversion;select * from template;select * from filemetadata;\"" > before.txt
+vagrant ssh dev_dataversenl -c 'sudo -u postgres psql dvndb < /vagrant/external/dataverse/tests/shell/DANS-v6-10/constraints.sql' >> before.txt
+
+#git --git-dir external/dataverse/.git checkout DD-2318-spilt-termsOUAA
+mvn -f external/dataverse/pom.xml clean install -DskipTests
+deploy.py -e shared_dataverse_payara_dir=payara7 --dataverse-war external/dataverse/target/dataverse dev_dataversenl
+
+# execute the DB migration manually:
+#  vagrant ssh dev_dataversenl -c "sudo -u postgres psql dvndb <<'SQL'
+#  SET ROLE dvnuser;
+#  SELECT current_user, session_user;
+#  \\set ON_ERROR_STOP on
+#  \\i /vagrant/external/dataverse/src/main/resources/db/migration/V6.10.1__DD2318-split-termsofuseandaccess.sql
+#  RESET ROLE;
+#  SQL"
+
+## show potential problems caused by the flyway
+vagrant ssh dev_dataversenl -c 'journalctl -u payara --no-pager' | grep PER01000 | grep -v 'already exists'
+
+############ show migration results
+vagrant ssh dev_dataversenl -c "sudo -u postgres psql dvndb -c \"select * from termsofaccess;select * from termsofuseorlicense;select * from datasetversion;select * from template;select * from filemetadata;\"" > after.txt
+vagrant ssh dev_dataversenl -c "sudo -u postgres psql dvndb -c \"select * from flyway_schema_history;\"" < /dev/null | egrep '(DD|version)'
+vagrant ssh dev_dataversenl -c 'sudo -u postgres psql dvndb < /vagrant/external/dataverse/tests/shell/DANS-v6-10/constraints.sql' >> after.txt
+
+grep dev_dataversenl config.yml
+echo "curl commands use hardcoded values for dev_dataversenl_v6.10-PATCH-7_2026-07-19"
+: "${API_TOKEN:?Set API_TOKEN to the API token of dataverseAdmin on dev_dataversenl_v6.10-PATCH-7_2026-07-19}"
+# files     10 8 6
+# datasets   9 7 5
+# dataverses 1(root) 2(dans) 3(general) 4(testv610)
+
+# omitted: &sourceLastUpdateTime=2026-07-19T13:48:15Z
+# it is the lastUpdateTime from the exported metadata but causes timestamp outdated error
+curl -X PUT "https://dev.dataverse.nl/api/datasets/9/editMetadata?replace=true" -H "X-Dataverse-key: $API_TOKEN" -H "Content-Type: application/json" \
+     -d '{ "fields": [ { "typeName": "subtitle", "value": "More stars for testing" }] }'
+
+curl -H "X-Dataverse-key:$API_TOKEN" -X PUT "https://dev.dataverse.nl/api/files/10/restrict" -H "Content-Type: application/json" \
+     -d '{"restrict": true, "enableAccessRequest":true, "termsOfAccess": "Reason for the restricted access"}'
+curl -H "X-Dataverse-key: $API_TOKEN" -X POST "https://dev.dataverse.nl/api/datasets/9/actions/:publish?type=minor"
+
+# the following three statements works when interactively copy-pasting them on the terminal, but not when running this script
+curl -H "X-Dataverse-key:$API_TOKEN" -X PUT "https://dev.dataverse.nl/api/datasets/9/access" -H "Content-Type: application/json" \
+     -d '{ "customTermsOfAccess": { "fileAccessRequest": true, "termsOfAccess": "Your changed terms of access for restricted files" } }'
+sleep 5
+curl -H "X-Dataverse-key: $API_TOKEN" -X POST "https://dev.dataverse.nl/api/datasets/9/actions/:publish?type=updatecurrent"
+
+curl -X PUT "https://dev.dataverse.nl/api/datasets/5/license" -H "X-Dataverse-key: $API_TOKEN" -H "Content-Type: application/json" -d '{ "name": "CC BY 4.0" }'
+curl -X PUT "https://dev.dataverse.nl/api/datasets/5/license" -H "X-Dataverse-key: $API_TOKEN" -H "Content-Type: application/json" -d '{ "name": "" }'
+curl -X PUT "https://dev.dataverse.nl/api/datasets/5/license" -H "X-Dataverse-key: $API_TOKEN" -H "Content-Type: application/json" -d '{ }'
+curl -X PUT "https://dev.dataverse.nl/api/datasets/5/license" -H "X-Dataverse-key: $API_TOKEN" -H "Content-Type: application/json" \
+     -d '{ "specialTerms": { "restrictions": "Your restrictions" } }'
+curl -X PUT "https://dev.dataverse.nl/api/datasets/5/license" -H "X-Dataverse-key: $API_TOKEN" -H "Content-Type: application/json" \
+     -d '{ "customTerms": { "termsOfUse": "Your terms of use", "restrictions": "Your restrictions" } }'
+curl -X PUT "https://dev.dataverse.nl/api/datasets/5/license" -H "X-Dataverse-key: $API_TOKEN" -H "Content-Type: application/json" \
+     -d '{ "customTerms": { "termsOfUse": "", "restrictions": "Your restrictions" } }'
+curl -X PUT "https://dev.dataverse.nl/api/datasets/5/license" -H "X-Dataverse-key: $API_TOKEN" -H "Content-Type: application/json" \
+     -d '{ "customTerms": { "restrictions": "Your restrictions" } }'
+
+curl -X POST "https://dev.dataverse.nl/api/dataverses/4/templates" -H "X-Dataverse-key: $API_TOKEN" -H "Content-Type: application/json" \
+--upload-file external/dataverse/tests/shell/DANS-v6-10/template-CCBY.json
+# NewTemplateDTO does not allow to set the termsOfUse and termsOfUseAndLicense fields
+# that functionality is web-ui only
+
