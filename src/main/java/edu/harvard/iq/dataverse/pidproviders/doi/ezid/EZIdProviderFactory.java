@@ -30,9 +30,10 @@ public class EZIdProviderFactory implements PidProviderFactory {
         String baseUrl = JvmSettings.EZID_API_URL.lookupOptional(providerId).orElse("https://ezid.cdlib.org");
         String username = JvmSettings.EZID_USERNAME.lookup(providerId);
         String password = JvmSettings.EZID_PASSWORD.lookup(providerId);
+        String datafileInfoMode = JvmSettings.EZID_XML_DATAFILE_INFO.lookupOptional().orElse("expanded");
 
         return new EZIdDOIProvider(providerId, providerLabel, providerAuthority, providerShoulder, identifierGenerationStyle, datafilePidFormat,
-                managedList, excludedList, baseUrl, username, password);
+                managedList, excludedList, baseUrl, username, password, datafileInfoMode);
     }
 
     public String getType() {

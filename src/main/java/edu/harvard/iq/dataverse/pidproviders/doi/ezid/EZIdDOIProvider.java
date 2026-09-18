@@ -5,6 +5,7 @@ import edu.harvard.iq.dataverse.Dataset;
 import edu.harvard.iq.dataverse.DvObject;
 import edu.harvard.iq.dataverse.GlobalId;
 import edu.harvard.iq.dataverse.pidproviders.doi.AbstractDOIProvider;
+import edu.harvard.iq.dataverse.pidproviders.doi.XmlMetadataTemplate;
 import edu.harvard.iq.dataverse.settings.JvmSettings;
 import edu.ucsb.nceas.ezid.EZIDException;
 import edu.ucsb.nceas.ezid.EZIDService;
@@ -29,16 +30,23 @@ public class EZIdDOIProvider extends AbstractDOIProvider {
     public static final String TYPE = "ezid";
     
     private String baseUrl;
+    private XmlMetadataTemplate.DatafileInfoMode datafileInfoMode;
     
     
     public EZIdDOIProvider(String id, String label, String providerAuthority, String providerShoulder, String identifierGenerationStyle,
             String datafilePidFormat, String managedList, String excludedList, String baseUrl, String username, String password) {
+        this(id, label, providerAuthority, providerShoulder, identifierGenerationStyle, datafilePidFormat, managedList, excludedList, baseUrl, username, password, null);
+    }
+
+    public EZIdDOIProvider(String id, String label, String providerAuthority, String providerShoulder, String identifierGenerationStyle,
+            String datafilePidFormat, String managedList, String excludedList, String baseUrl, String username, String password, String datafileInfoMode) {
         super(id, label, providerAuthority, providerShoulder, identifierGenerationStyle, datafilePidFormat, managedList, excludedList);
         // Creating the service doesn't do any harm, just initializing some object data here.
         // Makes sure we don't run into NPEs from the other methods, but will obviously fail if the
         // login below does not work.
         this.baseUrl = baseUrl;
         this.ezidService = new EZIDService(baseUrl);
+        this.datafileInfoMode = XmlMetadataTemplate.DatafileInfoMode.from(datafileInfoMode);
         
         try {
 
@@ -208,7 +216,7 @@ public class EZIdDOIProvider extends AbstractDOIProvider {
         logger.log(Level.FINE, "updateIdentifierStatus");
         String identifier = getIdentifier(dvObject);
         Map<String, String> metadata = getUpdateMetadata(dvObject);
-        String objMetadata = getMetadataFromDvObject(identifier, metadata, dvObject);
+        String objMetadata = getMetadataFromDvObject(identifier, metadata, dvObject, datafileInfoMode);
         Map<String, String> dcMetadata;
         dcMetadata = new HashMap<>();
         dcMetadata.put("datacite", objMetadata);
@@ -243,7 +251,7 @@ public class EZIdDOIProvider extends AbstractDOIProvider {
         }
         String identifier = getIdentifier(dvObject);
         Map<String, String> metadata = getMetadataForCreateIndicator(dvObject);
-        String objMetadata = getMetadataFromDvObject(identifier, metadata, dvObject);
+        String objMetadata = getMetadataFromDvObject(identifier, metadata, dvObject, datafileInfoMode);
         Map<String, String> dcMetadata;
         dcMetadata = new HashMap<>();
         dcMetadata.put("datacite", objMetadata);

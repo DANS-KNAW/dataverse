@@ -27,6 +27,18 @@ class JvmSettingsTest {
     void lookupDataciteDatafileInfoSetting() {
         assertEquals("brief", JvmSettings.DATACITE_XML_DATAFILE_INFO.lookup());
     }
+
+    @Test
+    @SystemProperty(key = "dataverse.ezid.xml.datafile-info", value = "brief")
+    void lookupEzidDatafileInfoSetting() {
+        assertEquals("brief", JvmSettings.EZID_XML_DATAFILE_INFO.lookup());
+    }
+
+    @Test
+    @SystemProperty(key = "dataverse.crossref.xml.datafile-info", value = "none")
+    void lookupCrossRefDatafileInfoSetting() {
+        assertEquals("none", JvmSettings.CROSSREF_XML_DATAFILE_INFO.lookup());
+    }
     
     @Test
     @SystemProperty(key = "dataverse.ingest.rserve.port", value = "1234")

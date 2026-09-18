@@ -867,6 +867,35 @@ This setting applies to both the DataCite metadata export and to DataCite XML se
 such as when publishing a new dataset version or explicitly updating PID-provider metadata for a
 published dataset.
 
+.. _ezid-settings:
+
+EZID Settings
+-------------
+
+.. _dataverse.ezid.xml.datafile-info:
+
+dataverse.ezid.xml.datafile-info
+++++++++++++++++++++++++++++++++
+
+``dataverse.ezid.xml.datafile-info`` controls how DataCite XML for datasets sent to EZID represents
+datafile sizes and formats. The default value, ``expanded``, preserves the current behavior and emits
+one ``size`` and one ``format`` element per datafile. Set the value to ``brief`` to emit a single
+``size`` element with the sum of all known datafile sizes and one ``format`` element per distinct
+datafile format. Set the value to ``none`` to omit datafile ``size`` and ``format`` elements entirely.
+
+.. _crossref-settings:
+
+CrossRef Settings
+-----------------
+
+.. _dataverse.crossref.xml.datafile-info:
+
+dataverse.crossref.xml.datafile-info
+++++++++++++++++++++++++++++++++++++
+
+``dataverse.crossref.xml.datafile-info`` controls datafile information mode for CrossRef metadata registration.
+Valid options are ``expanded`` (default), ``brief``, and ``none``.
+
 .. _auth-modes:
 
 Auth Modes: Local vs. Remote vs. Both
