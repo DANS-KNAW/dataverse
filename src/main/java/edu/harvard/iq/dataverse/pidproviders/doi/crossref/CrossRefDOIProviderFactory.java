@@ -32,9 +32,10 @@ public class CrossRefDOIProviderFactory implements PidProviderFactory {
         String password = JvmSettings.CROSSREF_PASSWORD.lookup(providerId);
         String depositor = JvmSettings.CROSSREF_DEPOSITOR.lookup(providerId);
         String depositorEmail = JvmSettings.CROSSREF_DEPOSITOR_EMAIL.lookup(providerId);
+        String datafileInfoMode = JvmSettings.CROSSREF_XML_DATAFILE_INFO.lookupOptional().orElse("expanded");
 
         return new CrossRefDOIProvider(providerId, providerLabel, providerAuthority, providerShoulder, identifierGenerationStyle,
-                datafilePidFormat, managedList, excludedList, baseUrl, apiUrl, username, password, depositor, depositorEmail);
+                datafilePidFormat, managedList, excludedList, baseUrl, apiUrl, username, password, depositor, depositorEmail, datafileInfoMode);
     }
 
     public String getType() {

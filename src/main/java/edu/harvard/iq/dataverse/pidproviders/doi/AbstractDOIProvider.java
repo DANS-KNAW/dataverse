@@ -99,6 +99,10 @@ public abstract class AbstractDOIProvider extends AbstractPidProvider {
     }
     
     public String getMetadataFromDvObject(String identifier, Map<String, String> metadata, DvObject dvObject) {
+        return getMetadataFromDvObject(identifier, metadata, dvObject, XmlMetadataTemplate.DatafileInfoMode.EXPANDED);
+    }
+
+    public String getMetadataFromDvObject(String identifier, Map<String, String> metadata, DvObject dvObject, XmlMetadataTemplate.DatafileInfoMode datafileInfoMode) {
 
         Dataset dataset = null;
 
@@ -130,7 +134,7 @@ public abstract class AbstractDOIProvider extends AbstractPidProvider {
         doiMetadata.setPublisher(producerString);
         doiMetadata.setPublisherYear(metadata.get("datacite.publicationyear"));
 
-        String xmlMetadata = new XmlMetadataTemplate(doiMetadata).generateXML(dvObject);
+        String xmlMetadata = new XmlMetadataTemplate(doiMetadata, datafileInfoMode != null ? datafileInfoMode : XmlMetadataTemplate.DatafileInfoMode.EXPANDED).generateXML(dvObject);
         logger.log(Level.FINE, "XML to send to DataCite: {0}", xmlMetadata);
         return xmlMetadata;
     }

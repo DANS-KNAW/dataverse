@@ -121,6 +121,14 @@ public enum JvmSettings {
     SCOPE_DATACITE(PREFIX, "datacite"),
     DATACITE_XML_DATAFILE_INFO(SCOPE_DATACITE, "xml.datafile-info"),
 
+    // EZID SETTINGS
+    SCOPE_EZID(PREFIX, "ezid"),
+    EZID_XML_DATAFILE_INFO(SCOPE_EZID, "xml.datafile-info"),
+
+    // CROSSREF SETTINGS
+    SCOPE_CROSSREF(PREFIX, "crossref"),
+    CROSSREF_XML_DATAFILE_INFO(SCOPE_CROSSREF, "xml.datafile-info"),
+
     // PERSISTENT IDENTIFIER SETTINGS
     SCOPE_PID(PREFIX, "pid"),
     PID_PROVIDERS(SCOPE_PID, "providers"),

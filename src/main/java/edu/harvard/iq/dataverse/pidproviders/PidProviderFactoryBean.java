@@ -164,8 +164,9 @@ public class PidProviderFactoryBean {
                         String baseUrl = JvmSettings.LEGACY_EZID_API_URL.lookup();
                         String username = JvmSettings.LEGACY_EZID_USERNAME.lookup();
                         String password = JvmSettings.LEGACY_EZID_PASSWORD.lookup();
+                        String ezidDatafileInfoMode = JvmSettings.EZID_XML_DATAFILE_INFO.lookupOptional().orElse("expanded");
                         PidUtil.addToProviderList(new EZIdDOIProvider("legacy", "legacy", authority, shoulder,
-                                identifierGenerationStyle, dataFilePidFormat, "", "", baseUrl, username, password));
+                                identifierGenerationStyle, dataFilePidFormat, "", "", baseUrl, username, password, ezidDatafileInfoMode));
 
                         break;
                     case "DataCite":
