@@ -407,10 +407,6 @@ public abstract class AbstractApiBean {
     }
 
     protected Dataset findDatasetOrDie(String id) throws WrappedResponse {
-        return findDatasetOrDie(id, false);
-    }
-
-    protected Dataset findDatasetOrDie(String id, boolean deep) throws WrappedResponse {
         Long datasetId;
         Dataset dataset;
         if (isNumeric(id)) {
@@ -450,11 +446,7 @@ public abstract class AbstractApiBean {
                         notFound(BundleUtil.getStringFromBundle("find.dataset.error.dataset_id_is_null", Collections.singletonList(PERSISTENT_ID_KEY.substring(1)))));
             }
         }
-        if (deep) {
-            dataset = datasetSvc.findDeep(datasetId);
-        } else {
-            dataset = datasetSvc.find(datasetId);
-        }
+        dataset = datasetSvc.find(datasetId);
         if (dataset == null) {
             throw new WrappedResponse(notFound(BundleUtil.getStringFromBundle("find.dataset.error.dataset.not.found.id", Collections.singletonList(id))));
         }
@@ -538,7 +530,7 @@ public abstract class AbstractApiBean {
             }
         }
     }
-       
+
     protected DataverseRole findRoleOrDie(String id) throws WrappedResponse {
         DataverseRole role;
         if (id.equals(ALIAS_KEY)) {
@@ -985,7 +977,7 @@ public abstract class AbstractApiBean {
                 .add("status", ApiConstants.STATUS_OK)
                 .add("data", jo).build() )
                 .type(MediaType.APPLICATION_JSON)
-                .build();    
+                .build();
     }
 
     protected Response ok( String msg ) {
@@ -999,8 +991,8 @@ public abstract class AbstractApiBean {
     protected Response ok( String msg, JsonObjectBuilder bld  ) {
         return Response.ok().entity(Json.createObjectBuilder()
             .add("status", ApiConstants.STATUS_OK)
-            .add("message", Json.createObjectBuilder().add("message",msg))     
-            .add("data", bld).build())      
+            .add("message", Json.createObjectBuilder().add("message",msg))
+            .add("data", bld).build())
             .type(MediaType.APPLICATION_JSON)
             .build();
     }
