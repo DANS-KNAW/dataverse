@@ -29,6 +29,7 @@ public class CrossRefDOIRegisterService implements java.io.Serializable {
     private final String password;
     private final String depositor;
     private final String depositorEmail;
+    private final XmlMetadataTemplate.DatafileInfoMode datafileInfoMode;
 
 
     private static DataverseServiceBean dataverseService = null;
@@ -36,12 +37,17 @@ public class CrossRefDOIRegisterService implements java.io.Serializable {
     private CrossRefRESTfullClient client = null;
 
     public CrossRefDOIRegisterService(String url, String apiUrl, String username, String password, String depositor, String depositorEmail) {
+        this(url, apiUrl, username, password, depositor, depositorEmail, null);
+    }
+
+    public CrossRefDOIRegisterService(String url, String apiUrl, String username, String password, String depositor, String depositorEmail, String datafileInfoMode) {
         this.url = url;
         this.apiUrl = apiUrl;
         this.username = username;
         this.password = password;
         this.depositor = depositor;
         this.depositorEmail = depositorEmail;
+        this.datafileInfoMode = XmlMetadataTemplate.DatafileInfoMode.from(datafileInfoMode);
     }
 
     private CrossRefRESTfullClient getClient() {
@@ -105,7 +111,7 @@ public class CrossRefDOIRegisterService implements java.io.Serializable {
             dataverseService = CDI.current().select(DataverseServiceBean.class).get();
         }
 
-        CrossRefMetadataTemplate metadataTemplate = new CrossRefMetadataTemplate();
+        CrossRefMetadataTemplate metadataTemplate = new CrossRefMetadataTemplate(datafileInfoMode);
         metadataTemplate.setIdentifier(identifier.substring(identifier.indexOf(':') + 1));
         metadataTemplate.setAuthors(dataset.getLatestVersion().getDatasetAuthors());
         metadataTemplate.setDepositor(depositor);
@@ -146,6 +152,7 @@ class CrossRefMetadataTemplate {
     }
 
     private final String timestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+    private XmlMetadataTemplate.DatafileInfoMode datafileInfoMode = XmlMetadataTemplate.DatafileInfoMode.EXPANDED;
     private String institution;
     private String depositor;
     private String depositorEmail;
@@ -155,15 +162,27 @@ class CrossRefMetadataTemplate {
     private final String baseUrl = getDataverseSiteUrlStatic();
     private List<DatasetAuthor> authors;
 
+    public CrossRefMetadataTemplate() {
+    }
+
+    public CrossRefMetadataTemplate(XmlMetadataTemplate.DatafileInfoMode datafileInfoMode) {
+        this.datafileInfoMode = datafileInfoMode != null ? datafileInfoMode : XmlMetadataTemplate.DatafileInfoMode.EXPANDED;
+    }
+
+    public XmlMetadataTemplate.DatafileInfoMode getDatafileInfoMode() {
+        return datafileInfoMode;
+    }
+
+    public void setDatafileInfoMode(XmlMetadataTemplate.DatafileInfoMode datafileInfoMode) {
+        this.datafileInfoMode = datafileInfoMode != null ? datafileInfoMode : XmlMetadataTemplate.DatafileInfoMode.EXPANDED;
+    }
+
     public List<DatasetAuthor> getAuthors() {
         return authors;
     }
 
     public void setAuthors(List<DatasetAuthor> authors) {
         this.authors = authors;
-    }
-
-    public CrossRefMetadataTemplate() {
     }
 
     public String generateXML() {

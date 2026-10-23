@@ -19,10 +19,16 @@ public class CrossRefDOIProvider extends AbstractDOIProvider {
 
     public CrossRefDOIProvider(String id, String label, String providerAuthority, String providerShoulder, String identifierGenerationStyle, String datafilePidFormat, String managedList, String excludedList,
                                String url, String apiUrl, String username, String password, String depositor, String depositorEmail) {
+        this(id, label, providerAuthority, providerShoulder, identifierGenerationStyle, datafilePidFormat, managedList, excludedList,
+                url, apiUrl, username, password, depositor, depositorEmail, null);
+    }
+
+    public CrossRefDOIProvider(String id, String label, String providerAuthority, String providerShoulder, String identifierGenerationStyle, String datafilePidFormat, String managedList, String excludedList,
+                               String url, String apiUrl, String username, String password, String depositor, String depositorEmail, String datafileInfoMode) {
         super(id, label, providerAuthority, providerShoulder, identifierGenerationStyle, datafilePidFormat,
                 managedList, excludedList);
 
-        crossRefDOIRegisterService = new CrossRefDOIRegisterService(url, apiUrl, username, password, depositor, depositorEmail);
+        crossRefDOIRegisterService = new CrossRefDOIRegisterService(url, apiUrl, username, password, depositor, depositorEmail, datafileInfoMode);
     }
 
     @Override
