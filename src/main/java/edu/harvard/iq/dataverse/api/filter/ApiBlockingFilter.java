@@ -228,18 +228,22 @@ public class ApiBlockingFilter implements ContainerRequestFilter {
     }
 
     /**
-     * Creates a canonical representation of {@code in}: trimmed spaces and slashes
+     * Creates a canonical representation of {@code in}: trimmed spaces and slashes,
+     * with a redundant {@code api/} prefix removed.
      * 
      * @param in the raw string
-     * @return {@code in} with no trailing and leading spaces and slashes.
+     * @return {@code in} with no trailing and leading spaces and slashes or {@code api/} prefix.
      */
-    private String canonicalize(String in) {
+    static String canonicalize(String in) {
         in = in.trim();
         if (in.startsWith("/")) {
             in = in.substring(1);
         }
         if (in.endsWith("/")) {
             in = in.substring(0, in.length() - 1);
+        }
+        if (in.startsWith("api/")) {
+            in = in.substring("api/".length());
         }
         return in;
     }
