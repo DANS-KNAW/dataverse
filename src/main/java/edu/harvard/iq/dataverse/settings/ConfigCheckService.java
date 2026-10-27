@@ -1,6 +1,8 @@
 package edu.harvard.iq.dataverse.settings;
 
 import edu.harvard.iq.dataverse.MailServiceBean;
+import edu.harvard.iq.dataverse.api.ApiConfiguration;
+import edu.harvard.iq.dataverse.api.filter.ApiBlockingFilter;
 import edu.harvard.iq.dataverse.pidproviders.PidProviderFactoryBean;
 import edu.harvard.iq.dataverse.pidproviders.PidUtil;
 import edu.harvard.iq.dataverse.settings.SettingsServiceBean.Key;
@@ -14,13 +16,17 @@ import jakarta.inject.Inject;
 import jakarta.mail.internet.InternetAddress;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 @Startup
 @Singleton
@@ -44,12 +50,56 @@ public class ConfigCheckService {
     
     @PostConstruct
     public void startup() {
+        checkApiSecuritySettings();
         if (!checkSystemDirectories() || !checkPidProviders()) {
             throw new ConfigurationError("Not all configuration checks passed successfully. See logs above.");
         }
         
         // Only checks resulting in warnings, nothing critical that needs to stop deployment
         checkSystemMailSetup();
+    }
+
+    /**
+     * Validates explicitly configured API blocking settings against the registered
+     * resource paths. Unset settings retain the filter's legacy database fallback.
+     *
+     * @throws ConfigurationError if a policy is invalid or an endpoint matches no resource path
+     */
+    public void checkApiSecuritySettings() {
+        JvmSettings.API_BLOCKED_POLICY.lookupOptional().ifPresent(policy -> {
+            if (!Set.of("drop", "localhost-only", "unblock-key").contains(policy)) {
+                throw new ConfigurationError("Invalid " + JvmSettings.API_BLOCKED_POLICY.getScopedKey()
+                        + ": '" + policy + "'. Expected drop, localhost-only, or unblock-key.");
+            }
+        });
+
+        String endpoints = JvmSettings.API_BLOCKED_ENDPOINTS.lookupOptional().orElse("");
+        if (endpoints.isBlank()) {
+            return;
+        }
+
+        Set<String> resourcePaths = new HashSet<>();
+        for (Class<?> resourceClass : new ApiConfiguration().getClasses()) {
+            jakarta.ws.rs.Path classPath = resourceClass.getAnnotation(jakarta.ws.rs.Path.class);
+            if (classPath == null) {
+                continue;
+            }
+            for (Method method : resourceClass.getMethods()) {
+                // Match the same annotation paths used by ApiBlockingFilter.
+                jakarta.ws.rs.Path methodPath = method.getAnnotation(jakarta.ws.rs.Path.class);
+                resourcePaths.add((classPath.value() + "/" + (methodPath == null ? "" : methodPath.value()))
+                        .replaceAll("//", "/"));
+            }
+        }
+
+        for (String endpoint : endpoints.split(",", -1)) {
+            Pattern pattern = ApiBlockingFilter.getBlockedEndpointPattern(endpoint);
+            if (endpoint.isBlank() || endpoint.trim().equals("/")
+                    || resourcePaths.stream().noneMatch(path -> pattern.matcher(path).matches())) {
+                throw new ConfigurationError("Invalid " + JvmSettings.API_BLOCKED_ENDPOINTS.getScopedKey()
+                        + ": '" + endpoint + "' does not match an existing API endpoint.");
+            }
+        }
     }
 
     /**

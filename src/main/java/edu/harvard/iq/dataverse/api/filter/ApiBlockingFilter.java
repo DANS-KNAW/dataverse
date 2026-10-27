@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.jetty.util.StringUtil;
@@ -217,13 +218,27 @@ public class ApiBlockingFilter implements ContainerRequestFilter {
             String endpointPrefix = canonicalize(endpoint);
             if (!endpointPrefix.isEmpty()) {
                 logger.log(Level.INFO, "Blocking API endpoint: {0}", endpointPrefix);
-                blockedApiEndpointPatterns.add(Pattern.compile(convertPathToRegex(endpointPrefix)));
+                blockedApiEndpointPatterns.add(getBlockedEndpointPattern(endpoint));
             }
         }
     }
 
-    private String convertPathToRegex(String path) {
-        return "^" + path.replaceAll("\\{[^}]+\\}", "[^/]+").replace("/", "\\/") + "(\\/.*)?$";
+    /**
+     * Builds the prefix matcher shared by request filtering and startup validation.
+     */
+    public static Pattern getBlockedEndpointPattern(String endpoint) {
+        return Pattern.compile(convertPathToRegex(canonicalize(endpoint)));
+    }
+
+    private static String convertPathToRegex(String path) {
+        Matcher parameters = Pattern.compile("\\{[^}]+\\}").matcher(path);
+        StringBuilder regex = new StringBuilder("^");
+        int start = 0;
+        while (parameters.find()) {
+            regex.append(Pattern.quote(path.substring(start, parameters.start()))).append("[^/]+");
+            start = parameters.end();
+        }
+        return regex.append(Pattern.quote(path.substring(start))).append("(/.*)?$").toString();
     }
 
     /**
@@ -232,7 +247,7 @@ public class ApiBlockingFilter implements ContainerRequestFilter {
      * @param in the raw string
      * @return {@code in} with no trailing and leading spaces and slashes.
      */
-    private String canonicalize(String in) {
+    private static String canonicalize(String in) {
         in = in.trim();
         if (in.startsWith("/")) {
             in = in.substring(1);
