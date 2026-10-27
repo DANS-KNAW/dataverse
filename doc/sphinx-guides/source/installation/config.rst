@@ -3405,7 +3405,9 @@ A comma-separated list of API endpoints that should be blocked. A minimal exampl
 
 Another example:
 
-``./asadmin create-jvm-options '-Ddataverse.api.blocked.endpoints=admin,builtin-users,datasets/:persistentId/versions/:versionId/files,files/:id'``
+``./asadmin create-jvm-options '-Ddataverse.api.blocked.endpoints=admin,builtin-users,datasets/{id}/versions/{versionId}/files,files/{id}'``
+
+Entries are resource-path prefixes, using the JAX-RS path templates (for example, ``{id}``) rather than concrete identifiers. Each entry must match an existing API resource path. Invalid entries, including empty entries within a non-empty list, prevent Dataverse from starting. Leading and trailing spaces and slashes are allowed.
 
 Defaults to an empty string (no endpoints blocked), but, in almost all cases, should include at least ``admin, builtin-users`` as a security measure.
 
@@ -3423,6 +3425,8 @@ Specifies how to treat blocked API endpoints. Valid values are:
 - ``drop``: Blocked requests are dropped (default).
 - ``localhost-only``: Blocked requests are only allowed from localhost.
 - ``unblock-key``: Blocked requests are allowed if they include a valid unblock key.
+
+An explicitly configured value other than these three policies prevents Dataverse from starting.
 
 For example:
 
