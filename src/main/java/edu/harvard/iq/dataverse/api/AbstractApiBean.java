@@ -1165,7 +1165,7 @@ public abstract class AbstractApiBean {
     }
 
     protected static JsonArrayBuilder toErasedFilesJsonArray(List<FileErasure> erasedFiles) {
-        JsonArrayBuilder jsonArrayBuilder = JsonUtil.createArrayBuilder();
+        JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
         for (FileErasure fileErasure : erasedFiles) {
             jsonArrayBuilder.add(JsonPrinter.json(fileErasure.getDataFile()));
         }

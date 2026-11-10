@@ -500,7 +500,7 @@ public class Files extends AbstractApiBean {
         boolean manualDeletionRequired = !StorageIO.isDataverseWritable(
                 DataAccess.getStorageDriverFromIdentifier(dataFile.getStorageIdentifier()));
 
-        JsonObjectBuilder responseBuilder = JsonUtil.createObjectBuilder()
+        JsonObjectBuilder responseBuilder = Json.createObjectBuilder()
                 .add("status", "confirmation_required")
                 .add("confirmationToken", token)
                 .add("tokenExpiresInSeconds", 300)
@@ -585,7 +585,7 @@ public class Files extends AbstractApiBean {
             erasureTokenCache.remove(confirmationToken);
 
             // Build response
-            JsonObjectBuilder responseBuilder = JsonUtil.createObjectBuilder()
+            JsonObjectBuilder responseBuilder = Json.createObjectBuilder()
                     .add("status", "erased")
                     .add("fileId", dataFile.getId());
             if (dataFile.getGlobalId() != null) {
