@@ -18,6 +18,8 @@ import edu.harvard.iq.dataverse.util.BundleUtil;
 import edu.harvard.iq.dataverse.util.FileUtil;
 import edu.harvard.iq.dataverse.util.ShapefileHandler;
 import edu.harvard.iq.dataverse.util.StringUtil;
+import org.eclipse.persistence.annotations.BatchFetch;
+import org.eclipse.persistence.annotations.BatchFetchType;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
