@@ -79,6 +79,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -6374,5 +6375,68 @@ public Response getDatasetExternalToolUrl(@Context ContainerRequestContext crc, 
         }
 
         return ok(new NullSafeJsonBuilder().add("uploadLimits", limits));
+    }
+
+    @GET
+    @AuthRequired
+    @Path("{identifier}/erasedFiles")
+    @Produces({ MediaType.APPLICATION_JSON, "text/csv" })
+    @Operation(summary = "List erased files in a dataset",
+            description = "Returns all erased files belonging to a dataset with their FileErasure details, optionally filtered by a date range. Superusers only. Returns CSV by default; use Accept: application/json for JSON.")
+    public Response listErasedFilesInDataset(@Context ContainerRequestContext crc,
+            @Parameter(description = "Dataset id or persistent identifier.", required = true)
+            @PathParam("identifier") String identifier,
+            @Parameter(description = "Start date filter (inclusive). Format: yyyy-MM-dd, yyyy-MM, or yyyy.")
+            @QueryParam("startDate") String startDate,
+            @Parameter(description = "End date filter (inclusive). Format: yyyy-MM-dd, yyyy-MM, or yyyy.")
+            @QueryParam("endDate") String endDate,
+            @Context HttpHeaders headers) {
+        User user = getRequestUser(crc);
+        if (user == null || !user.isSuperuser()) {
+            return error(Response.Status.FORBIDDEN, "Superusers only.");
+        }
+
+        Dataset dataset;
+        try {
+            dataset = findDatasetOrDie(identifier);
+        } catch (WrappedResponse wr) {
+            return wr.getResponse();
+        }
+
+        java.util.Date start = null;
+        java.util.Date end = null;
+        if (startDate != null && !startDate.isEmpty()) {
+            start = DateUtil.parseDate(startDate);
+            if (start == null) {
+                return error(Response.Status.BAD_REQUEST, "Invalid startDate format. Use yyyy-MM-dd, yyyy-MM, or yyyy.");
+            }
+        }
+        if (endDate != null && !endDate.isEmpty()) {
+            end = DateUtil.parseEndDateInclusive(endDate);
+            if (end == null) {
+                return error(Response.Status.BAD_REQUEST, "Invalid endDate format. Use yyyy-MM-dd, yyyy-MM, or yyyy.");
+            }
+        }
+
+        String jpql = buildErasedFilesJpql("fe.dataFile.dataset.id = :datasetId", start, end);
+        jakarta.persistence.Query query = em.createQuery(jpql);
+        query.setParameter("datasetId", dataset.getId());
+        setErasedFilesQueryParams(query, start, end);
+
+        List<FileErasure> erasedFiles = query.getResultList();
+
+        List<MediaType> acceptedTypes = headers.getAcceptableMediaTypes();
+        boolean wantJson = acceptedTypes.stream()
+                .anyMatch(mt -> mt.toString().equals(MediaType.APPLICATION_JSON) || mt.toString().equals("*/*"));
+
+        if (wantJson && !acceptedTypes.stream().anyMatch(mt -> mt.toString().equals("text/csv"))) {
+            return ok(toErasedFilesJsonArray(erasedFiles));
+        }
+        String filename = buildErasedFilesCsvFilename(start, end, dataset.getId());
+        return Response.ok()
+                .entity(toErasedFilesCsvString(erasedFiles, start, end, dataset.getId()))
+                .type("text/csv")
+                .header("Content-Disposition", "attachment; filename=" + filename)
+                .build();
     }
 }

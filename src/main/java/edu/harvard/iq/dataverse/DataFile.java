@@ -18,6 +18,8 @@ import edu.harvard.iq.dataverse.util.BundleUtil;
 import edu.harvard.iq.dataverse.util.FileUtil;
 import edu.harvard.iq.dataverse.util.ShapefileHandler;
 import edu.harvard.iq.dataverse.util.StringUtil;
+import org.eclipse.persistence.annotations.BatchFetch;
+import org.eclipse.persistence.annotations.BatchFetchType;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
@@ -295,6 +297,18 @@ public class DataFile extends DvObject implements Comparable {
 
     public void setRetention(Retention retention) {
         this.retention = retention;
+    }
+
+    @OneToOne(mappedBy = "dataFile")
+    @BatchFetch(BatchFetchType.IN)
+    private FileErasure fileErasure;
+
+    public FileErasure getFileErasure() {
+        return fileErasure;
+    }
+
+    public void setFileErasure(FileErasure fileErasure) {
+        this.fileErasure = fileErasure;
     }
 
     public DataFile() {

@@ -34,5 +34,6 @@ This guide documents the functionality only available to superusers (such as "da
    reporting-tools-and-queries
    maintenance
    backups
+   file-erasure
    troubleshooting
    big-data-administration

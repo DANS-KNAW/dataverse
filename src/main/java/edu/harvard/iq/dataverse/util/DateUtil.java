@@ -6,6 +6,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -65,30 +66,54 @@ public class DateUtil {
          }
     }
 
+    /**
+     * Parse a date string accepting common API date formats.
+     * Tries "yyyy-MM-dd", "yyyy-MM", and "yyyy" patterns.
+     * @param dateString the date string to parse
+     * @return a Date object, or null if no format matched or input is null/empty
+     */
     public static Date parseDate(String dateString) {
-        SimpleDateFormat sdf;
-        Date date;
+        if (dateString == null || dateString.isEmpty()) {
+            return null;
+        }
 
-        // YYYY-MM-DD
-        date = parseDate(dateString, YEAR_DASH_MONTH_DASH_DAY_PATTERN);
+        // Fall back to date-only format: yyyy-MM-dd
+        Date date = parseDate(dateString, YEAR_DASH_MONTH_DASH_DAY_PATTERN);
         if (date != null) {
             return date;
         }
-
-        // YYYY-MM
+        // Try year-month pattern: yyyy-MM
         date = parseDate(dateString, YEAR_DASH_MONTH_PATTERN);
         if (date != null) {
             return date;
         }
+        // Try year-only pattern: yyyy
+        return parseDate(dateString, YEAR_PATTERN);
+    }
 
-        // YYYT
-        date = parseDate(dateString, YEAR_PATTERN);
-        return date;
-        
+    public static Date parseEndDateInclusive(String dateString) {
+        Date date = parseDate(dateString);
+        if (date == null || dateString == null) {
+            return null;
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        if (dateString.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+        } else if (dateString.matches("\\d{4}-\\d{2}")) {
+            calendar.add(Calendar.MONTH, 1);
+        } else if (dateString.matches("\\d{4}")) {
+            calendar.add(Calendar.YEAR, 1);
+        } else {
+            return null;
+        }
+        calendar.add(Calendar.MILLISECOND, -1);
+        return calendar.getTime();
     }
 
     public static Date parseDate(String dateString, String format) {
-        
+
         try {
             SimpleDateFormat sdf = new SimpleDateFormat(format);
             Date date = sdf.parse(dateString);

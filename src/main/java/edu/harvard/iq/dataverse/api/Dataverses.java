@@ -32,6 +32,7 @@ import edu.harvard.iq.dataverse.settings.JvmSettings;
 import edu.harvard.iq.dataverse.settings.SettingsServiceBean;
 import edu.harvard.iq.dataverse.util.BundleUtil;
 import edu.harvard.iq.dataverse.util.ConstraintViolationUtil;
+import edu.harvard.iq.dataverse.util.DateUtil;
 import edu.harvard.iq.dataverse.util.FileUtil;
 import edu.harvard.iq.dataverse.util.StringUtil;
 import static edu.harvard.iq.dataverse.util.StringUtil.nonEmpty;
@@ -64,6 +65,8 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
@@ -2139,5 +2142,68 @@ public class Dataverses extends AbstractApiBean {
 
             return getRoleAssignmentHistoryResponse(dataverse, authenticatedUser, false, headers);
         }, getRequestUser(crc));
+    }
+
+    @GET
+    @AuthRequired
+    @Path("{identifier}/erasedFiles")
+    @Produces({ MediaType.APPLICATION_JSON, "text/csv" })
+    @Operation(summary = "List erased files in a dataverse (collection)",
+            description = "Returns all erased files belonging to datasets in a dataverse (collection) with their FileErasure details, optionally filtered by a date range. Superusers only. Returns CSV by default; use Accept: application/json for JSON.")
+    public Response listErasedFilesInDataverse(@Context ContainerRequestContext crc,
+            @Parameter(description = "Dataverse alias, id, or persistent identifier.", required = true)
+            @PathParam("identifier") String identifier,
+            @Parameter(description = "Start date filter (inclusive). Format: yyyy-MM-dd, yyyy-MM, or yyyy.")
+            @QueryParam("startDate") String startDate,
+            @Parameter(description = "End date filter (inclusive). Format: yyyy-MM-dd, yyyy-MM, or yyyy.")
+            @QueryParam("endDate") String endDate,
+            @Context HttpHeaders headers) {
+        User user = getRequestUser(crc);
+        if (user == null || !user.isSuperuser()) {
+            return error(Response.Status.FORBIDDEN, "Superusers only.");
+        }
+
+        Dataverse dataverse;
+        try {
+            dataverse = findDataverseOrDie(identifier);
+        } catch (WrappedResponse wr) {
+            return wr.getResponse();
+        }
+
+        Date start = null;
+        Date end = null;
+        if (startDate != null && !startDate.isEmpty()) {
+            start = DateUtil.parseDate(startDate);
+            if (start == null) {
+                return error(Response.Status.BAD_REQUEST, "Invalid startDate format. Use yyyy-MM-dd, yyyy-MM, or yyyy.");
+            }
+        }
+        if (endDate != null && !endDate.isEmpty()) {
+            end = DateUtil.parseEndDateInclusive(endDate);
+            if (end == null) {
+                return error(Response.Status.BAD_REQUEST, "Invalid endDate format. Use yyyy-MM-dd, yyyy-MM, or yyyy.");
+            }
+        }
+
+        String jpql = buildErasedFilesJpql("fe.dataFile.dataset.dataverse.id = :dataverseId", start, end);
+        jakarta.persistence.Query query = em.createQuery(jpql);
+        query.setParameter("dataverseId", dataverse.getId());
+        setErasedFilesQueryParams(query, start, end);
+
+        List<FileErasure> erasedFiles = query.getResultList();
+
+        List<MediaType> acceptedTypes = headers.getAcceptableMediaTypes();
+        boolean wantJson = acceptedTypes.stream()
+                .anyMatch(mt -> mt.toString().equals(MediaType.APPLICATION_JSON) || mt.toString().equals("*/*"));
+
+        if (wantJson && !acceptedTypes.stream().anyMatch(mt -> mt.toString().equals("text/csv"))) {
+            return ok(toErasedFilesJsonArray(erasedFiles));
+        }
+        String filename = buildErasedFilesCsvFilename(start, end, dataverse.getId());
+        return Response.ok()
+                .entity(toErasedFilesCsvString(erasedFiles, start, end, dataverse.getId()))
+                .type("text/csv")
+                .header("Content-Disposition", "attachment; filename=" + filename)
+                .build();
     }
 }
