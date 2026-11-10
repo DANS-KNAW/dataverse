@@ -3260,6 +3260,7 @@ public class DatasetPage implements java.io.Serializable {
         this.selectedNonDownloadableFiles = selectedNonDownloadableFiles;
     }
 
+
     private List<FileMetadata> selectedGlobusTransferableFiles;
 
     public List<FileMetadata> getSelectedGlobusTransferableFiles() {
@@ -3516,7 +3517,7 @@ public class DatasetPage implements java.io.Serializable {
         boolean globusDownloadEnabled = settingsWrapper.isGlobusDownload();
         for (FileMetadata fmd : this.selectedFiles){
             boolean downloadable=this.fileDownloadHelper.canDownloadFile(fmd);
-            
+
             boolean globusTransferable = false;
             if(globusDownloadEnabled) {
                 String driverId = DataAccess.getStorageDriverFromIdentifier(fmd.getDataFile().getStorageIdentifier());
@@ -5527,6 +5528,10 @@ public class DatasetPage implements java.io.Serializable {
         for (FileMetadata fmd : workingVersion.getFileMetadatas()){
             AuthenticatedUser authenticatedUser = (AuthenticatedUser) session.getUser();
             //Change here so that if all restricted files have pending requests there's no Request Button
+            // Skip erased files — they are non-downloadable but access cannot be requested
+            if (FileUtil.isErased(fmd.getDataFile())) {
+                continue;
+            }
             if ((!this.fileDownloadHelper.canDownloadFile(fmd) && !fmd.getDataFile().containsActiveFileAccessRequestFromUser(authenticatedUser))) {
                 return true;
             }
@@ -5561,7 +5566,8 @@ public class DatasetPage implements java.io.Serializable {
             return false;
         }
         for (FileMetadata fmd : workingVersion.getFileMetadatas()){
-            if (!this.fileDownloadHelper.canDownloadFile(fmd) && !FileUtil.isActivelyEmbargoed(fmd)){
+            // Skip erased and embargoed files — access cannot be requested for them
+            if (!this.fileDownloadHelper.canDownloadFile(fmd) && !FileUtil.isActivelyEmbargoed(fmd) && !FileUtil.isErased(fmd.getDataFile())){
                 return true;
             }
         }

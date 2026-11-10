@@ -247,6 +247,11 @@ public class Access extends AbstractApiBean {
             throw new NotFoundException(errorMessage);
             // (nobody should ever be using this API on a harvested DataFile)!
         }
+
+        if (FileUtil.isErased(df)) {
+            throw new WebApplicationException(Response.status(Response.Status.GONE)
+                    .entity("Datafile " + fileId + " has been erased.").build());
+        }
                
         // This will throw a ForbiddenException if access isn't authorized:
         checkAuthorization(crc, df);
@@ -469,6 +474,11 @@ public class Access extends AbstractApiBean {
                     String errorMessage = "Datafile " + df.getId() + " is a harvested file that cannot be accessed in this Dataverse";
                     throw new NotFoundException(errorMessage);
                     // (nobody should ever be using this API on a harvested DataFile)!
+                }
+
+                if (FileUtil.isErased(df)) {
+                    throw new WebApplicationException(Response.status(Response.Status.GONE)
+                            .entity("Datafile " + df.getId() + " has been erased.").build());
                 }
 
                 // This will throw a ForbiddenException if access isn't authorized:
@@ -1623,6 +1633,10 @@ public class Access extends AbstractApiBean {
 
         if (FileUtil.isRetentionExpired(dataFile)) {
             return error(BAD_REQUEST, BundleUtil.getStringFromBundle("access.api.requestAccess.failure.retentionExpired"));
+        }
+
+        if (FileUtil.isErased(dataFile)) {
+            return error(jakarta.ws.rs.core.Response.Status.GONE, "Datafile " + fileToRequestAccessId + " has been erased.");
         }
 
         if (!dataFile.getOwner().isFileAccessRequest()) {
