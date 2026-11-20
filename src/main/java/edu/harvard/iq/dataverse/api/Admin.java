@@ -1345,23 +1345,31 @@ public class Admin extends AbstractApiBean {
                 for (DataFile dataFile : dataset.getFiles()) {
 
                     boolean success = false;
+                    boolean skipped = false;
                      
                     JsonObjectBuilder output = Json.createObjectBuilder();
                     output.add("datafileId", dataFile.getId());
                     output.add("storageIdentifier", dataFile.getStorageIdentifier());
 
-                    
-                    try {
-                        FileUtil.validateDataFileChecksum(dataFile);
-                        success = true;
-                    } catch (IOException ex) {
-                        output.add("status", "invalid");
-                        output.add("errorMessage", ex.getMessage());
+                    if (FileUtil.isErased(dataFile)) {
+                        output.add("status", "skipped");
+                        output.add("errorMessage", "File has been erased and cannot be validated.");
+                        skipped = true;
                     }
                     
-                    if (success) {
-                        output.add("status", "valid");
-                    } 
+                    if (!skipped) {
+                        try {
+                            FileUtil.validateDataFileChecksum(dataFile);
+                            success = true;
+                        } catch (IOException ex) {
+                            output.add("status", "invalid");
+                            output.add("errorMessage", ex.getMessage());
+                        }
+
+                        if (success) {
+                            output.add("status", "valid");
+                        }
+                    }
                     
                     // write it out:
                     
@@ -1848,6 +1856,9 @@ public class Admin extends AbstractApiBean {
             try {
                 if (df.isHarvested()) {
                     harvested++;
+                } else if (FileUtil.isErased(df)) {
+                    // Skip erased files — their physical content no longer exists
+                    logger.fine("Skipping erased datafile: " + df.getId());
                 } else {
                     if (!df.getChecksumType().equals(cType)) {
 
@@ -1949,6 +1960,10 @@ public class Admin extends AbstractApiBean {
             return error(Status.BAD_REQUEST, "File with the id: " + fileId + " is harvested.");
         }
 
+        if (FileUtil.isErased(fileToUpdate)) {
+            return error(Status.BAD_REQUEST, "File with the id: " + fileId + " has been erased and cannot be rehashed.");
+        }
+
         DataFile.ChecksumType cType = null;
         try {
             cType = DataFile.ChecksumType.fromString(alg);
@@ -2009,6 +2024,10 @@ public class Admin extends AbstractApiBean {
 
         if (fileToValidate.isHarvested()) {
             return error(Status.BAD_REQUEST, "File with the id: " + fileId + " is harvested.");
+        }
+
+        if (FileUtil.isErased(fileToValidate)) {
+            return error(Status.BAD_REQUEST, "File with the id: " + fileId + " has been erased and cannot be validated.");
         }
 
         DataFile.ChecksumType cType = null;
